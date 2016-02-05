@@ -18,14 +18,10 @@ public interface Where<T> {
 	<S extends DataElement> WhereBuilder<T> isChildOf(S dataElement);
 	
 	/**
-	 * is child of a T element which validates the {@linkplain WhereBuilder where}
+	 * is child of a S element which validates the {@linkplain WhereBuilder where}
 	 * @param where
 	 * @return
 	 */
-<<<<<<< HEAD
 	<S extends DataElement> WhereBuilder<T> isChildOf(WhereBuilder<S> where);
-=======
-	<S extends DataElement> WhereBuilder<T> isChildOf(WhereBuilder<T> where);
->>>>>>> branch 'master' of https://github.com/cite-sa/exmms.git
 
 }
