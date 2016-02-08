@@ -16,46 +16,40 @@ public class CriteriaQueryExamples {
 
 	@Test
 	public void queryDataElement() {
-		
+
 		DataElement dataElement1 = mock(DataElement.class);
 		DataElement dataElement2 = mock(DataElement.class);
-		
+
 		DataElementMetadatum metadatum1 = mock(DataElementMetadatum.class);
 		DataElementMetadatum metadatum2 = mock(DataElementMetadatum.class);
-		
+
 		CriteriaQuery<DataElement> query = simpleMock();
-		
+
 		try {
-			List<DataElement> elements = query.whereBuilder().expression(metadatum1)
-					.or().exists(metadatum2).and()
-					.expression(query.expressionFactory().expression(metadatum1).or().expression(metadatum2))
-					.and()
-					.isChildOf(dataElement2).and().isParentOf(dataElement1).build()
-				.find();
+			List<DataElement> elements = query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
+					.expression(query.expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
+					.isChildOf(dataElement2).and().isParentOf(dataElement1).build().find();
 		} catch (UnsupportedQueryOperationException e1) {
 			fail();
 		}
-		
+
 	}
-	
+
 	@Test
 	public void queryMetadata() {
 		DataElement e2 = mock(DataElement.class);
-		
+
 		DataElementMetadatum m1 = mock(DataElementMetadatum.class);
 		DataElementMetadatum m2 = mock(DataElementMetadatum.class);
-		
+
 		CriteriaQuery<DataElementMetadatum> query = simpleMock();
-		
-		List<DataElementMetadatum> elements = query.whereBuilder().expression(m1)
-				.or().exists(m2).and()
-				.expression(query.expressionFactory().expression(m1).or().expression(m2))
-				.and()
-				.isChildOf(e2).build()
-			.find();
-		
+
+		List<DataElementMetadatum> elements = query.whereBuilder().expression(m1).or().exists(m2).and()
+				.expression(query.expressionFactory().expression(m1).or().expression(m2)).and().isChildOf(e2).build()
+				.find();
+
 	}
-	
+
 	@Test(expected = UnsupportedQueryOperationException.class)
 	public void queryMetadataWithUnsupportedQueryOperationException() throws UnsupportedQueryOperationException {
 		DataElement e1 = mock(DataElement.class);
@@ -63,20 +57,18 @@ public class CriteriaQueryExamples {
 		CriteriaQuery<DataElementMetadatum> query = mockWithException();
 
 		// call of unsupported isParentOf on DataElementMetadatum
-		List<DataElementMetadatum> elements = query.whereBuilder().isParentOf(e1)
-				.build()
-				.find();
+		List<DataElementMetadatum> elements = query.whereBuilder().isParentOf(e1).build().find();
 
 	}
-	
+
 	@Test
 	public void queryByIdTest() {
 		CriteriaQuery<DataElement> query = mock(CriteriaQuery.class);
 
 		DataElement e = query.find("id1");
-		
+
 	}
-	
+
 	private static CriteriaQuery<DataElementMetadatum> mockWithException() {
 		CriteriaQuery<DataElementMetadatum> query = mock(CriteriaQuery.class);
 		Where<DataElementMetadatum> where = mock(Where.class);
@@ -88,16 +80,16 @@ public class CriteriaQueryExamples {
 		try {
 			when(where.<DataElementMetadatum> isParentOf(any())).thenThrow(
 					new UnsupportedQueryOperationException(DataElementMetadatum.class + " doen't have any children"));
-			
+
 			when(where.<DataElement> isParentOf(any())).thenThrow(
 					new UnsupportedQueryOperationException(DataElementMetadatum.class + " doen't have any children"));
-		
+
 		} catch (UnsupportedQueryOperationException e) {
 		}
 
 		return query;
 	}
-	
+
 	private static <T> CriteriaQuery<T> simpleMock() {
 		CriteriaQuery<T> query = mock(CriteriaQuery.class);
 		Where<T> where = mock(Where.class);
@@ -118,9 +110,11 @@ public class CriteriaQueryExamples {
 			when(where.<DataElement> isParentOf(any())).thenReturn(whereBuilder);
 		} catch (UnsupportedQueryOperationException e) {
 		}
-		when(where.<DataElement> isChildOf(any())).thenReturn(whereBuilder);
-	
+		when(where.<DataElement> isChildOf(Matchers.<DataElement> any())).thenReturn(whereBuilder);
+		when(where.<DataElement> isChildOf(Matchers.<WhereBuilder<DataElement>> any()))
+				.thenReturn(whereBuilder);
+
 		return query;
 	}
-	
+
 }
