@@ -7,8 +7,26 @@ public class DataElement {
 	String id;
 
 	List<DataElementMetadatum> matadata;
-	
+
 	List<SystemicMetadatum> systemicMetadata;
+
+	List<Collection> collections;
+
+	public List<SystemicMetadatum> getSystemicMetadata() {
+		return systemicMetadata;
+	}
+
+	public void setSystemicMetadata(List<SystemicMetadatum> systemicMetadata) {
+		this.systemicMetadata = systemicMetadata;
+	}
+
+	public List<Collection> getCollections() {
+		return collections;
+	}
+
+	public void setCollections(List<Collection> collections) {
+		this.collections = collections;
+	}
 
 	public String getId() {
 		return id;
