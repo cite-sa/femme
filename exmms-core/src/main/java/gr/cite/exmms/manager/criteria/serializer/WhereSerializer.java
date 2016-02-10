@@ -8,7 +8,7 @@ import gr.cite.exmms.manager.criteria.WhereBuilder;
 
 public class WhereSerializer<T> implements Where<T> {
 
-	private WhereBuilder<T> builder = new WhereBuilderSerializer<>();
+	private WhereBuilder<T> builder;
 
 	private Operation operation;
 
@@ -17,10 +17,35 @@ public class WhereSerializer<T> implements Where<T> {
 	private WhereBuilder<T> subexpressionWhereBuilder;
 	private WhereBuilder<DataElement> childWhereBuilder;
 
+	boolean keepStack = false;
+
+	WhereSerializer<T> parent;
+
+	public WhereSerializer(boolean keepStack) {
+		this.keepStack = keepStack;
+		parent = this;
+		
+		System.out.println(this + " ->" + parent);
+
+	}
+
+	public WhereSerializer() {
+
+	}
+	
+	public WhereSerializer(WhereSerializer<T> parent) {
+		this.parent = parent;
+		
+		System.out.println(this + " ->" + parent);
+
+	}
+
 	@Override
 	public WhereBuilder<T> expression(WhereBuilder<T> expression) {
 		this.subexpressionWhereBuilder = expression;
+		subexpressionWhereBuilder.build();
 		operation = Operation.EXPRESSION;
+		builder = new WhereBuilderSerializer<>(parent);
 		return builder;
 	}
 
@@ -28,6 +53,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends Metadatum> WhereBuilder<T> expression(S metadatum) {
 		this.metadatum = metadatum;
 		operation = Operation.EXPRESSION;
+		builder = new WhereBuilderSerializer<>(parent);
+
 		return builder;
 	}
 
@@ -35,6 +62,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends Metadatum> WhereBuilder<T> exists(S metadatum) {
 		this.metadatum = metadatum;
 		operation = Operation.EXISTS;
+		builder = new WhereBuilderSerializer<>();
+
 		return builder;
 	}
 
@@ -42,6 +71,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends Metadatum> WhereBuilder<T> isParentOf(S metadatum) throws UnsupportedQueryOperationException {
 		this.metadatum = metadatum;
 		operation = Operation.IS_PARENT_OF;
+		builder = new WhereBuilderSerializer<>();
+
 		return builder;
 	}
 
@@ -49,6 +80,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends DataElement> WhereBuilder<T> isParentOf(S dataelement) throws UnsupportedQueryOperationException {
 		this.dataElement = dataelement;
 		operation = Operation.IS_PARENT_OF;
+		builder = new WhereBuilderSerializer<>();
+
 		return builder;
 	}
 
@@ -56,6 +89,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends DataElement> WhereBuilder<T> isChildOf(S dataElement) {
 		this.dataElement = dataElement;
 		operation = Operation.IS_CHILD_OF;
+		builder = new WhereBuilderSerializer<>();
+
 		return builder;
 	}
 
@@ -63,6 +98,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public <S extends DataElement> WhereBuilder<T> isChildOf(WhereBuilder<S> where) {
 		this.childWhereBuilder = (WhereBuilder<DataElement>) where;
 		operation = Operation.IS_CHILD_OF;
+		builder = new WhereBuilderSerializer<>();
+
 		return builder;
 	}
 
@@ -121,5 +158,8 @@ public class WhereSerializer<T> implements Where<T> {
 	public void setOperation(Operation operation) {
 		this.operation = operation;
 	}
-
+	
+	public void setParent(WhereSerializer<T> parent) {
+		this.parent = parent;
+	}
 }

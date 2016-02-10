@@ -4,7 +4,7 @@ public enum Operation {
 	EXPRESSION("expression"), EXISTS("exists"), IS_PARENT_OF("isParentOf"), IS_CHILD_OF("isChildOf"),
 	OR("or"), AND("and");
 
-	private String value;
+	private final String value;
 
 	Operation(String value) {
 		this.value = value;

@@ -16,7 +16,7 @@ public class CriteriaQuerySerializer<T> implements CriteriaQuery<T> {
 
 	@Override
 	public Where<T> expressionFactory() {
-		return new WhereSerializer<>();
+		return new WhereSerializer<>(true);
 	}
 
 	@Override
