@@ -1,4 +1,4 @@
-package gr.cite.exmms.manager.criteria;
+package gr.cite.exmms.criteria;
 
 import java.util.List;
 

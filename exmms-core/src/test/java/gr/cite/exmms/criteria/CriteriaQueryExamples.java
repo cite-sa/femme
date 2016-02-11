@@ -1,4 +1,4 @@
-package gr.cite.exmms.manager.criteria;
+package gr.cite.exmms.criteria;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -9,8 +9,12 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Matchers;
 
-import gr.cite.exmms.manager.core.DataElement;
-import gr.cite.exmms.manager.core.DataElementMetadatum;
+import gr.cite.exmms.core.DataElement;
+import gr.cite.exmms.core.DataElementMetadatum;
+import gr.cite.exmms.criteria.CriteriaQuery;
+import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
+import gr.cite.exmms.criteria.Where;
+import gr.cite.exmms.criteria.WhereBuilder;
 
 public class CriteriaQueryExamples {
 

@@ -1,13 +1,13 @@
-package gr.cite.exmms.manager.criteria.serializer;
+package gr.cite.exmms.criteria.serializer;
 
 import java.util.List;
 
-import gr.cite.exmms.manager.criteria.CriteriaQuery;
-import gr.cite.exmms.manager.criteria.Where;
+import gr.cite.exmms.criteria.CriteriaQuery;
+import gr.cite.exmms.criteria.Where;
 
 public class CriteriaQuerySerializer<T> implements CriteriaQuery<T> {
 
-	private Where<T> where = new WhereSerializer<>();
+	private WhereSerializer<T> where = new WhereSerializer<>();
 
 	@Override
 	public Where<T> whereBuilder() {
@@ -37,11 +37,11 @@ public class CriteriaQuerySerializer<T> implements CriteriaQuery<T> {
 		return null;
 	}
 
-	public Where<T> getWhere() {
+	public WhereSerializer<T> getWhere() {
 		return where;
 	}
 
-	public void setWhere(Where<T> where) {
+	public void setWhere(WhereSerializer<T> where) {
 		this.where = where;
 	}
 

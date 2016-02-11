@@ -1,10 +1,10 @@
-package gr.cite.exmms.manager.datastore.api;
+package gr.cite.exmms.datastore.api;
 
 import java.util.List;
 
-import gr.cite.exmms.manager.core.Collection;
-import gr.cite.exmms.manager.core.DataElement;
-import gr.cite.exmms.manager.datastore.exceptions.DatastoreException;
+import gr.cite.exmms.core.Collection;
+import gr.cite.exmms.core.DataElement;
+import gr.cite.exmms.datastore.exceptions.DatastoreException;
 
 public interface Datastore {
 	DataElement insert(DataElement dataElement) throws DatastoreException;

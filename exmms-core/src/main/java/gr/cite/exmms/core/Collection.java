@@ -1,4 +1,4 @@
-package gr.cite.exmms.manager.core;
+package gr.cite.exmms.core;
 
 import java.util.List;
 

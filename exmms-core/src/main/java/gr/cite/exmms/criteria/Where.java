@@ -1,7 +1,7 @@
-package gr.cite.exmms.manager.criteria;
+package gr.cite.exmms.criteria;
 
-import gr.cite.exmms.manager.core.DataElement;
-import gr.cite.exmms.manager.core.Metadatum;
+import gr.cite.exmms.core.DataElement;
+import gr.cite.exmms.core.Metadatum;
 
 public interface Where<T> {
 

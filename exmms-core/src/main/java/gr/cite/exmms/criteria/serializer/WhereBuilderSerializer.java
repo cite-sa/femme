@@ -1,12 +1,12 @@
-package gr.cite.exmms.manager.criteria.serializer;
+package gr.cite.exmms.criteria.serializer;
 
-import gr.cite.exmms.manager.criteria.CriteriaQuery;
-import gr.cite.exmms.manager.criteria.Where;
-import gr.cite.exmms.manager.criteria.WhereBuilder;
+import gr.cite.exmms.criteria.CriteriaQuery;
+import gr.cite.exmms.criteria.Where;
+import gr.cite.exmms.criteria.WhereBuilder;
 
 public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 
-	private Where<T> where;
+	private WhereSerializer<T> where;
 
 	private Operation operation;
 
@@ -14,7 +14,6 @@ public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 
 	public WhereBuilderSerializer(WhereSerializer<T> parent) {
 		this.parent = parent;
-		System.out.println(this + " ->" + parent);
 	}
 
 	public WhereBuilderSerializer() {
@@ -52,13 +51,15 @@ public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 			// stop recursion
 			WhereBuilderSerializer<T> topWhereBuilder = (WhereBuilderSerializer<T>) this.parent.getBuilder();
 			this.parent.setParent(null);
+
+			WhereSerializer<T> topWhere = topWhereBuilder.getParent();
 			
-			WhereSerializer<T> topWhere = null;
 			while (topWhereBuilder != this) {
 				topWhereBuilder.setParent(null);
 				topWhere = (WhereSerializer<T>) topWhereBuilder.getWhere();
 				topWhere.setParent(null);
-				topWhereBuilder = (WhereBuilderSerializer<T>) ((WhereSerializer<T>) (topWhereBuilder.getWhere())).getBuilder();		
+				topWhereBuilder = (WhereBuilderSerializer<T>) topWhere
+						.getBuilder();
 			}
 			if (topWhere != null) {
 				topWhere.setBuilder(null);
@@ -75,11 +76,11 @@ public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 		this.operation = operation;
 	}
 
-	public Where<T> getWhere() {
+	public WhereSerializer<T> getWhere() {
 		return where;
 	}
 
-	public void setWhere(Where<T> where) {
+	public void setWhere(WhereSerializer<T> where) {
 		this.where = where;
 	}
 

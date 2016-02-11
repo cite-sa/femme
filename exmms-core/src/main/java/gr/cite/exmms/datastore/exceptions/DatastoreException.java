@@ -1,4 +1,4 @@
-package gr.cite.exmms.manager.datastore.exceptions;
+package gr.cite.exmms.datastore.exceptions;
 
 public class DatastoreException extends Exception {
 
