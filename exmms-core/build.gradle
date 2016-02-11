@@ -2,9 +2,14 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'eclipse'
+apply plugin: 'jacoco'
+
 
 group = 'gr.cite.exmms'
 version = '0.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -22,7 +27,5 @@ dependencies {
     			// TODO move into separate project
     			'com.fasterxml.jackson.core:jackson-core:2.7.1',
     			'com.fasterxml.jackson.core:jackson-databind:2.7.1-1'
-    			
-    			
     			
 }
