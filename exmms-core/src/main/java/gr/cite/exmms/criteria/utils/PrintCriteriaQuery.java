@@ -22,7 +22,7 @@ public class PrintCriteriaQuery<T extends DataElement> implements CriteriaQuery<
 
 	@Override
 	public Where<T> expressionFactory() {
-		return new WherePrint<>(this);
+		return new WherePrint<>(new PrintCriteriaQuery<>());
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class PrintCriteriaQuery<T extends DataElement> implements CriteriaQuery<
 
 	@Override
 	public String toString() {
-		return query.toString();
+		return query.toString().trim();
 	}
 	
 	public static class WherePrint<T extends DataElement> implements Where<T> {

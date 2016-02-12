@@ -16,13 +16,19 @@ import gr.cite.exmms.criteria.serializer.WhereSerializer;
  */
 public class WhereWalker<T, S> {
 
-	public static <T, S> WhereBuilder<T> walk(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere,
+	public static <T, S> WhereBuilder<T> walkSubexpression(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere,
 			CriteriaQuery<S> datastoreQuery) throws UnsupportedQueryOperationException {
 		WhereWalker<T, S> walker = new WhereWalker<>(whereSerializer, datastoreWhere, datastoreQuery);
 		walker.walk();
 		return walker.getWhereBuilder();
 	}
 
+	public static <T, S> CriteriaQuery<T> walk(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere,
+			CriteriaQuery<S> datastoreQuery) throws UnsupportedQueryOperationException {
+		WhereWalker<T, S> walker = new WhereWalker<>(whereSerializer, datastoreWhere, datastoreQuery);
+		return walker.walk();
+	}
+	
 	WhereSerializer<T> whereSerializer;
 
 	Where<T> datastoreWhere;
@@ -38,9 +44,9 @@ public class WhereWalker<T, S> {
 		this.datastoreQuery = datastoreQuery;
 	}
 
-	void walk() throws UnsupportedQueryOperationException {
+	CriteriaQuery<T> walk() throws UnsupportedQueryOperationException {
 		if (whereSerializer == null || whereSerializer.getOperation() == null) {
-			return;
+			return null;
 		}
 
 		switch (whereSerializer.getOperation()) {
@@ -50,7 +56,7 @@ public class WhereWalker<T, S> {
 			} else {
 
 				whereBuilder = datastoreWhere
-						.expression(WhereWalker.walk(whereSerializer.getSubexpressionWhereBuilder().getParent(),
+						.expression(WhereWalker.walkSubexpression(whereSerializer.getSubexpressionWhereBuilder().getParent(),
 								datastoreQuery.expressionFactory(), datastoreQuery));
 			}
 
@@ -74,7 +80,7 @@ public class WhereWalker<T, S> {
 			if (whereSerializer.getDataElement() != null) {
 				whereBuilder = datastoreWhere.isChildOf(whereSerializer.getDataElement());
 			} else {
-				WhereBuilder<Element> builder = WhereWalker.walk(whereSerializer.getChildWhereBuilder().getParent(),
+				WhereBuilder<Element> builder = WhereWalker.walkSubexpression(whereSerializer.getChildWhereBuilder().getParent(),
 						datastoreQuery.expressionFactory(), datastoreQuery);
 
 				whereBuilder = datastoreWhere.isChildOf(builder);
@@ -85,7 +91,7 @@ public class WhereWalker<T, S> {
 			break;
 		}
 
-		WhereBuilderWalker.walk(whereSerializer.getBuilder(), whereBuilder, datastoreQuery);
+		return WhereBuilderWalker.walk(whereSerializer.getBuilder(), whereBuilder, datastoreQuery);
 
 	}
 
