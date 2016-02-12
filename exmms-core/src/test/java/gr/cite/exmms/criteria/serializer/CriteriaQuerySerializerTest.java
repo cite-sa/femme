@@ -24,14 +24,14 @@ public class CriteriaQuerySerializerTest {
 		CriteriaQuery<DataElement> expectedQuery = new CriteriaQuerySerializer<>();
 
 		Metadatum m1 = new Metadatum();
-		m1.setKey("m1");
+		m1.setName("m1");
 		Metadatum m2 = new Metadatum();
-		m2.setKey("m2");
+		m2.setName("m2");
 
 		Metadatum m3 = new Metadatum();
-		m3.setKey("m3");
+		m3.setName("m3");
 		Metadatum m4 = new Metadatum();
-		m4.setKey("m4");
+		m4.setName("m4");
 
 		expectedQuery.whereBuilder().exists(m1).and().exists(m2).or().expression(
 
