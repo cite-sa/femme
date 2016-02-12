@@ -6,7 +6,7 @@ import gr.cite.exmms.core.Metadatum;
 import gr.cite.exmms.criteria.CriteriaQuery;
 import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
 import gr.cite.exmms.criteria.serializer.CriteriaQuerySerializer;
-import gr.cite.exmms.criteria.serializer.PrintCriteriaQuery;
+import gr.cite.exmms.criteria.utils.PrintCriteriaQuery;
 
 public class CriteriaWalker<T> {
 	CriteriaQuerySerializer<T> querySerializer;
