@@ -116,14 +116,6 @@ public class WhereSerializer<T> implements Where<T> {
 		this.builder = builder;
 	}
 
-	public DataElement getDataelement() {
-		return dataElement;
-	}
-
-	public void setDataelement(DataElement dataelement) {
-		this.dataElement = dataelement;
-	}
-
 	public DataElement getDataElement() {
 		return dataElement;
 	}
