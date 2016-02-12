@@ -1,13 +1,24 @@
 package gr.cite.exmms.criteria.walker;
 
+import gr.cite.exmms.criteria.CriteriaQuery;
+import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
 import gr.cite.exmms.criteria.Where;
 import gr.cite.exmms.criteria.WhereBuilder;
 import gr.cite.exmms.criteria.serializer.WhereBuilderSerializer;
 
-public class WhereBuilderWalker<T> {
+/**
+ * 
+ * @param <T>
+ *            where generic type
+ * @param <S>
+ *            {@linkplain CriteriaQuery} generic type
+ * 
+ */
+public class WhereBuilderWalker<T, S> {
 
-	public static <T> Where<T> walk(WhereBuilderSerializer<T> whereSerializer, WhereBuilder<T> datastoreWhere) {
-		WhereBuilderWalker<T> walker = new WhereBuilderWalker<>(whereSerializer, datastoreWhere);
+	public static <T, S> Where<T> walk(WhereBuilderSerializer<T> whereSerializer, WhereBuilder<T> datastoreWhere,
+			CriteriaQuery<S> datastoreQuery) throws UnsupportedQueryOperationException {
+		WhereBuilderWalker<T, S> walker = new WhereBuilderWalker<>(whereSerializer, datastoreWhere, datastoreQuery);
 		walker.walk();
 		return walker.getWhere();
 	}
@@ -18,13 +29,22 @@ public class WhereBuilderWalker<T> {
 
 	private Where<T> where;
 
-	public WhereBuilderWalker(WhereBuilderSerializer<T> whereBuilderSerializer, WhereBuilder<T> datastoreWhereBuilder) {
+	private CriteriaQuery<S> datastoreQuery;
+
+	public WhereBuilderWalker(WhereBuilderSerializer<T> whereBuilderSerializer, WhereBuilder<T> datastoreWhereBuilder,
+			CriteriaQuery<S> datastoreQuery) {
 		super();
 		this.whereBuilderSerializer = whereBuilderSerializer;
 		this.datastoreWhereBuilder = datastoreWhereBuilder;
+		this.datastoreQuery = datastoreQuery;
+
 	}
 
-	void walk() {
+	void walk() throws UnsupportedQueryOperationException {
+		if (whereBuilderSerializer == null || whereBuilderSerializer.getOperation() == null) {
+			return;
+		}
+
 		switch (whereBuilderSerializer.getOperation()) {
 		case OR:
 
@@ -41,7 +61,7 @@ public class WhereBuilderWalker<T> {
 			break;
 		}
 
-		WhereWalker.walk(whereBuilderSerializer.getWhere(), where);
+		WhereWalker.walk(whereBuilderSerializer.getWhere(), where, datastoreQuery);
 	}
 
 	public Where<T> getWhere() {
