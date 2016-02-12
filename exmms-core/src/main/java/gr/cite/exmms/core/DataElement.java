@@ -2,24 +2,14 @@ package gr.cite.exmms.core;
 
 import java.util.List;
 
-public class DataElement {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-	String id;
+@JsonInclude(Include.NON_NULL)
+public class DataElement extends Element {
 
-	List<DataElementMetadatum> matadata;
-
-	List<SystemicMetadatum> systemicMetadata;
-
-	List<Collection> collections;
-
-	public List<SystemicMetadatum> getSystemicMetadata() {
-		return systemicMetadata;
-	}
-
-	public void setSystemicMetadata(List<SystemicMetadatum> systemicMetadata) {
-		this.systemicMetadata = systemicMetadata;
-	}
-
+	private List<Collection> collections;
+	
 	public List<Collection> getCollections() {
 		return collections;
 	}
@@ -27,21 +17,4 @@ public class DataElement {
 	public void setCollections(List<Collection> collections) {
 		this.collections = collections;
 	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public List<DataElementMetadatum> getMatadata() {
-		return matadata;
-	}
-
-	public void setMatadata(List<DataElementMetadatum> matadata) {
-		this.matadata = matadata;
-	}
-
 }
