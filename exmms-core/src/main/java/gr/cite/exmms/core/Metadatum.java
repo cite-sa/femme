@@ -8,18 +8,18 @@ public class Metadatum {
 
 	String value;
 
-	String mediaType;
+	String contentType;
 	
 	
 	public Metadatum() {
 		
 	}
 	
-	public Metadatum(String id, String name, String value, String mediaType) {
+	public Metadatum(String id, String name, String value, String contentType) {
 		this.id = id;
 		this.name = name;
 		this.value = value;
-		this.mediaType = mediaType;
+		this.contentType = contentType;
 	}
 
 	public String getId() {
@@ -46,12 +46,12 @@ public class Metadatum {
 		this.value = value;
 	}
 
-	public String getMedialType() {
-		return mediaType;
+	public String getContentType() {
+		return contentType;
 	}
 
-	public void setMediaType(String mediaType) {
-		this.mediaType = mediaType;
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 
 }

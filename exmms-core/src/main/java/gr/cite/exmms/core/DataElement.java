@@ -2,14 +2,21 @@ package gr.cite.exmms.core;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-@JsonInclude(Include.NON_NULL)
 public class DataElement extends Element {
+	
+	private DataElement dataElement;
 
 	private List<Collection> collections;
 	
+	
+	public DataElement getDataElement() {
+		return dataElement;
+	}
+
+	public void setDataElement(DataElement dataElement) {
+		this.dataElement = dataElement;
+	}
+
 	public List<Collection> getCollections() {
 		return collections;
 	}

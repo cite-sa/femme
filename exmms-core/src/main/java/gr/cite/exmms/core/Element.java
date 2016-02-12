@@ -6,14 +6,14 @@ public class Element {
 
 	private String id;
 	
+	private String name;
+	
 	private String endpoint;
 
 	private List<DataElementMetadatum> metadata;
 
 	private List<SystemicMetadatum> systemicMetadata;
 	
-	private List<DataElement> dataElements;
-
 	
 	public String getId() {
 		return id;
@@ -23,6 +23,14 @@ public class Element {
 		this.id = id;
 	}
 	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public String getEndpoint() {
 		return endpoint;
 	}
@@ -45,13 +53,5 @@ public class Element {
 
 	public void setSystemicMetadata(List<SystemicMetadatum> systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
-	}
-
-	public List<DataElement> getDataElements() {
-		return dataElements;
-	}
-
-	public void setDataElements(List<DataElement> dataElements) {
-		this.dataElements = dataElements;
 	}
 }
