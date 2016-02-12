@@ -6,7 +6,11 @@ public interface CriteriaQuery<T> {
 	
 	Where<T> whereBuilder();
 
-	Where<T> expressionFactory();
+	/**
+	 * 
+	 * @param <S> expression factory of type S
+	 */
+	<S> Where<S> expressionFactory();
 
 	T find(String id);
 	

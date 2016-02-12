@@ -12,7 +12,6 @@ public class Metadatum {
 	
 	
 	public Metadatum() {
-		
 	}
 	
 	public Metadatum(String id, String name, String value, String contentType) {

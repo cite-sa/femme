@@ -1,13 +1,24 @@
 package gr.cite.exmms.criteria.walker;
 
+import gr.cite.exmms.core.Element;
+import gr.cite.exmms.criteria.CriteriaQuery;
+import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
 import gr.cite.exmms.criteria.Where;
 import gr.cite.exmms.criteria.WhereBuilder;
 import gr.cite.exmms.criteria.serializer.WhereSerializer;
 
-public class WhereWalker<T> {
+/**
+ * 
+ * @param <T>
+ *            where generic type
+ * @param <S>
+ *            {@linkplain CriteriaQuery} generic type
+ */
+public class WhereWalker<T, S> {
 
-	public static <T> WhereBuilder<T> walk(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere) {
-		WhereWalker<T> walker = new WhereWalker<>(whereSerializer, datastoreWhere);
+	public static <T, S> WhereBuilder<T> walk(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere,
+			CriteriaQuery<S> datastoreQuery) throws UnsupportedQueryOperationException {
+		WhereWalker<T, S> walker = new WhereWalker<>(whereSerializer, datastoreWhere, datastoreQuery);
 		walker.walk();
 		return walker.getWhereBuilder();
 	}
@@ -18,21 +29,29 @@ public class WhereWalker<T> {
 
 	WhereBuilder<T> whereBuilder;
 
-	public WhereWalker(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere) {
+	private CriteriaQuery<S> datastoreQuery;
+
+	public WhereWalker(WhereSerializer<T> whereSerializer, Where<T> datastoreWhere, CriteriaQuery<S> datastoreQuery) {
 		super();
 		this.whereSerializer = whereSerializer;
 		this.datastoreWhere = datastoreWhere;
+		this.datastoreQuery = datastoreQuery;
 	}
 
-	void walk() {
+	void walk() throws UnsupportedQueryOperationException {
+		if (whereSerializer == null || whereSerializer.getOperation() == null) {
+			return;
+		}
+
 		switch (whereSerializer.getOperation()) {
 		case EXPRESSION:
 			if (whereSerializer.getMetadatum() != null) {
 				whereBuilder = datastoreWhere.expression(whereSerializer.getMetadatum());
 			} else {
-				whereBuilder = datastoreWhere.expression(null); // TODO
-																// whereBuilder
-																// walk
+
+				whereBuilder = datastoreWhere
+						.expression(WhereWalker.walk(whereSerializer.getSubexpressionWhereBuilder().getParent(),
+								datastoreQuery.expressionFactory(), datastoreQuery));
 			}
 
 			break;
@@ -55,17 +74,18 @@ public class WhereWalker<T> {
 			if (whereSerializer.getDataElement() != null) {
 				whereBuilder = datastoreWhere.isChildOf(whereSerializer.getDataElement());
 			} else {
-				whereBuilder = datastoreWhere.isChildOf(null); // TODO
-																// whereBuilder
-																// walk
+				WhereBuilder<Element> builder = WhereWalker.walk(whereSerializer.getChildWhereBuilder().getParent(),
+						datastoreQuery.expressionFactory(), datastoreQuery);
+
+				whereBuilder = datastoreWhere.isChildOf(builder);
 			}
 
 			break;
 		default:
 			break;
 		}
-		
-		WhereBuilderWalker.walk(whereSerializer.getBuilder(), whereBuilder);
+
+		WhereBuilderWalker.walk(whereSerializer.getBuilder(), whereBuilder, datastoreQuery);
 
 	}
 

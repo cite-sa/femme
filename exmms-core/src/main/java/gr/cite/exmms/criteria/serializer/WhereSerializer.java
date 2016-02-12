@@ -16,7 +16,7 @@ public class WhereSerializer<T> implements Where<T> {
 	private Metadatum metadatum;
 	private Element dataElement;
 	private WhereBuilderSerializer<T> subexpressionWhereBuilder;
-	private WhereBuilderSerializer<DataElement> childWhereBuilder;
+	private WhereBuilderSerializer<Element> childWhereBuilder;
 
 	boolean keepStack = false;
 
@@ -93,7 +93,7 @@ public class WhereSerializer<T> implements Where<T> {
 
 	@Override
 	public <S extends Element> WhereBuilder<T> isChildOf(WhereBuilder<S> expression) {
-		this.childWhereBuilder = (WhereBuilderSerializer<DataElement>) expression;
+		this.childWhereBuilder = (WhereBuilderSerializer<Element>) expression;
 		childWhereBuilder.build();
 		operation = Operation.IS_CHILD_OF;
 		builder = new WhereBuilderSerializer<>(parent);
@@ -133,11 +133,11 @@ public class WhereSerializer<T> implements Where<T> {
 		this.subexpressionWhereBuilder = subexpressionWhereBuilder;
 	}
 
-	public WhereBuilderSerializer<DataElement> getChildWhereBuilder() {
+	public WhereBuilderSerializer<Element> getChildWhereBuilder() {
 		return childWhereBuilder;
 	}
 
-	public void setChildWhereBuilder(WhereBuilderSerializer<DataElement> childWhereBuilder) {
+	public void setChildWhereBuilder(WhereBuilderSerializer<Element> childWhereBuilder) {
 		this.childWhereBuilder = childWhereBuilder;
 	}
 

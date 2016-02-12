@@ -32,7 +32,7 @@ public class CriteriaQueryExamples {
 
 		try {
 			List<DataElement> elements = query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
-					.expression(query.expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
+					.expression(query.<DataElement>expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
 					.isChildOf(dataElement2).and().isParentOf(dataElement1).build().find();
 		} catch (UnsupportedQueryOperationException e1) {
 			fail();
@@ -50,7 +50,7 @@ public class CriteriaQueryExamples {
 		CriteriaQuery<DataElementMetadatum> query = simpleMock();
 
 		List<DataElementMetadatum> elements = query.whereBuilder().expression(m1).or().exists(m2).and()
-				.expression(query.expressionFactory().expression(m1).or().expression(m2)).and().isChildOf(e2).build()
+				.expression(query.<DataElementMetadatum>expressionFactory().expression(m1).or().expression(m2)).and().isChildOf(e2).build()
 				.find();
 
 	}
@@ -101,7 +101,7 @@ public class CriteriaQueryExamples {
 		WhereBuilder<T> whereBuilder = mock(WhereBuilder.class);
 
 		when(query.whereBuilder()).thenReturn(where);
-		when(query.expressionFactory()).thenReturn(where);
+		when(query.<T>expressionFactory()).thenReturn(where);
 
 		when(whereBuilder.build()).thenReturn(query);
 		when(whereBuilder.or()).thenReturn(where);

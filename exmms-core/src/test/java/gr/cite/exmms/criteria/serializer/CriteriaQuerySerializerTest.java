@@ -47,17 +47,17 @@ public class CriteriaQuerySerializerTest {
 
 				.expression(
 
-						expectedQuery.expressionFactory().expression(m3).and().expression(m4))
+						expectedQuery.<DataElement>expressionFactory().expression(m3).and().expression(m4))
 
 				.or()
 
 				.expression(
 
-						expectedQuery.expressionFactory().expression(m3).and()
+						expectedQuery.<DataElement>expressionFactory().expression(m3).and()
 
 								.isChildOf(
 
-										expectedQuery.expressionFactory().expression(m4))
+										expectedQuery.<DataElement>expressionFactory().expression(m4))
 
 								.or().isParentOf(m5))
 
@@ -92,7 +92,7 @@ public class CriteriaQuerySerializerTest {
 		CriteriaQuery<DataElement> expectedQuery = new CriteriaQuerySerializer<>();
 		expectedQuery.whereBuilder().expression(
 
-				expectedQuery.expressionFactory().exists(m1)
+				expectedQuery.<DataElement>expressionFactory().exists(m1)
 
 		).build();
 
