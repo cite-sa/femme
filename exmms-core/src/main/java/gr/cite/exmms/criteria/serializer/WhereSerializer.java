@@ -1,6 +1,7 @@
 package gr.cite.exmms.criteria.serializer;
 
 import gr.cite.exmms.core.DataElement;
+import gr.cite.exmms.core.Element;
 import gr.cite.exmms.core.Metadatum;
 import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
 import gr.cite.exmms.criteria.Where;
@@ -13,7 +14,7 @@ public class WhereSerializer<T> implements Where<T> {
 	private Operation operation;
 
 	private Metadatum metadatum;
-	private DataElement dataElement;
+	private Element dataElement;
 	private WhereBuilderSerializer<T> subexpressionWhereBuilder;
 	private WhereBuilderSerializer<DataElement> childWhereBuilder;
 
@@ -73,7 +74,7 @@ public class WhereSerializer<T> implements Where<T> {
 	}
 
 	@Override
-	public <S extends DataElement> WhereBuilder<T> isParentOf(S dataelement) throws UnsupportedQueryOperationException {
+	public <S extends Element> WhereBuilder<T> isParentOf(S dataelement) throws UnsupportedQueryOperationException {
 		this.dataElement = dataelement;
 		operation = Operation.IS_PARENT_OF;
 		builder = new WhereBuilderSerializer<>(parent);
@@ -82,7 +83,7 @@ public class WhereSerializer<T> implements Where<T> {
 	}
 
 	@Override
-	public <S extends DataElement> WhereBuilder<T> isChildOf(S dataElement) {
+	public <S extends Element> WhereBuilder<T> isChildOf(S dataElement) {
 		this.dataElement = dataElement;
 		operation = Operation.IS_CHILD_OF;
 		builder = new WhereBuilderSerializer<>(parent);
@@ -91,7 +92,7 @@ public class WhereSerializer<T> implements Where<T> {
 	}
 
 	@Override
-	public <S extends DataElement> WhereBuilder<T> isChildOf(WhereBuilder<S> expression) {
+	public <S extends Element> WhereBuilder<T> isChildOf(WhereBuilder<S> expression) {
 		this.childWhereBuilder = (WhereBuilderSerializer<DataElement>) expression;
 		childWhereBuilder.build();
 		operation = Operation.IS_CHILD_OF;
@@ -116,19 +117,19 @@ public class WhereSerializer<T> implements Where<T> {
 		this.builder = builder;
 	}
 
-	public DataElement getDataelement() {
+	public Element getDataelement() {
 		return dataElement;
 	}
 
-	public void setDataelement(DataElement dataelement) {
+	public void setDataelement(Element dataelement) {
 		this.dataElement = dataelement;
 	}
 
-	public DataElement getDataElement() {
+	public Element getDataElement() {
 		return dataElement;
 	}
 
-	public void setDataElement(DataElement dataElement) {
+	public void setDataElement(Element dataElement) {
 		this.dataElement = dataElement;
 	}
 

@@ -52,18 +52,15 @@ public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 			WhereBuilderSerializer<T> topWhereBuilder = (WhereBuilderSerializer<T>) this.parent.getBuilder();
 			this.parent.setParent(null);
 
-			WhereSerializer<T> topWhere = topWhereBuilder.getParent();
-			
+			WhereSerializer<T> topWhere = this.parent;
+
 			while (topWhereBuilder != this) {
 				topWhereBuilder.setParent(null);
 				topWhere = (WhereSerializer<T>) topWhereBuilder.getWhere();
 				topWhere.setParent(null);
-				topWhereBuilder = (WhereBuilderSerializer<T>) topWhere
-						.getBuilder();
+				topWhereBuilder = (WhereBuilderSerializer<T>) topWhere.getBuilder();
 			}
-			if (topWhere != null) {
-				topWhere.setBuilder(null);
-			}
+			topWhere.setBuilder(null);
 		}
 		return null;
 	}
