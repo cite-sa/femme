@@ -11,6 +11,7 @@ import org.mockito.Matchers;
 
 import gr.cite.exmms.core.DataElement;
 import gr.cite.exmms.core.DataElementMetadatum;
+import gr.cite.exmms.core.Element;
 import gr.cite.exmms.criteria.CriteriaQuery;
 import gr.cite.exmms.criteria.UnsupportedQueryOperationException;
 import gr.cite.exmms.criteria.Where;
@@ -69,7 +70,7 @@ public class CriteriaQueryExamples {
 	public void queryByIdTest() {
 		CriteriaQuery<DataElement> query = mock(CriteriaQuery.class);
 
-		DataElement e = query.find("id1");
+		Element e = query.find("id1");
 
 	}
 
@@ -85,7 +86,7 @@ public class CriteriaQueryExamples {
 			when(where.<DataElementMetadatum> isParentOf(any())).thenThrow(
 					new UnsupportedQueryOperationException(DataElementMetadatum.class + " doen't have any children"));
 
-			when(where.<DataElement> isParentOf(any())).thenThrow(
+			when(where.<Element> isParentOf(any())).thenThrow(
 					new UnsupportedQueryOperationException(DataElementMetadatum.class + " doen't have any children"));
 
 		} catch (UnsupportedQueryOperationException e) {
@@ -111,12 +112,12 @@ public class CriteriaQueryExamples {
 		when(where.<DataElementMetadatum> exists(Matchers.<DataElementMetadatum> any())).thenReturn(whereBuilder);
 		try {
 			when(where.<DataElementMetadatum> isParentOf(any())).thenReturn(whereBuilder);
-			when(where.<DataElement> isParentOf(any())).thenReturn(whereBuilder);
+			when(where.<Element> isParentOf(any())).thenReturn(whereBuilder);
 		} catch (UnsupportedQueryOperationException e) {
 		}
-		when(where.<DataElement> isChildOf(Matchers.<DataElement> any())).thenReturn(whereBuilder);
-		when(where.<DataElement> isChildOf(Matchers.<WhereBuilder<DataElement>> any()))
-				.thenReturn(whereBuilder);
+		when(where.<Element> isChildOf(Matchers.<Element> any())).thenReturn(whereBuilder);
+		/*when(where.<Element> isChildOf(Matchers.<WhereBuilder<DataElement>> any()))
+				.thenReturn(whereBuilder);*/
 
 		return query;
 	}

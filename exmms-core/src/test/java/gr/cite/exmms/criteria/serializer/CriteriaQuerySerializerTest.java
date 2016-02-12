@@ -24,19 +24,17 @@ public class CriteriaQuerySerializerTest {
 		mapper.setSerializationInclusion(Include.NON_NULL);
 
 		Metadatum m1 = new Metadatum();
-		m1.setKey("m1");
-
+		m1.setName("m1");
 		Metadatum m2 = new Metadatum();
-		m2.setKey("m2");
+		m2.setName("m2");
 
 		Metadatum m3 = new Metadatum();
-		m3.setKey("m3");
-
+		m3.setName("m3");
 		Metadatum m4 = new Metadatum();
-		m4.setKey("m4");
+		m4.setName("m4");
 
 		Metadatum m5 = new Metadatum();
-		m5.setKey("m5");
+		m5.setName("m5");
 
 		DataElement d1 = new DataElement();
 		d1.setId("d1");
@@ -89,7 +87,7 @@ public class CriteriaQuerySerializerTest {
 		mapper.setSerializationInclusion(Include.NON_NULL);
 
 		Metadatum m1 = new Metadatum();
-		m1.setKey("m1");
+		m1.setName("m1");
 
 		CriteriaQuery<DataElement> expectedQuery = new CriteriaQuerySerializer<>();
 		expectedQuery.whereBuilder().expression(

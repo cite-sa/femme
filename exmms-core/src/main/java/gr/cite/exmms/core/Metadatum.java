@@ -4,11 +4,23 @@ public class Metadatum {
 
 	String id;
 
-	String key;
+	String name;
 
 	String value;
 
-	String type;
+	String mediaType;
+	
+	
+	public Metadatum() {
+		
+	}
+	
+	public Metadatum(String id, String name, String value, String mediaType) {
+		this.id = id;
+		this.name = name;
+		this.value = value;
+		this.mediaType = mediaType;
+	}
 
 	public String getId() {
 		return id;
@@ -18,12 +30,12 @@ public class Metadatum {
 		this.id = id;
 	}
 
-	public String getKey() {
-		return key;
+	public String getName() {
+		return name;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getValue() {
@@ -34,12 +46,12 @@ public class Metadatum {
 		this.value = value;
 	}
 
-	public String getType() {
-		return type;
+	public String getMedialType() {
+		return mediaType;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setMediaType(String mediaType) {
+		this.mediaType = mediaType;
 	}
 
 }

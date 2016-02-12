@@ -1,26 +1,9 @@
 package gr.cite.exmms.core;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-public class Collection extends DataElement {
-	private String endpoint;
-
-	private List<DataElement> dataElements;
-
-	public String getEndpoint() {
-		return endpoint;
-	}
-
-	public void setEndpoint(String endpoint) {
-		this.endpoint = endpoint;
-	}
-
-	public List<DataElement> getDataElements() {
-		return dataElements;
-	}
-
-	public void setDataElements(List<DataElement> dataElements) {
-		this.dataElements = dataElements;
-	}
-
+@JsonInclude(Include.NON_NULL)
+public class Collection extends Element {
+	
 }
