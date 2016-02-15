@@ -21,7 +21,7 @@ repositories {
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.13',
     
-    		new File(projectDir, '../exmms-core').exists() ? project(':exmms-core') : 'gr.cite.exmms:exmms-core:0.1-SNAPSHOT'
+    		new File(projectDir, '../exmms-core').exists() ? project('exmms-core') : 'gr.cite.exmms:exmms-core:0.1-SNAPSHOT'
     		
 
     testCompile 'junit:junit:4.12',

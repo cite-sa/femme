@@ -18,8 +18,4 @@ include 'services:webservice'
 
 rootProject.name = 'exmms-commons'
 
-def exmmsCoreProject = new File(settingsDir, '../exmms-core');
-if (exmmsCoreProject.exists()) {
-	include ':exmms-core'
-	project(':exmms-core').projectDir = exmmsCoreProject
-}
+includeFlat 'exmms-core'
