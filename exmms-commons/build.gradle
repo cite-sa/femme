@@ -11,6 +11,11 @@ version = '0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 // In this section you declare where to find the dependencies of your project
 repositories {
 	mavenLocal();
@@ -34,3 +39,5 @@ dependencies {
     			'org.mongodb:mongo-java-driver:3.2.1'
     			
 }
+
+build.finalizedBy(install)
