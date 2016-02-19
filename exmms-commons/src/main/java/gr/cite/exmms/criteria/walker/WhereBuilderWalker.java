@@ -16,11 +16,10 @@ import gr.cite.exmms.criteria.serializer.WhereBuilderSerializer;
  */
 public class WhereBuilderWalker<T, S> {
 
-	public static <T, S> Where<T> walk(WhereBuilderSerializer<T> whereSerializer, WhereBuilder<T> datastoreWhere,
+	public static <T, S> CriteriaQuery<T> walk(WhereBuilderSerializer<T> whereSerializer, WhereBuilder<T> datastoreWhere,
 			CriteriaQuery<S> datastoreQuery) throws UnsupportedQueryOperationException {
 		WhereBuilderWalker<T, S> walker = new WhereBuilderWalker<>(whereSerializer, datastoreWhere, datastoreQuery);
-		walker.walk();
-		return walker.getWhere();
+		return walker.walk();
 	}
 
 	WhereBuilderSerializer<T> whereBuilderSerializer;
@@ -40,9 +39,9 @@ public class WhereBuilderWalker<T, S> {
 
 	}
 
-	void walk() throws UnsupportedQueryOperationException {
+	CriteriaQuery<T> walk() throws UnsupportedQueryOperationException {
 		if (whereBuilderSerializer == null || whereBuilderSerializer.getOperation() == null) {
-			return;
+			return datastoreWhereBuilder.build();
 		}
 
 		switch (whereBuilderSerializer.getOperation()) {
@@ -61,7 +60,7 @@ public class WhereBuilderWalker<T, S> {
 			break;
 		}
 
-		WhereWalker.walk(whereBuilderSerializer.getWhere(), where, datastoreQuery);
+		return WhereWalker.walk(whereBuilderSerializer.getWhere(), where, datastoreQuery);
 	}
 
 	public Where<T> getWhere() {
