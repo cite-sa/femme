@@ -1,5 +1,6 @@
 package gr.cite.exmms.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DataElement extends Element {
@@ -8,6 +9,10 @@ public class DataElement extends Element {
 
 	private List<Collection> collections;
 	
+	public DataElement() {
+		super();
+		collections = new ArrayList<>();
+	}
 	
 	public DataElement getDataElement() {
 		return dataElement;

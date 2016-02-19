@@ -14,6 +14,12 @@ public class Metadatum {
 	public Metadatum() {
 	}
 	
+	public Metadatum(String name, String value, String contentType) {
+		this.name = name;
+		this.value = value;
+		this.contentType = contentType;
+	}
+	
 	public Metadatum(String id, String name, String value, String contentType) {
 		this.id = id;
 		this.name = name;
