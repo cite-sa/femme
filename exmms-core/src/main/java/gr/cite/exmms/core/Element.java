@@ -1,5 +1,6 @@
 package gr.cite.exmms.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Element {
@@ -10,10 +11,14 @@ public class Element {
 	
 	private String endpoint;
 
-	private List<DataElementMetadatum> metadata;
+	private List<Metadatum> metadata;
 
 	private List<SystemicMetadatum> systemicMetadata;
 	
+	public Element() {
+		metadata = new ArrayList<>();
+		systemicMetadata = new ArrayList<>();
+	}
 	
 	public String getId() {
 		return id;
@@ -39,11 +44,11 @@ public class Element {
 		this.endpoint = endpoint;
 	}
 
-	public List<DataElementMetadatum> getMetadata() {
+	public List<Metadatum> getMetadata() {
 		return metadata;
 	}
 
-	public void setMetadata(List<DataElementMetadatum> metadata) {
+	public void setMetadata(List<Metadatum> metadata) {
 		this.metadata = metadata;
 	}
 	
