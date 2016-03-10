@@ -17,11 +17,11 @@ import gr.cite.exmms.datastore.exceptions.DatastoreException;
 
 public class DatastoreMongoTest {
 	private static final Logger logger = LoggerFactory.getLogger(DatastoreMongoTest.class);
-	DatastoreMongo mongo;
+	MongoDatastore mongo;
 	
 	@Before
 	public void init() {
-		mongo = new DatastoreMongo();		
+		mongo = new MongoDatastore();		
 	}
 	
 	@After
@@ -31,17 +31,38 @@ public class DatastoreMongoTest {
 	
 	@Test
 	public void insert() {
-		List<DataElement> dataElements = createDemoDataElements();
+		/*DataElement dataElement = createDemoDataElement();*/
+		Collection collection = createDemoCollection();
+		/*List<DataElement> dataElements = createDemoDataElements();*/
 		try {
-			mongo.insert(dataElements);
+			/*mongo.insert(dataElement);*/
+			mongo.insert(collection);
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 	
-	@Test
+	/*@Test
 	public void find() {
 		mongo.listDataElements();
+	}*/
+	
+	public DataElement createDemoDataElement() {
+		DataElement dataElement = new DataElement();
+		dataElement.setName("testDataElement");
+		dataElement.setEndpoint("http://www.cite-sa/gr/");
+		
+		List<Metadatum> metadata = new ArrayList<>();
+		metadata.add(new DataElementMetadatum("dc", "<dc><a>test value</a></dc>", "xml"));
+		dataElement.setMetadata(metadata);
+		
+		DataElement embeddedDataElement = new DataElement();
+		embeddedDataElement.setName("embeddedTestDataElement");
+		embeddedDataElement.setEndpoint("http://www.cite-sa/gr/");
+		
+		dataElement.setDataElement(embeddedDataElement);
+		
+		return dataElement;
 	}
 	
 	public List<DataElement> createDemoDataElements() {
@@ -52,7 +73,7 @@ public class DatastoreMongoTest {
 			dataElement.setEndpoint("http://www.cite-sa/gr/" + i);
 			
 			List<Metadatum> metadata = new ArrayList<>();
-			metadata.add(new DataElementMetadatum("dc", "<dc><a>test value</a></dc>", "xml"));
+			metadata.add(new Metadatum("dc", "<dc><a>test value</a></dc>", "xml"));
 			dataElement.setMetadata(metadata);
 			
 			dataElements.add(dataElement);
@@ -60,8 +81,19 @@ public class DatastoreMongoTest {
 		return dataElements;
 	}
 	
-	/*@Test
 	public Collection createDemoCollection() {
-		return null;
-	}*/
+		Collection collection = new Collection();
+		collection.setName("testCollection");
+		collection.setEndpoint("http://www.cite-sa/gr/");
+		
+		List<Metadatum> metadata = new ArrayList<>();
+		metadata.add(new Metadatum("dc", "<dc><a>test value</a></dc>", "xml"));
+		collection.setMetadata(metadata);
+		
+		List<DataElement> dataElements = new ArrayList<>();
+		dataElements.add(createDemoDataElement());
+		collection.setDataElements(dataElements);
+		
+		return collection;
+	}
 }

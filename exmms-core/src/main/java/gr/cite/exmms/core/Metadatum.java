@@ -3,7 +3,7 @@ package gr.cite.exmms.core;
 public class Metadatum {
 
 	String id;
-
+	
 	String name;
 
 	String value;
@@ -26,7 +26,7 @@ public class Metadatum {
 		this.value = value;
 		this.contentType = contentType;
 	}
-
+	
 	public String getId() {
 		return id;
 	}

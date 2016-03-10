@@ -1,4 +1,4 @@
-package gr.cite.datastore.mongo.serializer;
+package gr.cite.exmms.datastore.mongo.codecs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 
 import gr.cite.exmms.core.Collection;
 import gr.cite.exmms.core.DataElement;
@@ -48,6 +51,17 @@ public class MongoSerializer {
 		}
 		return document;
 	}
+	
+	public static Document createDocument(Metadatum metadatum) {
+		Document metadatumDocument = new Document();
+		if (metadatum.getName() != null) {
+			metadatumDocument.append(METADATUM_NAME_KEY, metadatum.getName());
+		}
+		if (metadatum.getName() != null) {
+			metadatumDocument.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getName());
+		}
+		return metadatumDocument;
+	}
 
 	public static Element createElement(Document document) {
 		Element element = null;
@@ -67,13 +81,16 @@ public class MongoSerializer {
 		if (dataElement.getEndpoint() != null) {
 			newDataElementDocument.append(DATA_ELEMENT_ENDPOINT_KEY, dataElement.getEndpoint());
 		}
+		
 		if (dataElement.getMetadata().size() > 0) {
 			newDataElementDocument.append(DATA_ELEMENT_METADATA_KEY,
 					dataElement.getMetadata().stream().map(new Function<Metadatum, Document>() {
 						@Override
 						public Document apply(Metadatum metadatum) {
-							return new Document().append(METADATUM_NAME_KEY, metadatum.getName())
-									.append(METADATUM_VALUE_KEY, metadatum.getValue())
+							return new Document()
+									.append(METADATUM_ID_KEY, metadatum.getId())
+									.append(METADATUM_NAME_KEY, metadatum.getName())
+									/*.append(METADATUM_VALUE_KEY, metadatum.getValue())*/
 									.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType());
 						}
 					}).collect(Collectors.toList()));
@@ -84,8 +101,8 @@ public class MongoSerializer {
 						@Override
 						public Document apply(SystemicMetadatum metadatum) {
 							return new Document().append(METADATUM_NAME_KEY, metadatum.getName())
-									.append(METADATUM_NAME_KEY, metadatum.getValue())
-									.append(METADATUM_NAME_KEY, metadatum.getContentType());
+									.append(METADATUM_VALUE_KEY, metadatum.getValue())
+									.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType());
 						}
 					}).collect(Collectors.toList()));
 		}
@@ -116,7 +133,7 @@ public class MongoSerializer {
 		
 		
 		if (collection.getMetadata().size() > 0) {
-			newCollectionDocument.append(DATA_ELEMENT_METADATA_KEY,
+			newCollectionDocument.append(COLLECTION_METADATA_KEY,
 					collection.getMetadata().stream().map(new Function<Metadatum, Document>() {
 						@Override
 						public Document apply(Metadatum metadatum) {
@@ -127,7 +144,7 @@ public class MongoSerializer {
 					}).collect(Collectors.toList()));
 		}
 		if (collection.getSystemicMetadata().size() > 0) {
-			newCollectionDocument.append(DATA_ELEMENT_SYSTEMIC_METADATA_KEY,
+			newCollectionDocument.append(COLLECTION_SYSTEMIC_METADATA_KEY,
 					collection.getSystemicMetadata().stream().map(new Function<SystemicMetadatum, Document>() {
 						@Override
 						public Document apply(SystemicMetadatum metadatum) {

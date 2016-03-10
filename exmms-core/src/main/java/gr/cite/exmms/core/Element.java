@@ -20,6 +20,16 @@ public class Element {
 		systemicMetadata = new ArrayList<>();
 	}
 	
+	public Element(String id, String name, String endpoint) {
+		this.metadata = new ArrayList<>();
+		this.systemicMetadata = new ArrayList<>();
+	}
+	
+	public Element(String id, String name, String endpoint, List<Metadatum> metadata) {
+		this.metadata = metadata;
+		this.systemicMetadata = new ArrayList<>();
+	}
+	
 	public String getId() {
 		return id;
 	}

@@ -10,11 +10,11 @@ import gr.cite.exmms.datastore.exceptions.DatastoreException;
 public interface Datastore {
 	<T extends Element> T insert(T element) throws DatastoreException;
 	
-	<T extends Element> List<T> insert(List<T> dataElements) throws DatastoreException;
+	<T extends Element> List<T> insert(List<T> elements) throws DatastoreException;
 	
-	Element update(Element dataElement) throws DatastoreException;
+	Element update(Element element) throws DatastoreException;
 
-	void remove(Element dataElement) throws DatastoreException;
+	void remove(Element element) throws DatastoreException;
 	
 	void add(Element dataElement, Collection collection) throws DatastoreException;
 	
