@@ -14,6 +14,7 @@ import gr.cite.exmms.core.DataElement;
 import gr.cite.exmms.core.DataElementMetadatum;
 import gr.cite.exmms.core.Metadatum;
 import gr.cite.exmms.datastore.exceptions.DatastoreException;
+import gr.cite.exmms.datastore.mongodb.MongoDatastore;
 
 public class DatastoreMongoTest {
 	private static final Logger logger = LoggerFactory.getLogger(DatastoreMongoTest.class);

@@ -1,4 +1,4 @@
-package gr.cite.exmms.datastore.mongo;
+package gr.cite.exmms.datastore.mongodb;
 
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -11,8 +11,8 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 
 import gr.cite.exmms.core.Element;
-import gr.cite.exmms.datastore.mongo.codecs.ElementCodecProvider;
-import gr.cite.exmms.datastore.mongo.codecs.MetadatumCodecProvider;
+import gr.cite.exmms.datastore.mongodb.codecs.ElementCodecProvider;
+import gr.cite.exmms.datastore.mongodb.codecs.MetadatumCodecProvider;
 
 public class MongoDatastoreClient {
 	private static final String DATABASE_HOST = "localhost:27017";

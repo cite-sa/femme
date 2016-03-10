@@ -1,4 +1,4 @@
-package gr.cite.exmms.datastore.mongo.codecs;
+package gr.cite.exmms.datastore.mongodb.codecs;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -10,6 +10,7 @@ import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.BsonWriter;
+import org.bson.Document;
 import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
@@ -62,7 +63,11 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		String filename = UUID.randomUUID().toString();
 		InputStream streamToUploadFrom = new ByteArrayInputStream(
 				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
-		GridFSUploadOptions options = new GridFSUploadOptions().metadata(MongoSerializer.createDocument(metadatum));
+		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
+					new Document()
+					.append(METADATUM_NAME_KEY, metadatum.getName())
+					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
+				);
 
 		ObjectId fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
 

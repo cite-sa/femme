@@ -1,4 +1,4 @@
-package gr.cite.exmms.criteria.mongo;
+package gr.cite.exmms.criteria.mongodb;
 
 import java.util.List;
 
@@ -10,8 +10,7 @@ import com.mongodb.client.MongoDatabase;
 import gr.cite.exmms.core.Element;
 import gr.cite.exmms.criteria.CriteriaQuery;
 import gr.cite.exmms.criteria.Where;
-import gr.cite.exmms.datastore.mongo.MongoDatastoreClient;
-import gr.cite.exmms.datastore.mongo.codecs.MongoSerializer;
+import gr.cite.exmms.datastore.mongodb.MongoDatastoreClient;
 
 public class MongoCriteriaQuery<T extends Element> implements CriteriaQuery<T> {
 	private MongoCollection collection;

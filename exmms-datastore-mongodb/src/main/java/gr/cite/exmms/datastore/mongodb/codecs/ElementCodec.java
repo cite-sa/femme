@@ -1,4 +1,4 @@
-package gr.cite.exmms.datastore.mongo.codecs;
+package gr.cite.exmms.datastore.mongodb.codecs;
 
 import java.util.ArrayList;
 import java.util.List;

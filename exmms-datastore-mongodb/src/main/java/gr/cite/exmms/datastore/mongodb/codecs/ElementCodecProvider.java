@@ -1,4 +1,4 @@
-package gr.cite.exmms.datastore.mongo.codecs;
+package gr.cite.exmms.datastore.mongodb.codecs;
 
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
