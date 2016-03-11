@@ -27,4 +27,9 @@ public class Collection extends Element {
 	public void setDataElements(List<DataElement> dataElements) {
 		this.dataElements = dataElements;
 	}
+	
+	@Override
+	public String toString() {
+		return super.toString();
+	}
 }

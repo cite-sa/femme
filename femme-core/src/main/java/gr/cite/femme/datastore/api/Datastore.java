@@ -20,6 +20,8 @@ public interface Datastore {
 	
 	void delete(Element dataElement, Collection collection) throws DatastoreException;
 	
+	List<Element> listElements() throws DatastoreException;
+	
 	List<DataElement> listDataElements() throws DatastoreException;
 	
 	List<Collection> listCollections() throws DatastoreException;

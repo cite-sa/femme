@@ -7,9 +7,8 @@ public class Metadatum {
 	String name;
 
 	String value;
-
-	String contentType;
 	
+	String contentType;
 	
 	public Metadatum() {
 	}
@@ -19,7 +18,6 @@ public class Metadatum {
 		this.value = value;
 		this.contentType = contentType;
 	}
-	
 	public Metadatum(String id, String name, String value, String contentType) {
 		this.id = id;
 		this.name = name;
@@ -58,5 +56,18 @@ public class Metadatum {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
-
+	@Override
+	public String toString() {
+		StringBuilder metadataBuilder = new StringBuilder();
+		metadataBuilder.append("\t" + this.id);
+		metadataBuilder.append("\n");
+		metadataBuilder.append("\t" + this.name);
+		metadataBuilder.append("\n");
+		metadataBuilder.append("\t" + this.contentType);
+		metadataBuilder.append("\n");
+		metadataBuilder.append("\t" + this.value);
+		metadataBuilder.append("\n");
+		
+		return metadataBuilder.toString();
+	}
 }
