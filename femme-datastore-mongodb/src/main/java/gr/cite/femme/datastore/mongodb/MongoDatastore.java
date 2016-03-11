@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
@@ -22,12 +23,10 @@ public class MongoDatastore implements Datastore {
 
 	MongoDatastoreClient mongoClient;
 	MongoCollection<Element> mongoCollection;
-	/*GridFSBucket gridFSBucket;*/
 
 	public MongoDatastore() {
 		mongoClient = new MongoDatastoreClient();
 		mongoCollection = mongoClient.getElementsCollection();
-		/*gridFSBucket = mongoClient.getGridFSBucket();*/
 	}
 
 	public void close() {
@@ -64,20 +63,6 @@ public class MongoDatastore implements Datastore {
 		}
 		return elementList;
 	}
-	
-	/*private void insertMetadata(List<Metadatum> metadata) {
-		for (Metadatum metadatum : metadata) {
-			String filename = UUID.randomUUID().toString();
-			InputStream streamToUploadFrom = new ByteArrayInputStream(
-					metadatum.getValue().getBytes(StandardCharsets.UTF_8));
-			GridFSUploadOptions options = new GridFSUploadOptions().metadata(MongoSerializer.createDocument(metadatum));
-
-			ObjectId fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
-
-			metadatum.setId(fileId.toString());
-			metadatum.setFileName(filename);
-		}
-	}*/
 
 	@Override
 	public DataElement update(Element element) throws DatastoreException {
@@ -95,14 +80,27 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public void delete(Element dataElement, Collection collection) throws DatastoreException {
 	}
+	
+	@Override
+	public List<Element> listElements() {
+		List<Element> elements = new ArrayList<>();
+		MongoCursor<Element> cursor = mongoCollection.find().iterator();
+		try {
+			while (cursor.hasNext()) {
+				elements.add(cursor.next());
+			}
+		} finally {
+			cursor.close();
+		}
+		return elements;
+	}
 
 	@Override
 	public List<DataElement> listDataElements() {
 		List<DataElement> dataElements = new ArrayList<>();
-		MongoCursor<Element> cursor = mongoCollection.find(Filters.exists("collection", false)).iterator();
+		MongoCursor<Element> cursor = mongoCollection.find(Filters.exists("collections", true)).iterator();
 		try {
 			while (cursor.hasNext()) {
-				/*dataElements.add((DataElement) MongoSerializer.createElement(cursor.next()));*/
 				dataElements.add((DataElement) cursor.next());
 			}
 		} finally {
@@ -114,10 +112,9 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public List<Collection> listCollections() {
 		List<Collection> collections = new ArrayList<>();
-		MongoCursor<Element> cursor = mongoCollection.find(Filters.exists("collection", true)).iterator();
+		MongoCursor<Element> cursor = mongoCollection.find(Filters.exists("collections", false)).iterator();
 		try {
 			while (cursor.hasNext()) {
-				/*collections.add((Collection) MongoSerializer.createElement(cursor.next()));*/
 				collections.add((Collection) cursor.next());
 			}
 		} finally {

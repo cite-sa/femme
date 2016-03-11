@@ -50,17 +50,23 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		writer.writeString(ELEMENT_ENDPOINT_KEY, value.getEndpoint());
 		
 		if (value instanceof DataElement) {
-			writeEmdeddedDataElement(writer, encoderContext, (DataElement) value);
-			writeEmbeddedCollections(writer, encoderContext, (DataElement) value);
+			if (((DataElement) value).getDataElement() != null) {
+				writeEmdeddedDataElement(writer, encoderContext, (DataElement) value);
+			}
+			if (((DataElement) value).getCollections() != null) {
+				writeEmbeddedCollections(writer, encoderContext, (DataElement) value);
+			}
 		} else if (value instanceof Collection) {
 			writeEmdeddedDataElements(writer, encoderContext, (Collection) value);
 		}
 		
-		writer.writeStartArray(ELEMENT_METADATA_KEY);
-		for (Metadatum metadatum : value.getMetadata()) {
-			encoderContext.encodeWithChildContext(codecRegistry.get(Metadatum.class), writer, metadatum);
+		if (value.getMetadata() != null && value.getMetadata().size() > 0) {
+			writer.writeStartArray(ELEMENT_METADATA_KEY);
+			for (Metadatum metadatum : value.getMetadata()) {
+				encoderContext.encodeWithChildContext(codecRegistry.get(Metadatum.class), writer, metadatum);
+			}
+			writer.writeEndArray();
 		}
-		writer.writeEndArray();
 		
 		// TODO : Systemic metadata
 		writer.writeEndDocument();
@@ -106,6 +112,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		DataElement embeddedDataElement = null;
 		List<Collection> dataElementCollections = null;
 		List<DataElement> collectionDataElements = null;
+		boolean isCollection = false;
 		
 		reader.readStartDocument();
 		
@@ -114,38 +121,32 @@ public class ElementCodec implements CollectibleCodec<Element> {
             
             if (fieldName.equals(ELEMENT_ID_KEY)) {
             	id = reader.readObjectId().toString();
-            }
-            if (fieldName.equals(ELEMENT_NAME_KEY)) {
+            } else if (fieldName.equals(ELEMENT_NAME_KEY)) {
             	name = reader.readString();
-            }
-            if (fieldName.equals(ELEMENT_ENDPOINT_KEY)) {
+            } else if (fieldName.equals(ELEMENT_ENDPOINT_KEY)) {
             	endpoint = reader.readString();
-            }
-            if (fieldName.equals(ELEMENT_METADATA_KEY)) {
+            } else if (fieldName.equals(ELEMENT_METADATA_KEY)) {
             	metadata = new ArrayList<>();
         		reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
         			metadata.add(codecRegistry.get(Metadatum.class).decode(reader, decoderContext));
         		}
         		reader.readEndArray();
-            }
-            if (fieldName.equals("")) {
+            } else if (fieldName.equals("")) {
         		// TODO : Systemic metadata
-            }
-            if (fieldName.equals(DATA_ELEMENT_DATA_ELEMENT_KEY)) {
+            } else if (fieldName.equals(DATA_ELEMENT_DATA_ELEMENT_KEY)) {
             	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		embeddedDataElement = (DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext);            		
             	}
-            }
-            if (fieldName.equals(DATA_ELEMENT_COLLECTIONS_KEY)) {
+            } else if (fieldName.equals(DATA_ELEMENT_COLLECTIONS_KEY)) {
             	dataElementCollections = new ArrayList<>();
             	reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
         			dataElementCollections.add((Collection) codecRegistry.get(Element.class).decode(reader, decoderContext));
         		}
         		reader.readEndArray();
-            }
-            if (fieldName.equals(COLLECTION_DATA_ELEMENTS_KEY)) {
+            } else if (fieldName.equals(COLLECTION_DATA_ELEMENTS_KEY)) {
+            	isCollection = true;
             	collectionDataElements = new ArrayList<>();
             	reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -158,10 +159,10 @@ public class ElementCodec implements CollectibleCodec<Element> {
         reader.readEndDocument();
         
         // Element is a collection
-        if (collectionDataElements != null) {
-        	return new DataElement(id, name, endpoint, metadata, null, embeddedDataElement, dataElementCollections);
-        } else { // Element is a data element
+        if (isCollection) {
         	return new Collection(id, name, endpoint, metadata, null, collectionDataElements);
+        } else { // Element is a data element
+        	return new DataElement(id, name, endpoint, metadata, null, embeddedDataElement, dataElementCollections);
         }
 	}
 

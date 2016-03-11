@@ -1,9 +1,13 @@
 package gr.cite.femme.datastore.mongodb.codecs;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bson.BsonReader;
@@ -21,11 +25,12 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.utils.Pair;
 
 public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private static final String METADATUM_ID_KEY = "_id";
 	private static final String METADATUM_FILENAME_KEY = "fileName";
-	/*private static final String METADATUM_FILE_ID_KEY = "fileId";*/
+	private static final String METADATUM_FILE_ID_KEY = "fileId";
 	private static final String METADATUM_NAME_KEY = "name";
 	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
 	
@@ -46,19 +51,19 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 			generateIdIfAbsentFromDocument(value);
 		}
 		
-		insertMetadata(value);
+		Pair<ObjectId, String> file = insertMetadata(value);
 		
 		writer.writeObjectId(METADATUM_ID_KEY, new ObjectId(value.getId()));
-		/*writer.writeString(METADATUM_FILENAME_KEY, value.getFileName());*/
-		/*writer.writeString(METADATUM_FILE_ID_KEY, value.getFileId());*/
+		writer.writeObjectId(METADATUM_FILE_ID_KEY, file.getFirst());
+		writer.writeString(METADATUM_FILENAME_KEY, file.getSecond());
 		writer.writeString(METADATUM_NAME_KEY, value.getName());
 		writer.writeString(METADATUM_CONTENT_TYPE_KEY, value.getContentType());
 		
 		writer.writeEndDocument();
 	}
 	
-	private void insertMetadata(Metadatum metadatum) {
-		String filename = UUID.randomUUID().toString();
+	private Pair<ObjectId, String> insertMetadata(Metadatum metadatum) {
+		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
 		InputStream streamToUploadFrom = new ByteArrayInputStream(
 				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
@@ -68,8 +73,8 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 				);
 
 		ObjectId fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
-
-		metadatum.setId(fileId.toString());
+		
+		return new Pair<ObjectId, String>(fileId, filename);
 	}
 	@Override
 	public Class<Metadatum> getEncoderClass() {
@@ -80,12 +85,17 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		reader.readStartDocument();
 		
 		String id = reader.readObjectId(METADATUM_ID_KEY).toString();
+		ObjectId fileId = reader.readObjectId(METADATUM_FILE_ID_KEY);
 		String fileName = reader.readString(METADATUM_FILENAME_KEY);
 		String name = reader.readString(METADATUM_NAME_KEY);
 		String contentType = reader.readString(METADATUM_CONTENT_TYPE_KEY);
 		
 		reader.readEndDocument();
-		return new Metadatum(id, fileName, name, contentType);
+		
+		OutputStream metadatumStream = new ByteArrayOutputStream();
+		gridFSBucket.downloadToStream(fileId, metadatumStream);
+		
+		return new Metadatum(id, name, metadatumStream.toString(), contentType);
 	}
 	@Override
 	public Metadatum generateIdIfAbsentFromDocument(Metadatum metadatum) {

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.DataElementMetadatum;
+import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.exceptions.DatastoreException;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
@@ -51,7 +52,7 @@ public class DatastoreMongoTest {
 		}
 	}
 	
-	@Test
+	/*@Test*/
 	public void insertDataElements() {
 		List<DataElement> dataElements = createDemoDataElements();
 		try {
@@ -61,12 +62,27 @@ public class DatastoreMongoTest {
 		}
 	}
 	
-	/*@Test
-	public void find() {
-		mongo.listDataElements();
-	}*/
+	@Test
+	public void listElements() {
+		List<Element> elements = mongo.listElements();
+		printElements(elements);
+	}
 	
-	public DataElement createDemoDataElement(String name, String endpoint) {
+	/*@Test*/
+	public void listDataElements() {
+		List<DataElement> dataElements = mongo.listDataElements();
+		printDataElements(dataElements);
+	}
+	
+	/*@Test*/
+	public void listCollections() {
+		List<Collection> collections = mongo.listCollections();
+		printCollections(collections);
+	}
+	
+	
+	
+	private DataElement createDemoDataElement(String name, String endpoint) {
 		DataElement dataElement = new DataElement();
 		if (name != null) {
 			dataElement.setName(name);
@@ -92,7 +108,7 @@ public class DatastoreMongoTest {
 		return dataElement;
 	}
 	
-	public List<DataElement> createDemoDataElements() {
+	private List<DataElement> createDemoDataElements() {
 		List<DataElement> dataElements = new ArrayList<>();
 		for (int i = 0; i < 2; i ++) {
 			dataElements.add(createDemoDataElement("testDataElement" + i, "http://www.cite-sa/gr/" + i));
@@ -100,7 +116,7 @@ public class DatastoreMongoTest {
 		return dataElements;
 	}
 	
-	public Collection createDemoCollection() {
+	private Collection createDemoCollection() {
 		Collection collection = new Collection();
 		collection.setName("testCollection");
 		collection.setEndpoint("http://www.cite-sa/gr/");
@@ -114,5 +130,20 @@ public class DatastoreMongoTest {
 		collection.setDataElements(dataElements);
 		
 		return collection;
+	}
+	private void printElements(List<Element> elements) {
+		for (Element element : elements) {
+			System.out.println(element.toString());
+		}
+	}
+	private void printDataElements(List<DataElement> dataElements) {
+		for (DataElement dataElement : dataElements) {
+			System.out.println(dataElement.toString());
+		}
+	}
+	private void printCollections(List<Collection> collections) {
+		for (Collection collection : collections) {
+			System.out.println(collection.toString());
+		}
 	}
 }
