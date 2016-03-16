@@ -63,6 +63,26 @@ public class DatastoreMongoTest {
 	}
 	
 	@Test
+	public void removeDataElement() {
+		DataElement dataElement = mongo.listDataElements().get(0); 
+		try {
+			mongo.remove(dataElement);
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+	
+	/*@Test*/
+	public void findDataElement() {
+		DataElement dataElement = mongo.listDataElements().get(0);
+		try {
+			mongo.remove(dataElement);
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+	
+	/*@Test*/
 	public void listElements() {
 		List<Element> elements = mongo.listElements();
 		printElements(elements);

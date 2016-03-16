@@ -31,6 +31,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private static final String METADATUM_ID_KEY = "_id";
 	private static final String METADATUM_FILENAME_KEY = "fileName";
 	private static final String METADATUM_FILE_ID_KEY = "fileId";
+	private static final String METADATUM_ELEMENT_ID_KEY = "elementId";
 	private static final String METADATUM_NAME_KEY = "name";
 	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
 	
@@ -68,6 +69,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
 					new Document()
+					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
 					.append(METADATUM_NAME_KEY, metadatum.getName())
 					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
 				);

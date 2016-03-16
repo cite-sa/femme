@@ -11,8 +11,8 @@ public class Collection extends Element {
 		dataElements = new ArrayList<>();
 	}
 	
-	public Collection(String id, String name, String endpoint, List<Metadatum> metadata, String systemicMetadata, List<DataElement> dataElements) {
-		super(id, name, endpoint, metadata);
+	public Collection(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata, List<DataElement> dataElements) {
+		super(id, name, endpoint, metadata, systemicMetadata);
 		if (dataElements != null) {
 			this.dataElements = dataElements;
 		} else {

@@ -13,11 +13,11 @@ public class Element {
 
 	private List<Metadatum> metadata;
 
-	private List<SystemicMetadatum> systemicMetadata;
+	private SystemicMetadata systemicMetadata;
 	
 	public Element() {
 		metadata = new ArrayList<>();
-		systemicMetadata = new ArrayList<>();
+		systemicMetadata = new SystemicMetadata();
 	}
 	
 	public Element(String id, String name, String endpoint) {
@@ -25,7 +25,7 @@ public class Element {
 		this.name = name;
 		this.endpoint = endpoint;
 		this.metadata = new ArrayList<>();
-		this.systemicMetadata = new ArrayList<>();
+		systemicMetadata = new SystemicMetadata();
 	}
 	
 	public Element(String id, String name, String endpoint, List<Metadatum> metadata) {
@@ -33,7 +33,15 @@ public class Element {
 		this.name = name;
 		this.endpoint = endpoint;
 		this.metadata = metadata;
-		this.systemicMetadata = new ArrayList<>();
+		systemicMetadata = new SystemicMetadata();
+	}
+	
+	public Element(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata) {
+		this.id = id;
+		this.name = name;
+		this.endpoint = endpoint;
+		this.metadata = metadata;
+		this.systemicMetadata = systemicMetadata;
 	}
 	
 	public String getId() {
@@ -68,11 +76,11 @@ public class Element {
 		this.metadata = metadata;
 	}
 	
-	public List<SystemicMetadatum> getSystemicMetadata() {
+	public SystemicMetadata getSystemicMetadata() {
 		return systemicMetadata;
 	}
 
-	public void setSystemicMetadata(List<SystemicMetadatum> systemicMetadata) {
+	public void setSystemicMetadata(SystemicMetadata systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
 	}
 	@Override
@@ -91,6 +99,9 @@ public class Element {
 			}
 			elementBuilder.append("]\n");
 		}
+		elementBuilder.append("created: " + this.systemicMetadata.getCreated().toString());
+		elementBuilder.append("\n");
+		elementBuilder.append("modified: " + this.systemicMetadata.getModified().toString());
 		elementBuilder.append("\n");
 		return elementBuilder.toString();
 	}

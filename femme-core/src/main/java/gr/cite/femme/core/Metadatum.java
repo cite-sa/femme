@@ -2,13 +2,15 @@ package gr.cite.femme.core;
 
 public class Metadatum {
 
-	String id;
+	private String id;
 	
-	String name;
+	private String elementId;
+	
+	private String name;
 
-	String value;
+	private String value;
 	
-	String contentType;
+	private String contentType;
 	
 	public Metadatum() {
 	}
@@ -24,6 +26,13 @@ public class Metadatum {
 		this.value = value;
 		this.contentType = contentType;
 	}
+	public Metadatum(String id, String elementId, String name, String value, String contentType) {
+		this.id = id;
+		this.elementId = elementId;
+		this.name = name;
+		this.value = value;
+		this.contentType = contentType;
+	}
 	
 	public String getId() {
 		return id;
@@ -31,6 +40,14 @@ public class Metadatum {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public String getElementId() {
+		return elementId;
+	}
+
+	public void setElementId(String elementId) {
+		this.elementId = elementId;
 	}
 
 	public String getName() {

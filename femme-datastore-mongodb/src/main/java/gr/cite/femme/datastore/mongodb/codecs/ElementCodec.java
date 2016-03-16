@@ -18,12 +18,14 @@ import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.core.SystemicMetadata;
 
 public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String ELEMENT_ID_KEY = "_id";
 	private static final String ELEMENT_NAME_KEY = "name";
 	private static final String ELEMENT_ENDPOINT_KEY = "endpoint";
 	private static final String ELEMENT_METADATA_KEY = "metadata";
+	private static final String ELEMENT_SYSTEMIC_METADATA_KEY = "systemicMetadata";
 	
 	private static final String DATA_ELEMENT_DATA_ELEMENT_KEY = "dataElement";
 	private static final String DATA_ELEMENT_COLLECTIONS_KEY = "collections";
@@ -46,8 +48,12 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		}
 		
 		writer.writeObjectId(ELEMENT_ID_KEY, new ObjectId(value.getId()));
-		writer.writeString(ELEMENT_NAME_KEY, value.getName());
-		writer.writeString(ELEMENT_ENDPOINT_KEY, value.getEndpoint());
+		if (value.getName() != null) {
+			writer.writeString(ELEMENT_NAME_KEY, value.getName());
+		}
+		if (value.getEndpoint() != null) {
+			writer.writeString(ELEMENT_ENDPOINT_KEY, value.getEndpoint());
+		}
 		
 		if (value instanceof DataElement) {
 			if (((DataElement) value).getDataElement() != null) {
@@ -63,12 +69,17 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		if (value.getMetadata() != null && value.getMetadata().size() > 0) {
 			writer.writeStartArray(ELEMENT_METADATA_KEY);
 			for (Metadatum metadatum : value.getMetadata()) {
+				metadatum.setElementId(value.getId());
 				encoderContext.encodeWithChildContext(codecRegistry.get(Metadatum.class), writer, metadatum);
 			}
 			writer.writeEndArray();
 		}
 		
 		// TODO : Systemic metadata
+		if (value.getSystemicMetadata() != null) {
+			writer.writeName(ELEMENT_SYSTEMIC_METADATA_KEY);
+			encoderContext.encodeWithChildContext(codecRegistry.get(SystemicMetadata.class), writer, value.getSystemicMetadata());
+		}
 		writer.writeEndDocument();
 	}
 	
@@ -109,6 +120,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	public Element decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null, name = null, endpoint = null;
 		List<Metadatum> metadata = null;
+		SystemicMetadata systemicMetadata =  null;
 		DataElement embeddedDataElement = null;
 		List<Collection> dataElementCollections = null;
 		List<DataElement> collectionDataElements = null;
@@ -132,8 +144,10 @@ public class ElementCodec implements CollectibleCodec<Element> {
         			metadata.add(codecRegistry.get(Metadatum.class).decode(reader, decoderContext));
         		}
         		reader.readEndArray();
-            } else if (fieldName.equals("")) {
-        		// TODO : Systemic metadata
+            } else if (fieldName.equals("systemicMetadata")) {
+            	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+            		systemicMetadata = codecRegistry.get(SystemicMetadata.class).decode(reader, decoderContext);            		
+            	}
             } else if (fieldName.equals(DATA_ELEMENT_DATA_ELEMENT_KEY)) {
             	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		embeddedDataElement = (DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext);            		
@@ -160,9 +174,9 @@ public class ElementCodec implements CollectibleCodec<Element> {
         
         // Element is a collection
         if (isCollection) {
-        	return new Collection(id, name, endpoint, metadata, null, collectionDataElements);
+        	return new Collection(id, name, endpoint, metadata, systemicMetadata, collectionDataElements);
         } else { // Element is a data element
-        	return new DataElement(id, name, endpoint, metadata, null, embeddedDataElement, dataElementCollections);
+        	return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElement, dataElementCollections);
         }
 	}
 
