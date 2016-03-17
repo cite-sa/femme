@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.DataElementMetadatum;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.exceptions.DatastoreException;
@@ -116,7 +115,8 @@ public class DatastoreMongoTest {
 		}
 		
 		List<Metadatum> metadata = new ArrayList<>();
-		metadata.add(new DataElementMetadatum("dc", "<dc><a>test value</a></dc>", "xml"));
+		metadata.add(new Metadatum("dc", "<dc><a>test value 1</a></dc>", "xml"));
+		metadata.add(new Metadatum("cidoc", "<dc><a>test value 2</a></dc>", "xml"));
 		dataElement.setMetadata(metadata);
 		
 		DataElement embeddedDataElement = new DataElement();
@@ -130,7 +130,7 @@ public class DatastoreMongoTest {
 	
 	private List<DataElement> createDemoDataElements() {
 		List<DataElement> dataElements = new ArrayList<>();
-		for (int i = 0; i < 2; i ++) {
+		for (int i = 0; i < 5; i ++) {
 			dataElements.add(createDemoDataElement("testDataElement" + i, "http://www.cite-sa/gr/" + i));
 		}
 		return dataElements;

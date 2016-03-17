@@ -11,9 +11,11 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 
 import gr.cite.femme.core.Element;
+import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
+import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
 
 public class MongoDatastoreClient {
 	private static final String DATABASE_HOST = "localhost:27017";
@@ -23,31 +25,31 @@ public class MongoDatastoreClient {
 
 	private MongoClient client;
 	private MongoDatabase database;
-	private MongoCollection<Element> collection;
-	private GridFSBucket gridFSBucket;
+	private MongoCollection<Element> elementCollection;
+	private MetadatumGridFS metadatumGridFS;
 
 	public MongoDatastoreClient() {
 		client = new MongoClient(DATABASE_HOST);
 		database = client.getDatabase(DATABASE_NAME);
-		gridFSBucket = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
+		metadatumGridFS = new MetadatumGridFS(GridFSBuckets.create(database, METADATA_BUCKET_NAME));
 
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
 						CodecRegistries.fromProviders(
 								new ElementCodecProvider(),
-								new MetadatumCodecProvider(gridFSBucket),
+								new MetadatumCodecProvider(metadatumGridFS),
 								new SystemicMetadataCodecProvider()),
 				MongoClient.getDefaultCodecRegistry());
 
-		collection = database.getCollection(COLLECTION_NAME, Element.class).withCodecRegistry(codecRegistry);
+		elementCollection = database.getCollection(COLLECTION_NAME, Element.class).withCodecRegistry(codecRegistry);
 	}
 
-	public MongoCollection<Element> getElementsCollection() {
-		return collection;
+	public MongoCollection<Element> getElementCollection() {
+		return elementCollection;
 	}
-
-	public GridFSBucket getGridFSBucket() {
-		return gridFSBucket;
+	
+	public MetadatumGridFS getMetadatumGridFS() {
+		return metadatumGridFS;
 	}
 
 	public void close() {
