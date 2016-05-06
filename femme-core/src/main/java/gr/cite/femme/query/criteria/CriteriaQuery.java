@@ -1,4 +1,4 @@
-package gr.cite.femme.criteria;
+package gr.cite.femme.query.criteria;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface CriteriaQuery<T> {
 
 	T find(String id);
 	
-	T find(T t);
+	List<T> find(T t);
 
 	List<T> find();
 

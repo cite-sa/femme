@@ -19,9 +19,7 @@ public class DataElement extends Element {
 	}
 	public DataElement(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata, DataElement dataElement, List<Collection> collections) {
 		super(id, name, endpoint, metadata, systemicMetadata);
-		if (dataElement != null) {
-			this.dataElement = dataElement;
-		}
+		this.dataElement = dataElement;
 		if (collections != null) {
 			this.collections = collections;
 		} else {
@@ -43,6 +41,14 @@ public class DataElement extends Element {
 
 	public void setCollections(List<Collection> collections) {
 		this.collections = collections;
+	}
+	
+	public void addCollection(Collection collection) {
+		this.collections.add(collection);
+	}
+	
+	public void addCollections(List<Collection> collections) {
+		this.collections.addAll(collections);
 	}
 	
 	@Override

@@ -1,10 +1,6 @@
 package gr.cite.femme.datastore.exceptions;
 
 public class DatastoreException extends Exception {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -31368528254778068L;
 
 	public DatastoreException() {
@@ -26,5 +22,4 @@ public class DatastoreException extends Exception {
 	public DatastoreException(Throwable cause) {
 		super(cause);
 	}
-
 }

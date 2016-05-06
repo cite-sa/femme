@@ -17,7 +17,7 @@ public class Element {
 	
 	public Element() {
 		metadata = new ArrayList<>();
-		systemicMetadata = new SystemicMetadata();
+		/*systemicMetadata = new SystemicMetadata();*/
 	}
 	
 	public Element(String id, String name, String endpoint) {
@@ -40,8 +40,16 @@ public class Element {
 		this.id = id;
 		this.name = name;
 		this.endpoint = endpoint;
-		this.metadata = metadata;
-		this.systemicMetadata = systemicMetadata;
+		if (metadata != null) {
+			this.metadata = metadata;			
+		} else {
+			this.metadata = new ArrayList<>();
+		}
+		if (systemicMetadata != null) {
+			this.systemicMetadata = systemicMetadata;			
+		} else {
+			systemicMetadata = new SystemicMetadata();
+		}
 	}
 	
 	public String getId() {
@@ -86,11 +94,17 @@ public class Element {
 	@Override
 	public String toString() {
 		StringBuilder elementBuilder = new StringBuilder();
-		elementBuilder.append("ID: " + this.id);
+		if (this.id != null) {
+			elementBuilder.append("ID: " + this.id);			
+		}
 		elementBuilder.append("\n");
-		elementBuilder.append("name: " + this.name);
+		if (this.name != null) {
+			elementBuilder.append("name: " + this.name);			
+		}
 		elementBuilder.append("\n");
-		elementBuilder.append("endpoint: " + this.endpoint);
+		if (this.endpoint != null) {
+			elementBuilder.append("endpoint: " + this.endpoint);			
+		}
 		elementBuilder.append("\n");
 		if (this.metadata != null) {
 			elementBuilder.append("metadata: [\n");
@@ -99,9 +113,11 @@ public class Element {
 			}
 			elementBuilder.append("]\n");
 		}
-		elementBuilder.append("created: " + this.systemicMetadata.getCreated().toString());
-		elementBuilder.append("\n");
-		elementBuilder.append("modified: " + this.systemicMetadata.getModified().toString());
+		if (this.systemicMetadata != null) {
+			elementBuilder.append("created: " + this.systemicMetadata.getCreated().toString());
+			elementBuilder.append("\n");
+			elementBuilder.append("modified: " + this.systemicMetadata.getModified().toString());
+		}
 		elementBuilder.append("\n");
 		return elementBuilder.toString();
 	}

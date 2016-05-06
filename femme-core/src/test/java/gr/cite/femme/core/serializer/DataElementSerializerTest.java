@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.DataElementMetadatum;
+import gr.cite.femme.core.Metadatum;
 
 public class DataElementSerializerTest {
 
@@ -22,7 +22,7 @@ public class DataElementSerializerTest {
 		dataElement.setId(UUID.randomUUID().toString());
 		dataElement.setEndpoint(UUID.randomUUID().toString());
 		dataElement.setMetadata(
-				Arrays.asList(new DataElementMetadatum(UUID.randomUUID().toString(), "test", "testValue", "xml")));
+				Arrays.asList(new Metadatum(UUID.randomUUID().toString(), "test", "testValue", "xml")));
 		
 		try {
 			String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataElement);

@@ -1,4 +1,4 @@
-package gr.cite.femme.criteria;
+package gr.cite.femme.query.criteria;
 
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
@@ -9,7 +9,7 @@ public interface Where<T> {
 
 	<S extends Metadatum> WhereBuilder<T> expression(S metadatum);
 
-	<S extends Metadatum> WhereBuilder<T> exists(S metadatum);
+	/*<S extends Metadatum> WhereBuilder<T> exists(S metadatum);*/
 
 	<S extends Metadatum> WhereBuilder<T> isParentOf(S metadatum) throws UnsupportedQueryOperationException;
 
