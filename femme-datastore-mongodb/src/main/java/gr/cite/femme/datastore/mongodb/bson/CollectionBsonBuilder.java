@@ -36,10 +36,10 @@ public class CollectionBsonBuilder {
 		return this;
 	}
 	
-	/*public CollectionBsonBuilder metadata(List<Metadatum> metadata) {
+	public CollectionBsonBuilder metadata(List<Metadatum> metadata) {
 		this.metadata = metadata;
 		return this;
-	}*/
+	}
 	
 	public CollectionBsonBuilder systemicMetadata(SystemicMetadata systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
@@ -56,7 +56,7 @@ public class CollectionBsonBuilder {
 		collectionObj.setId(id);
 		collectionObj.setName(name);
 		collectionObj.setEndpoint(endpoint);
-		collectionObj.setMetadata(null);
+		collectionObj.setMetadata(metadata);
 		collectionObj.setSystemicMetadata(systemicMetadata);
 		collectionObj.setDataElements(dataElements);
 		

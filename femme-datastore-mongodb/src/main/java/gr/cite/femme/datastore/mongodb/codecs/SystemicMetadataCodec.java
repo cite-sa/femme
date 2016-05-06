@@ -26,15 +26,15 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	public void encode(BsonWriter writer, SystemicMetadata value, EncoderContext encoderContext) {
 		writer.writeStartDocument();
 		
-		if (!documentHasId(value)) {
-			generateIdIfAbsentFromDocument(value);
+		if (encoderContext.isEncodingCollectibleDocument()) {
+			if (!documentHasId(value)) {
+				generateIdIfAbsentFromDocument(value);
+			}
+			
+			writer.writeObjectId(SYSTEMIC_METADATA_ID_KEY, new ObjectId(value.getId()));
+			writer.writeDateTime(SYSTEMIC_METADATA_CREATED_KEY, Instant.now().toEpochMilli());
+			writer.writeDateTime(SYSTEMIC_METADATA_MODIFIED_KEY, Instant.now().toEpochMilli());
 		}
-		
-		
-		writer.writeObjectId(SYSTEMIC_METADATA_ID_KEY, new ObjectId(value.getId()));
-		writer.writeDateTime(SYSTEMIC_METADATA_CREATED_KEY, value.getCreated().toEpochMilli());
-		writer.writeDateTime(SYSTEMIC_METADATA_MODIFIED_KEY, value.getModified().toEpochMilli());
-		
 		writer.writeEndDocument();
 	}
 	

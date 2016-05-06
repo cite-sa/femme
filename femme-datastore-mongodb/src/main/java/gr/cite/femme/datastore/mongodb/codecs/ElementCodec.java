@@ -33,6 +33,13 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String COLLECTION_DATA_ELEMENTS_KEY = "dataElements";
 	/*private static final String COLLECTION_IS_COLLECTION_KEY = "isCollection";*/
 	
+	private static final String METADATUM_ID_KEY = "_id";
+	private static final String METADATUM_FILENAME_KEY = "fileName";
+	private static final String METADATUM_FILE_ID_KEY = "fileId";
+	private static final String METADATUM_ELEMENT_ID_KEY = "elementId";
+	private static final String METADATUM_NAME_KEY = "name";
+	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
+	
 	private CodecRegistry codecRegistry;
 	
 	public ElementCodec(CodecRegistry codecRegistry) {
@@ -43,11 +50,15 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	public void encode(BsonWriter writer, Element value, EncoderContext encoderContext) {
 		writer.writeStartDocument();
 		
+		/*if (encoderContext.isEncodingCollectibleDocument()) {*/
 		if (!documentHasId(value)) {
 			generateIdIfAbsentFromDocument(value);
-		}
+		}			
+		/*}*/
 		
-		writer.writeObjectId(ELEMENT_ID_KEY, new ObjectId(value.getId()));
+		if (value.getId() != null) {			
+			writer.writeObjectId(ELEMENT_ID_KEY, new ObjectId(value.getId()));
+		}
 		if (value.getName() != null) {
 			writer.writeString(ELEMENT_NAME_KEY, value.getName());
 		}
@@ -56,23 +67,69 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		}
 		
 		if (value instanceof DataElement) {
-			if (((DataElement) value).getDataElement() != null) {
-				writeEmdeddedDataElement(writer, encoderContext, (DataElement) value);
+			DataElement dataElement = (DataElement) value;
+			if (dataElement.getDataElement() != null) {
+				writeEmdeddedDataElement(writer, encoderContext, dataElement);
 			}
-			if (((DataElement) value).getCollections() != null) {
-				writeEmbeddedCollections(writer, encoderContext, (DataElement) value);
+			if (dataElement.getCollections() != null) {
+				/*writeEmbeddedCollections(writer, encoderContext, (DataElement) value);*/
+				
+				writer.writeName(DATA_ELEMENT_COLLECTIONS_KEY);
+				writer.writeStartArray();
+				for (Collection collection: dataElement.getCollections()) {
+					writer.writeStartDocument();
+					if (!documentHasId(collection)) {
+						generateIdIfAbsentFromDocument(collection);
+					}
+					writer.writeObjectId(ELEMENT_ID_KEY, new ObjectId(collection.getId()));
+					/*writer.writeString(ELEMENT_NAME_KEY, collection.getName());*/
+					writer.writeEndDocument();
+				}
+				writer.writeEndArray();
 			}
 		} else if (value instanceof Collection) {
-			writeEmdeddedDataElements(writer, encoderContext, (Collection) value);
+			/*writeEmdeddedDataElements(writer, encoderContext, (Collection) value);*/
+			
+			Collection collection = (Collection) value;
+			if (collection.getDataElements() != null) {
+				writer.writeName(COLLECTION_DATA_ELEMENTS_KEY);
+				writer.writeStartArray();
+				for (DataElement dataElement: collection.getDataElements()) {
+					writer.writeStartDocument();
+					if (!documentHasId(dataElement)) {
+						generateIdIfAbsentFromDocument(dataElement);
+					}
+					writer.writeObjectId(ELEMENT_ID_KEY, new ObjectId(dataElement.getId()));
+					/*writer.writeString(ELEMENT_NAME_KEY, dataElement.getName());*/
+					writer.writeEndDocument();
+				}
+				writer.writeEndArray();
+			}
 		}
 		
-		if (value.getMetadata() != null && value.getMetadata().size() > 0) {
+		/*if (value.getMetadata() != null && value.getMetadata().size() > 0) {
+			if (!encoderContext.isEncodingCollectibleDocument()) {
+				writer.writeName(ELEMENT_METADATA_KEY);
+				writer.writeStartDocument();
+				writer.writeName("$elemMatch");
+			}*/
+		if (value.getMetadata() != null) {
 			writer.writeStartArray(ELEMENT_METADATA_KEY);
+		
 			for (Metadatum metadatum : value.getMetadata()) {
-				metadatum.setElementId(value.getId());
+				if (value.getId() != null) {
+					metadatum.setElementId(value.getId());
+				}
+			
 				encoderContext.encodeWithChildContext(codecRegistry.get(Metadatum.class), writer, metadatum);
 			}
-			writer.writeEndArray();
+			/*writeMetadata(writer, metadatum, encoderContext);*/
+			
+			/*if (!encoderContext.isEncodingCollectibleDocument()) {
+				writer.writeEndDocument();
+			} else {*/
+				writer.writeEndArray();
+			/*}*/
 		}
 		
 		// TODO : Systemic metadata
@@ -80,6 +137,33 @@ public class ElementCodec implements CollectibleCodec<Element> {
 			writer.writeName(ELEMENT_SYSTEMIC_METADATA_KEY);
 			encoderContext.encodeWithChildContext(codecRegistry.get(SystemicMetadata.class), writer, value.getSystemicMetadata());
 		}
+		writer.writeEndDocument();
+	}
+	
+	private void writeMetadata(BsonWriter writer, Metadatum metadatum, EncoderContext encoderContext) {
+		writer.writeStartDocument();
+
+		/*if (!documentHasId(value)) {
+			generateIdIfAbsentFromDocument(value);
+		}*/
+		/*if (encoderContext.isEncodingCollectibleDocument()) {*/
+			
+		/*}*/
+		if (metadatum.getId() != null) {
+			writer.writeObjectId(METADATUM_FILE_ID_KEY, new ObjectId(metadatum.getId()));			
+		} else {
+			writer.writeObjectId(METADATUM_ID_KEY, new ObjectId());
+		}
+		
+		
+		/* writer.writeString(METADATUM_FILENAME_KEY, file.getSecond()); */
+		if (metadatum.getName() != null) {
+			writer.writeString(METADATUM_NAME_KEY, metadatum.getName());
+		}
+		if (metadatum.getContentType() != null) {
+			writer.writeString(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType());
+		}
+
 		writer.writeEndDocument();
 	}
 	
@@ -141,7 +225,10 @@ public class ElementCodec implements CollectibleCodec<Element> {
             	metadata = new ArrayList<>();
         		reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-        			metadata.add(codecRegistry.get(Metadatum.class).decode(reader, decoderContext));
+        			Metadatum metadatum = codecRegistry.get(Metadatum.class).decode(reader, decoderContext);
+        			metadatum.setElementId(id);
+        			metadata.add(metadatum);
+        			/*metadata.add(codecRegistry.get(Metadatum.class).decode(reader, decoderContext));*/
         		}
         		reader.readEndArray();
             } else if (fieldName.equals("systemicMetadata")) {
@@ -165,6 +252,13 @@ public class ElementCodec implements CollectibleCodec<Element> {
             	reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
         			collectionDataElements.add((DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext));
+        			/*String embeddedDataElementFieldName = reader.readName();
+        			if (embeddedDataElementFieldName.equals(ELEMENT_ID_KEY)) {
+        				dataElement.setId(reader.readObjectId().toString()); 				
+        			} else if (embeddedDataElementFieldName.equals(ELEMENT_NAME_KEY)) {
+        				dataElement.setName(reader.readString());
+        			}
+        			collectionDataElements.add(dataElement);*/
         		}
         		reader.readEndArray();
             }
