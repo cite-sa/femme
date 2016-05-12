@@ -2,6 +2,8 @@ package gr.cite.femme.query;
 
 import java.util.List;
 
+import gr.cite.femme.core.Collection;
+import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 

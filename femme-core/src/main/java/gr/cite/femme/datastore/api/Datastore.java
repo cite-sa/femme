@@ -11,7 +11,7 @@ import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.IQueryOptions;
 
-public interface Datastore  {
+public interface Datastore<R extends ICriteria, S extends IQuery<R>>  {
 	<T extends Element> T insert(T element) throws DatastoreException;
 	
 	<T extends Element> List<T> insert(List<T> elements) throws DatastoreException;
@@ -24,15 +24,9 @@ public interface Datastore  {
 
 	void remove(Element dataElement, Collection collection) throws DatastoreException;
 	
-	<T extends Element> void delete(ICriteria criteria, Class<T> elementSubtype) throws DatastoreException, IllegalElementSubtype;
+	<T extends Element> void delete(R criteria, Class<T> elementSubtype) throws DatastoreException, IllegalElementSubtype;
 	
 	public <T extends Element> Element find(String id, Class<T> elementSubtype) throws IllegalElementSubtype;
 
-	public <T extends Element> IQueryOptions<T> find(IQuery query, Class<T> elementSubtype) throws IllegalElementSubtype;
-	
-	List<Element> listElements() throws DatastoreException;
-	
-	List<DataElement> listDataElements() throws DatastoreException;
-	
-	List<Collection> listCollections() throws DatastoreException;
+	public <T extends Element> IQueryOptions<T> find(S query, Class<T> elementSubtype) throws IllegalElementSubtype;
 }
