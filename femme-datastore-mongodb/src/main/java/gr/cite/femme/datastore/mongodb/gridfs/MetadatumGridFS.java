@@ -105,7 +105,9 @@ public class MetadatumGridFS {
 		
 		MongoCursor<Metadatum> cursor = null;
 		try {
-			cursor = gridFSBucket.find(buildMetadataFromDocument(metadatum)).map(new Function<GridFSFile, Metadatum>() {
+			cursor = gridFSBucket.find(
+					new Document().append(METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY, new ObjectId(elementId))
+					).map(new Function<GridFSFile, Metadatum>() {
 				@Override
 				public Metadatum apply(GridFSFile t) {
 					Metadatum metadatum = new Metadatum();
@@ -236,6 +238,7 @@ public class MetadatumGridFS {
 		if (metadatum.getContentType() != null) {
 			metadataDocument.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType());
 		}
+		System.out.println(new Document(METADATUM_METADATA_KEY, metadataDocument).toJson());
 		return new Document(METADATUM_METADATA_KEY, metadataDocument);
 	}
 }

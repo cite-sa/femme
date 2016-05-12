@@ -3,6 +3,7 @@ package gr.cite.femme.datastore.mongodb.codecs;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.BsonArray;
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
@@ -241,11 +242,37 @@ public class ElementCodec implements CollectibleCodec<Element> {
             	}
             } else if (fieldName.equals(DATA_ELEMENT_COLLECTIONS_KEY)) {
             	dataElementCollections = new ArrayList<>();
-            	reader.readStartArray();
+            	
+            	/*reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
         			dataElementCollections.add((Collection) codecRegistry.get(Element.class).decode(reader, decoderContext));
         		}
+        		reader.readEndArray();*/
+            	
+        		
+            	
+            	
+            	reader.readStartArray();
+            	
+            	
+                while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+                	/*System.out.println(reader.readBsonType());*/
+                	reader.readStartDocument();
+                	/*System.out.println(reader.readObjectId().toString());*/
+                    String collectionFieldName = reader.readName();
+                    
+                	if (collectionFieldName.equals(ELEMENT_ID_KEY)) {
+        				Collection collection = new Collection();
+        				collection.setId(reader.readObjectId().toString());
+        				dataElementCollections.add(collection);
+        			}
+                	reader.readEndDocument();
+                }
+                /*System.out.println(reader.readBsonType());*/
+        		
         		reader.readEndArray();
+        		
+        		
             } else if (fieldName.equals(COLLECTION_DATA_ELEMENTS_KEY)) {
             	isCollection = true;
             	collectionDataElements = new ArrayList<>();

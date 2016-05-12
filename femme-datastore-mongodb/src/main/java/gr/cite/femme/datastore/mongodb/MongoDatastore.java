@@ -36,10 +36,11 @@ import gr.cite.femme.datastore.mongodb.utils.ElementFields;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.IQueryOptions;
+import gr.cite.femme.query.mongodb.Criteria;
 import gr.cite.femme.query.mongodb.Query;
 import gr.cite.femme.query.mongodb.QueryOptions;
 
-public class MongoDatastore implements Datastore {
+public class MongoDatastore implements Datastore<Criteria, Query>  {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDatastore.class);
 
 	MongoDatastoreClient mongoClient;
@@ -65,7 +66,7 @@ public class MongoDatastore implements Datastore {
 		return collections;
 	}
 
-	public MongoCollection<DataElement> getElements() {
+	public MongoCollection<DataElement> getDataElements() {
 		return dataElements;
 	}
 
@@ -279,7 +280,7 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public <T extends Element> void delete(ICriteria criteria, Class<T> elementSubtype)
+	public <T extends Element> void delete(Criteria criteria, Class<T> elementSubtype)
 			throws DatastoreException, IllegalElementSubtype {
 		int deletedCount = 0;
 		String subtype = elementSubtype.getSimpleName();
@@ -292,7 +293,7 @@ public class MongoDatastore implements Datastore {
 			if (element instanceof DataElement) {
 				try {
 					logger.debug("Delete DataElement " + element.getId());
-					dataElements.deleteOne(Filters.eq(ElementFields.id(), element.getId()));
+					dataElements.deleteOne(Filters.eq(ElementFields.id(), new ObjectId(element.getId())));
 					logger.debug("Delete completed");
 					deletedCount++;
 				} catch(MongoException e) {
@@ -351,16 +352,18 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public <T extends Element> IQueryOptions<T> find(IQuery query, Class<T> elementSubtype)
+	public <T extends Element> IQueryOptions<T> find(Query query, Class<T> elementSubtype)
 			throws IllegalElementSubtype {
-		String subtype = elementSubtype.getSimpleName();
+		return new QueryOptions<T>(query, this, elementSubtype);
+		
+		/*String subtype = elementSubtype.getSimpleName();
 		if (subtype.equals("DataElement")) {
-			return (QueryOptions<T>) new QueryOptions<DataElement>(dataElements, metadatumGridfs, query);
+			return (QueryOptions<T>) new QueryOptions<DataElement>(query, this);
 		} else if (subtype.equals("Collection")) {
-			return (QueryOptions<T>) new QueryOptions<Collection>(collections, metadatumGridfs, query);
+			return (QueryOptions<T>) new QueryOptions<Collection>(query, this);
 		} else {
 			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
-		}
+		}*/
 	}
 
 	/*
@@ -393,55 +396,6 @@ public class MongoDatastore implements Datastore {
 
 	}
 
-	@Override
-	public List<Element> listElements() throws DatastoreException {
-		/*
-		 * List<Element> elements = new ArrayList<>(); MongoCursor<Element>
-		 * cursor = elementCollection.find().iterator(); try { while
-		 * (cursor.hasNext()) { Element elementFromDB = cursor.next(); for
-		 * (Metadatum metadatum : elementFromDB.getMetadata()) { Metadatum
-		 * gridFSDownload = metadatumGridfs.download(metadatum.getId());
-		 * metadatum.setValue(gridFSDownload.getValue()); }
-		 * elements.add(elementFromDB); } } catch (DatastoreException e) { throw
-		 * e; } finally { cursor.close(); } return elements;
-		 */
-		return null;
-	}
-
-	@Override
-	public List<DataElement> listDataElements() throws DatastoreException {
-		/*
-		 * List<DataElement> dataElements = new ArrayList<>();
-		 * MongoCursor<Element> cursor =
-		 * elementCollection.find(Filters.exists("collections",
-		 * true)).iterator(); try { while (cursor.hasNext()) { DataElement
-		 * dataElementFromDB = (DataElement) cursor.next(); for (Metadatum
-		 * metadatum : dataElementFromDB.getMetadata()) { try { Metadatum
-		 * gridFSDownload = metadatumGridfs.download(metadatum.getId());
-		 * metadatum.setValue(gridFSDownload.getValue()); } catch
-		 * (DatastoreException e) { throw e; } }
-		 * dataElements.add(dataElementFromDB); } } finally { cursor.close(); }
-		 * return dataElements;
-		 */
-		return null;
-	}
-
-	@Override
-	public List<Collection> listCollections() throws DatastoreException {
-		/*
-		 * List<Collection> collections = new ArrayList<>();
-		 * MongoCursor<Element> cursor =
-		 * elementCollection.find(Filters.exists("collections",
-		 * false)).iterator(); try { while (cursor.hasNext()) { Collection
-		 * collectionFromDB = (Collection) cursor.next(); for (Metadatum
-		 * metadatum : collectionFromDB.getMetadata()) { Metadatum
-		 * gridFSDownload = metadatumGridfs.download(metadatum.getId());
-		 * metadatum.setValue(gridFSDownload.getValue()); }
-		 * collections.add(collectionFromDB); } } catch (DatastoreException e) {
-		 * throw e; } finally { cursor.close(); } return collections;
-		 */
-		return null;
-	}
 
 	/*
 	 * private ElementBson buildElementBson(Element element) { ElementBson

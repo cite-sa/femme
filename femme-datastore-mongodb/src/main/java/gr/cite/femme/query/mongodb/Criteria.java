@@ -7,12 +7,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.datastore.mongodb.utils.ElementFields;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IWhere;
 
 public class Criteria implements ICriteria {
-	private IWhere where;
+	private Where where;
 	
 	private Map<String, Object> criteria = new LinkedHashMap<String, Object>();
 	private String key = null;
@@ -21,6 +25,8 @@ public class Criteria implements ICriteria {
 	Map<String, Object> orMap;
 	private List<Map<String, Object>> orList;
 	
+	private boolean collectionsResolved = true;
+	private boolean dataElementsResolved = true;
 	
 	
 	public Criteria() {
@@ -32,11 +38,27 @@ public class Criteria implements ICriteria {
 		key = field;
 	}
 	
+	public boolean isCollectionsResolved() {
+		return collectionsResolved;
+	}
+
+	public void resolveCollections() {
+		this.collectionsResolved = true;
+	}
+	
+	public boolean isDataElementsResolved() {
+		return dataElementsResolved;
+	}
+
+	public void resolveDataElements() {
+		this.dataElementsResolved = true;
+	}
+	
 	public static Criteria query() {
 		return new Criteria();
 	}
 	@Override
-	public IWhere where(String elementField) throws InvalidCriteriaQueryOperation {
+	public Where where(String elementField) throws InvalidCriteriaQueryOperation {
 		if (!criteria.isEmpty()) {
 			throw new InvalidCriteriaQueryOperation("Where is not allowed");
 		}
@@ -45,28 +67,13 @@ public class Criteria implements ICriteria {
 	}
 	
 	@Override
-	public IWhere and(String elementField) throws InvalidCriteriaQueryOperation {
+	public Where and(String elementField) throws InvalidCriteriaQueryOperation {
 		if (criteria.containsKey(elementField)) {
 			throw new InvalidCriteriaQueryOperation("And is not allowed on same field");
 		}
 		key = elementField;
 		return where;
 	}
-
-	/*public IWhere or(String elementField) {
-		if (!or) {
-			or = true;
-			orList = new ArrayList<>();
-			
-			criteria.put("$or", orList);
-			
-			key = elementField;
-		} else {
-			key = elementField;
-		}
-		
-		return where;
-	}*/
 
 	@Override
 	public ICriteria andOperator(ICriteria ... criterias) {
@@ -97,6 +104,63 @@ public class Criteria implements ICriteria {
 		criteria.put("$addToSet", newField);
 		return this;
 	}
+	
+	@Override
+	public ICriteria inCollection(List<String> collectionIds) {
+		Map<String, Object> collections = new LinkedHashMap<>();
+		collections.put("$in", 
+				collectionIds.stream().map(new Function<String, Document>() {
+
+					@Override
+					public Document apply(String collectionId) {
+						return new Document().append(ElementFields.id(), new ObjectId(collectionId));
+					}
+				}).collect(Collectors.toList())
+				);
+		criteria.put("collections", collections);
+		
+		collectionsResolved = true;
+		return this;
+	}
+	
+	@Override
+	public ICriteria inCollection(ICriteria collectionCriteria) {
+		Map<String, Object> collections = new LinkedHashMap<>();
+		collections.put("$in", collectionCriteria);
+		criteria.put("collections", collections);
+		
+		collectionsResolved = false;
+		return this;
+	}
+	
+	@Override
+	public ICriteria hasDataElements(List<String> dataElementIds) {
+		Map<String, Object> dataElements = new LinkedHashMap<>();
+		dataElements.put("$in", 
+				dataElementIds.stream().map(new Function<String, Document>() {
+
+					@Override
+					public Document apply(String collectionId) {
+						return new Document().append(ElementFields.id(), new ObjectId(collectionId));
+					}
+				}).collect(Collectors.toList())
+				);
+		criteria.put("dataElements", dataElements);
+		
+		dataElementsResolved = true;
+		return this;
+	}
+	
+	@Override
+	public ICriteria hasDataElements(ICriteria dataElementCriteria) {
+		Map<String, Object> dataElements = new LinkedHashMap<>();
+		dataElements.put("$in", dataElementCriteria);
+		criteria.put("dataElements", dataElements);
+		
+		dataElementsResolved = false;
+		return this;
+	}
+	
 	@Override
 	public Map<String, Object> getCriteria() {
 		return criteria;

@@ -4,10 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IWhere;
 
-public class Where implements IWhere {
+public class Where implements IWhere<Criteria> {
 	Criteria criteria;
 
 	public Where() {
@@ -19,13 +18,13 @@ public class Where implements IWhere {
 	}
 	
 	@Override
-	public ICriteria eq(Object value) {
+	public Criteria eq(Object value) {
 		criteria.setValue(value);
 		return criteria;
 	}
 
 	@Override
-	public ICriteria gt(Object value) {
+	public Criteria gt(Object value) {
 		Map<String, Object> gtMap = new LinkedHashMap<>();
 		gtMap.put("$gt", value);
 		criteria.setValue(gtMap);
@@ -33,7 +32,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria gte(Object value) {
+	public Criteria gte(Object value) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("$gte", value);
 		criteria.setValue(map);
@@ -41,7 +40,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria lt(Object value) {
+	public Criteria lt(Object value) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("$lt", value);
 		criteria.setValue(map);
@@ -49,7 +48,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria lte(Object value) {
+	public Criteria lte(Object value) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("$lte", value);
 		criteria.setValue(map);
@@ -57,7 +56,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria ne(Object value) {
+	public Criteria ne(Object value) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("$ne", value);
 		criteria.setValue(map);
@@ -65,7 +64,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria in(List<Object> array) {
+	public Criteria in(List<Object> array) {
 		Map<String, List<Object>> map = new LinkedHashMap<>();
 		map.put("$in", array);
 		criteria.setValue(map);
@@ -73,7 +72,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria nin(List<Object> array) {
+	public Criteria nin(List<Object> array) {
 		Map<String, List<Object>> map = new LinkedHashMap<>();
 		map.put("$nin", array);
 		criteria.setValue(map);
@@ -81,7 +80,7 @@ public class Where implements IWhere {
 	}
 
 	@Override
-	public ICriteria exists(boolean exists) {
+	public Criteria exists(boolean exists) {
 		// TODO Auto-generated method stub
 		return null;
 	}
