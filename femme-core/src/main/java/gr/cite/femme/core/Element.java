@@ -16,8 +16,8 @@ public class Element {
 	private SystemicMetadata systemicMetadata;
 	
 	public Element() {
-		metadata = new ArrayList<>();
-		/*systemicMetadata = new SystemicMetadata();*/
+		this.metadata = new ArrayList<>();
+		this.systemicMetadata = new SystemicMetadata();
 	}
 	
 	public Element(String id, String name, String endpoint) {
@@ -48,7 +48,7 @@ public class Element {
 		if (systemicMetadata != null) {
 			this.systemicMetadata = systemicMetadata;			
 		} else {
-			systemicMetadata = new SystemicMetadata();
+			this.systemicMetadata = new SystemicMetadata();
 		}
 	}
 	
@@ -114,9 +114,14 @@ public class Element {
 			elementBuilder.append("]\n");
 		}
 		if (this.systemicMetadata != null) {
-			elementBuilder.append("created: " + this.systemicMetadata.getCreated().toString());
+			if (this.systemicMetadata.getCreated() != null) {
+				elementBuilder.append("created: " + this.systemicMetadata.getCreated().toString());
+			}
 			elementBuilder.append("\n");
-			elementBuilder.append("modified: " + this.systemicMetadata.getModified().toString());
+			if (this.systemicMetadata.getModified() != null) {
+				elementBuilder.append("modified: " + this.systemicMetadata.getModified().toString());
+			}
+			
 		}
 		elementBuilder.append("\n");
 		return elementBuilder.toString();

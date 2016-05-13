@@ -4,35 +4,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataElement extends Element {
-	
-	private DataElement dataElement;
+
+	private List<DataElement> dataElements;
 
 	private List<Collection> collections;
-	
+
 	public DataElement() {
 		super();
-		collections = new ArrayList<>();
+		
+		this.dataElements = new ArrayList<>();
+		this.collections = new ArrayList<>();
 	}
+
 	public DataElement(String id, String name, String endpoint) {
 		super(id, name, endpoint);
-		collections = new ArrayList<>();
+		
+		this.dataElements = new ArrayList<>();
+		this.collections = new ArrayList<>();
 	}
-	public DataElement(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata, DataElement dataElement, List<Collection> collections) {
+
+	public DataElement(String id, String name, String endpoint, List<Metadatum> metadata,
+			SystemicMetadata systemicMetadata, List<DataElement> dataElements, List<Collection> collections) {
 		super(id, name, endpoint, metadata, systemicMetadata);
-		this.dataElement = dataElement;
+		
+		if (dataElements != null) {
+			this.dataElements = dataElements;
+		} else {
+			this.dataElements = new ArrayList<>();
+		}
+		
 		if (collections != null) {
 			this.collections = collections;
 		} else {
 			this.collections = new ArrayList<>();
 		}
 	}
-	
-	public DataElement getDataElement() {
-		return dataElement;
+
+	public List<DataElement> getDataElements() {
+		return dataElements;
 	}
 
-	public void setDataElement(DataElement dataElement) {
-		this.dataElement = dataElement;
+	public void setDataElements(List<DataElement> dataElements) {
+		this.dataElements = dataElements;
 	}
 
 	public List<Collection> getCollections() {
@@ -42,20 +55,20 @@ public class DataElement extends Element {
 	public void setCollections(List<Collection> collections) {
 		this.collections = collections;
 	}
-	
+
 	public void addCollection(Collection collection) {
 		this.collections.add(collection);
 	}
-	
+
 	public void addCollections(List<Collection> collections) {
 		this.collections.addAll(collections);
 	}
-	
+
 	@Override
 	public String toString() {
 		String element = super.toString();
-		if (this.dataElement != null) {
-			element += "dataElement: {\n" + this.dataElement.toString() + "}";
+		for (DataElement dataElement: this.dataElements) {
+			element += "dataElements: {\n" + dataElement.toString() + "}";
 		}
 		return element;
 	}
