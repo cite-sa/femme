@@ -6,10 +6,10 @@ import java.util.List;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
-import gr.cite.femme.criteria.Where;
-import gr.cite.femme.criteria.WhereBuilder;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
+import gr.cite.femme.query.criteria.Where;
+import gr.cite.femme.query.criteria.WhereBuilder;
 
 public class PrintCriteriaQuery<T extends DataElement> implements CriteriaQuery<T> {
 
@@ -32,7 +32,7 @@ public class PrintCriteriaQuery<T extends DataElement> implements CriteriaQuery<
 	}
 
 	@Override
-	public T find(DataElement t) {
+	public List<T> find(DataElement t) {
 		System.out.println("query: " + query);
 		return null;
 	}
@@ -75,11 +75,11 @@ public class PrintCriteriaQuery<T extends DataElement> implements CriteriaQuery<
 			return whereBuilder;
 		}
 
-		@Override
+		/*@Override
 		public <S extends Metadatum> WhereBuilder<T> exists(S metadatum) {
 			query.append(" exists " + metadatum.getName());
 			return whereBuilder;
-		}
+		}*/
 
 		@Override
 		public <S extends Metadatum> WhereBuilder<T> isParentOf(S metadatum)

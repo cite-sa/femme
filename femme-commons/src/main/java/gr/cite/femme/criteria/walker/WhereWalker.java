@@ -1,11 +1,11 @@
 package gr.cite.femme.criteria.walker;
 
 import gr.cite.femme.core.Element;
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
-import gr.cite.femme.criteria.Where;
-import gr.cite.femme.criteria.WhereBuilder;
 import gr.cite.femme.criteria.serializer.WhereSerializer;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
+import gr.cite.femme.query.criteria.Where;
+import gr.cite.femme.query.criteria.WhereBuilder;
 
 /**
  * 
@@ -62,10 +62,10 @@ public class WhereWalker<T, S> {
 
 			break;
 
-		case EXISTS:
+		/*case EXISTS:
 			whereBuilder = datastoreWhere.exists(whereSerializer.getMetadatum());
 
-			break;
+			break;*/
 
 		case IS_PARENT_OF:
 			if (whereSerializer.getMetadatum() != null) {

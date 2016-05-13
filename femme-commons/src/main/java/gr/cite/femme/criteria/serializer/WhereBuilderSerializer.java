@@ -1,8 +1,8 @@
 package gr.cite.femme.criteria.serializer;
 
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.Where;
-import gr.cite.femme.criteria.WhereBuilder;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.Where;
+import gr.cite.femme.query.criteria.WhereBuilder;
 
 public class WhereBuilderSerializer<T> implements WhereBuilder<T> {
 

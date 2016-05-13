@@ -1,10 +1,10 @@
 package gr.cite.femme.criteria.walker;
 
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
-import gr.cite.femme.criteria.Where;
-import gr.cite.femme.criteria.WhereBuilder;
 import gr.cite.femme.criteria.serializer.WhereBuilderSerializer;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
+import gr.cite.femme.query.criteria.Where;
+import gr.cite.femme.query.criteria.WhereBuilder;
 
 /**
  * 

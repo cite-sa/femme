@@ -1,8 +1,8 @@
 package gr.cite.femme.criteria.walker;
 
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.criteria.serializer.CriteriaQuerySerializer;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 
 public class CriteriaWalker<T> {
 	CriteriaQuerySerializer<T> querySerializer;

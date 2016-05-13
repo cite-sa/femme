@@ -8,11 +8,11 @@ import org.junit.Test;
 import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.criteria.serializer.CriteriaQuerySerializer;
 import gr.cite.femme.criteria.utils.PrintCriteriaQuery;
 import gr.cite.femme.criteria.walker.CriteriaWalker;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 
 public class CriteriaWalkerExamplesTest {
 
@@ -40,7 +40,7 @@ public class CriteriaWalkerExamplesTest {
 		c1.setId("c1");
 
 		this.expectedQuery = new CriteriaQuerySerializer<>();
-		expectedQuery.whereBuilder().exists(m1).and().exists(m2).or()
+		expectedQuery.whereBuilder()/*.exists(m1).and().exists(m2).or()*/
 
 				.expression(
 

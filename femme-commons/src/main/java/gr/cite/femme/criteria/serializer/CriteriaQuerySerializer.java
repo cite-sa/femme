@@ -2,8 +2,8 @@ package gr.cite.femme.criteria.serializer;
 
 import java.util.List;
 
-import gr.cite.femme.criteria.CriteriaQuery;
-import gr.cite.femme.criteria.Where;
+import gr.cite.femme.query.criteria.CriteriaQuery;
+import gr.cite.femme.query.criteria.Where;
 
 public class CriteriaQuerySerializer<T> implements CriteriaQuery<T> {
 
@@ -26,7 +26,7 @@ public class CriteriaQuerySerializer<T> implements CriteriaQuery<T> {
 	}
 
 	@Override
-	public T find(T t) {
+	public List<T> find(T t) {
 		// TODO Auto-generated method stub
 		return null;
 	}

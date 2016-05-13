@@ -1,11 +1,10 @@
 package gr.cite.femme.criteria.serializer;
 
-import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.criteria.UnsupportedQueryOperationException;
-import gr.cite.femme.criteria.Where;
-import gr.cite.femme.criteria.WhereBuilder;
+import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
+import gr.cite.femme.query.criteria.Where;
+import gr.cite.femme.query.criteria.WhereBuilder;
 
 public class WhereSerializer<T> implements Where<T> {
 
@@ -55,14 +54,14 @@ public class WhereSerializer<T> implements Where<T> {
 		return builder;
 	}
 
-	@Override
+	/*@Override
 	public <S extends Metadatum> WhereBuilder<T> exists(S metadatum) {
 		this.metadatum = metadatum;
 		operation = Operation.EXISTS;
 		builder = new WhereBuilderSerializer<>(parent);
 
 		return builder;
-	}
+	}*/
 
 	@Override
 	public <S extends Metadatum> WhereBuilder<T> isParentOf(S metadatum) throws UnsupportedQueryOperationException {
