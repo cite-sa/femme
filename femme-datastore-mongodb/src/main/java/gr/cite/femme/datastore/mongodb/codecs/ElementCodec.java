@@ -3,7 +3,6 @@ package gr.cite.femme.datastore.mongodb.codecs;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bson.BsonArray;
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
@@ -28,7 +27,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String ELEMENT_METADATA_KEY = "metadata";
 	private static final String ELEMENT_SYSTEMIC_METADATA_KEY = "systemicMetadata";
 	
-	private static final String DATA_ELEMENT_DATA_ELEMENT_KEY = "dataElement";
+	private static final String DATA_ELEMENT_DATA_ELEMENTS_KEY = "subDataElements";
 	private static final String DATA_ELEMENT_COLLECTIONS_KEY = "collections";
 	
 	private static final String COLLECTION_DATA_ELEMENTS_KEY = "dataElements";
@@ -69,9 +68,8 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		
 		if (value instanceof DataElement) {
 			DataElement dataElement = (DataElement) value;
-			if (dataElement.getDataElement() != null) {
-				writeEmdeddedDataElement(writer, encoderContext, dataElement);
-			}
+			writeEmdeddedDataElements(writer, encoderContext, dataElement.getDataElements());
+				
 			if (dataElement.getCollections() != null) {
 				/*writeEmbeddedCollections(writer, encoderContext, (DataElement) value);*/
 				
@@ -168,15 +166,15 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		writer.writeEndDocument();
 	}
 	
-	private void writeEmdeddedDataElement(BsonWriter writer, EncoderContext encoderContext, DataElement dataElement) {
+	/*private void writeEmdeddedDataElement(BsonWriter writer, EncoderContext encoderContext, DataElement dataElement) {
 		if (dataElement.getDataElement() != null) {
 			writer.writeName(DATA_ELEMENT_DATA_ELEMENT_KEY);
 			DataElement newDataElement = dataElement.getDataElement(); 
 			encoderContext.encodeWithChildContext(this.codecRegistry.get(Element.class), writer, newDataElement);
 		}
-	}
+	}*/
 	
-	private void writeEmbeddedCollections(BsonWriter writer, EncoderContext encoderContext, DataElement dataElement) {
+	/*private void writeEmbeddedCollections(BsonWriter writer, EncoderContext encoderContext, DataElement dataElement) {
 		if (dataElement.getCollections() != null) {
 			writer.writeStartArray(DATA_ELEMENT_COLLECTIONS_KEY);
 			for (Collection collection : dataElement.getCollections()) {
@@ -194,6 +192,16 @@ public class ElementCodec implements CollectibleCodec<Element> {
 			}
 			writer.writeEndArray();
 		}
+	}*/
+	
+	private void writeEmdeddedDataElements(BsonWriter writer, EncoderContext encoderContext, List<DataElement> dataElements) {
+		if (dataElements != null) {
+			writer.writeStartArray(DATA_ELEMENT_DATA_ELEMENTS_KEY);
+			for (DataElement dataElement: dataElements) {
+				encoderContext.encodeWithChildContext(codecRegistry.get(Element.class), writer, dataElement);
+			}
+			writer.writeEndArray();
+		}
 	}
 
 	@Override
@@ -206,7 +214,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		String id = null, name = null, endpoint = null;
 		List<Metadatum> metadata = null;
 		SystemicMetadata systemicMetadata =  null;
-		DataElement embeddedDataElement = null;
+		List<DataElement> embeddedDataElements = null;
 		List<Collection> dataElementCollections = null;
 		List<DataElement> collectionDataElements = null;
 		boolean isCollection = false;
@@ -236,10 +244,18 @@ public class ElementCodec implements CollectibleCodec<Element> {
             	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		systemicMetadata = codecRegistry.get(SystemicMetadata.class).decode(reader, decoderContext);            		
             	}
-            } else if (fieldName.equals(DATA_ELEMENT_DATA_ELEMENT_KEY)) {
-            	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+            } else if (fieldName.equals(DATA_ELEMENT_DATA_ELEMENTS_KEY)) {
+            	/*if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		embeddedDataElement = (DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext);            		
-            	}
+            	}*/
+            	
+            	embeddedDataElements = new ArrayList<>();
+            	
+            	reader.readStartArray();
+        		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+        			embeddedDataElements.add((DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext));
+        		}
+        		reader.readEndArray();
             } else if (fieldName.equals(DATA_ELEMENT_COLLECTIONS_KEY)) {
             	dataElementCollections = new ArrayList<>();
             	
@@ -249,12 +265,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
         		}
         		reader.readEndArray();*/
             	
-        		
-            	
-            	
             	reader.readStartArray();
-            	
-            	
                 while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
                 	/*System.out.println(reader.readBsonType());*/
                 	reader.readStartDocument();
@@ -268,8 +279,6 @@ public class ElementCodec implements CollectibleCodec<Element> {
         			}
                 	reader.readEndDocument();
                 }
-                /*System.out.println(reader.readBsonType());*/
-        		
         		reader.readEndArray();
         		
         		
@@ -293,11 +302,11 @@ public class ElementCodec implements CollectibleCodec<Element> {
 
         reader.readEndDocument();
         
-        // Element is a collection
+        // Element is a Collection
         if (isCollection) {
         	return new Collection(id, name, endpoint, metadata, systemicMetadata, collectionDataElements);
-        } else { // Element is a data element
-        	return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElement, dataElementCollections);
+        } else { // Element is a DataElement
+        	return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElements, dataElementCollections);
         }
 	}
 
@@ -316,14 +325,12 @@ public class ElementCodec implements CollectibleCodec<Element> {
 
 	@Override
 	public BsonValue getDocumentId(Element element) {
-		if (!documentHasId(element))
-	    {
+		if (!documentHasId(element)) {
 			if (element instanceof DataElement) {
 				throw new IllegalStateException("The data element does not contain an _id");				
 			} else if (element instanceof Collection) {
 				throw new IllegalStateException("The collection does not contain an _id");
 			}
-	        
 	    }
 	    return new BsonString(element.getId());
 	}

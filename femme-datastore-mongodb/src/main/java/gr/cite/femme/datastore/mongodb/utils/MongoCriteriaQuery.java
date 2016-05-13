@@ -20,7 +20,7 @@ import gr.cite.femme.datastore.mongodb.bson.CollectionBsonBuilder;
 import gr.cite.femme.datastore.mongodb.bson.DataElementBsonBuilder;
 import gr.cite.femme.datastore.mongodb.bson.ElementBson;
 import gr.cite.femme.datastore.mongodb.bson.ElementBsonBuilder;
-import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.criteria.Where;

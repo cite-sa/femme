@@ -28,11 +28,14 @@ import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.api.Datastore;
+import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.DatastoreException;
 import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
-import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
+import gr.cite.femme.datastore.exceptions.MetadataStoreException;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore;
 import gr.cite.femme.datastore.mongodb.utils.Documentizer;
-import gr.cite.femme.datastore.mongodb.utils.ElementFields;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.IQueryOptions;
@@ -46,20 +49,20 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	MongoDatastoreClient mongoClient;
 	MongoCollection<Collection> collections;
 	MongoCollection<DataElement> dataElements;
-	MetadatumGridFS metadatumGridfs;
+	MetadataStore metadataStore;
 
 	public MongoDatastore() {
 		mongoClient = new MongoDatastoreClient();
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadatumGridfs = mongoClient.getMetadatumGridFS();
+		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadata(), mongoClient.getMetadataGridFS());
 	}
 
 	public MongoDatastore(MongoDatabase db) {
 		mongoClient = new MongoDatastoreClient(db);
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadatumGridfs = mongoClient.getMetadatumGridFS();
+		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadata(), mongoClient.getMetadataGridFS());
 	}
 
 	public MongoCollection<Collection> getCollections() {
@@ -74,15 +77,15 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		mongoClient.close();
 	}
 
-	public MetadatumGridFS getMetadatumGridFS() {
-		return metadatumGridfs;
+	public MetadataStore getMetadataStore() {
+		return metadataStore;
 	}
 
 	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) throws DatastoreException {
 		for (Metadatum metadatum : metadata) {
 			try {
-				metadatumGridfs.upload(metadatum, elementId.toString());
-			} catch (MongoGridFSException e) {
+				metadataStore.insert(metadatum, elementId.toString());
+			} catch (MetadataStoreException e) {
 				logger.error(e.getMessage(), e);
 				throw new DatastoreException("Inserting element metadata failed.");
 			}
@@ -93,11 +96,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	@Override
 	public <T extends Element> T insert(T element) throws DatastoreException {
 		element.setId(new ObjectId().toString());
-		try {
-			insertMetadata(element.getMetadata(), element.getId());
-		} catch (MongoGridFSException e) {
-			throw new DatastoreException("Bulk insertion failed.", e);
-		}
+		insertMetadata(element.getMetadata(), element.getId());
 
 		try {
 			if (element instanceof Collection) {
@@ -136,7 +135,11 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 				}
 			}
 		} catch (MongoException e) {
-			metadatumGridfs.delete(element.getId());
+			try {
+				metadataStore.delete(element.getId());
+			} catch (MetadataStoreException e1) {
+				logger.error(e1.getMessage(), e1);
+			}
 			throw new DatastoreException("Inserting collection failed.", e);
 		}
 		return element;
@@ -192,7 +195,11 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 			}
 		} catch (MongoException e) {
 			for (Element element : elements) {
-				metadatumGridfs.delete(element.getId());
+				try {
+					metadataStore.delete(element.getId());
+				} catch (MetadataStoreException e1) {
+					logger.error(e1.getMessage(), e1);
+				}
 			}
 			throw new DatastoreException("Bulk insertion failed.", e);
 		}
@@ -293,25 +300,33 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 			if (element instanceof DataElement) {
 				try {
 					logger.debug("Delete DataElement " + element.getId());
-					dataElements.deleteOne(Filters.eq(ElementFields.id(), new ObjectId(element.getId())));
+					dataElements.deleteOne(Filters.eq(FieldNames.ID, new ObjectId(element.getId())));
 					logger.debug("Delete completed");
 					deletedCount++;
 				} catch(MongoException e) {
 					throw new DatastoreException("Couldn't delete DataElement " + element.getId(), e);
 				}
 				// TODO: remove DataElement id from Collection
-				metadatumGridfs.delete(element.getId());
+				try {
+					metadataStore.delete(element.getId());
+				} catch (MetadataStoreException e) {
+					logger.error(e.getMessage(), e);
+				}
 			} else if (element instanceof Collection) {
 				try {
 					logger.debug("Delete Collection " + element.getId());
-					collections.deleteOne(Filters.eq(ElementFields.id(), element.getId()));
+					collections.deleteOne(Filters.eq(FieldNames.ID, element.getId()));
 					logger.debug("Delete completed");
 					deletedCount++;
 				} catch(MongoException e) {
 					throw new DatastoreException("Couldn't delete Collection " + element.getId(), e);
 				}
 				// TODO: remove Collection id from DataElements
-				metadatumGridfs.delete(element.getId());
+				try {
+					metadataStore.delete(element.getId());
+				} catch (MetadataStoreException e) {
+					logger.error(e.getMessage(), e);
+				}
 			}
 		}
 		/*try {
@@ -334,17 +349,13 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		
 	}
 
-	public void exists(Metadatum metadatum) {
-		metadatumGridfs.exists(metadatum);
-	}
-
 	@Override
 	public <T extends Element> Element find(String id, Class<T> elementSubtype) throws IllegalElementSubtype {
 		String subtype = elementSubtype.getSimpleName();
 		if (subtype.equals("DataElement")) {
-			return dataElements.find(new Document().append(ElementFields.id(), id)).limit(1).first();
+			return dataElements.find(new Document().append(FieldNames.ID, id)).limit(1).first();
 		} else if (subtype.equals("Collection")) {
-			return collections.find(new Document().append(ElementFields.id(), id)).limit(1).first();
+			return collections.find(new Document().append(FieldNames.ID, id)).limit(1).first();
 		} else {
 			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
 		}

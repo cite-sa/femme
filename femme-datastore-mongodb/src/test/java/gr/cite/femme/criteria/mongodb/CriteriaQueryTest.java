@@ -23,7 +23,7 @@ import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.mongodb.DatastoreMongoTest;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.datastore.mongodb.utils.ElementFields;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.mongodb.Criteria;
@@ -37,7 +37,7 @@ public class CriteriaQueryTest {
 		Criteria subCriteria1 = new Criteria();
 		Criteria subCriteria2 = new Criteria();
 		try {
-			criteria.where(ElementFields.endpoint()).eq("http://www.cite-sa/gr/")
+			criteria.where(FieldNames.ENDPOINT).eq("http://www.cite-sa/gr/")
 					.orOperator(
 							subCriteria1.where("name").gt("5"),
 							subCriteria2.where("endpoint").eq("sdf").and("name").eq("ddsf"));

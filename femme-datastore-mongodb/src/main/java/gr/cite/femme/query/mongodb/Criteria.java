@@ -11,7 +11,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
-import gr.cite.femme.datastore.mongodb.utils.ElementFields;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IWhere;
 
@@ -113,7 +113,7 @@ public class Criteria implements ICriteria {
 
 					@Override
 					public Document apply(String collectionId) {
-						return new Document().append(ElementFields.id(), new ObjectId(collectionId));
+						return new Document().append(FieldNames.ID, new ObjectId(collectionId));
 					}
 				}).collect(Collectors.toList())
 				);
@@ -141,10 +141,9 @@ public class Criteria implements ICriteria {
 
 					@Override
 					public Document apply(String collectionId) {
-						return new Document().append(ElementFields.id(), new ObjectId(collectionId));
+						return new Document().append(FieldNames.ID, new ObjectId(collectionId));
 					}
-				}).collect(Collectors.toList())
-				);
+				}).collect(Collectors.toList()));
 		criteria.put("dataElements", dataElements);
 		
 		dataElementsResolved = true;
@@ -160,6 +159,16 @@ public class Criteria implements ICriteria {
 		dataElementsResolved = false;
 		return this;
 	}
+	
+	/*@Override
+	public ICriteria hasDataElements(ICriteria dataElementCriteria) {
+		Map<String, Object> dataElements = new LinkedHashMap<>();
+		dataElements.put("$in", dataElementCriteria);
+		criteria.put("dataElements", dataElements);
+		
+		dataElementsResolved = false;
+		return this;
+	}*/
 	
 	@Override
 	public Map<String, Object> getCriteria() {

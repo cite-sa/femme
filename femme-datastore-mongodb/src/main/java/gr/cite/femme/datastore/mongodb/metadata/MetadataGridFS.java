@@ -1,4 +1,4 @@
-package gr.cite.femme.datastore.mongodb.gridfs;
+package gr.cite.femme.datastore.mongodb.metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,13 +29,15 @@ import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.DatastoreException;
+import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.utils.Pair;
 import gr.cite.scarabaeus.utils.xml.XMLConverter;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 
-public class MetadatumGridFS {
-	private static final Logger logger = LoggerFactory.getLogger(MetadatumGridFS.class);
+public class MetadataGridFS implements MetadataStore {
+	private static final Logger logger = LoggerFactory.getLogger(MetadataGridFS.class);
 	
 	private static final String METADATUM_ID_KEY = "_id";
 	private static final String METADATUM_FILENAME_KEY = "fileName";
@@ -46,19 +48,21 @@ public class MetadatumGridFS {
 	private static final String METADATUM_METADATA_KEY = "metadata";
 	private static final String METADATUM_METADATA_ELEMENT_ID_PATH = METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY;
 	
-	private static final String FILE_ID_KEY = "_id";
-	private static final String FILE_FILENAME_KEY = "filename";
-	
 	private GridFSBucket gridFSBucket;
 	
-	public MetadatumGridFS() {
+	public MetadataGridFS() {
 		
 	}
-	public MetadatumGridFS(GridFSBucket gridFSBucket) {
+	
+	public MetadataGridFS(GridFSBucket gridFSBucket) {
 		this.gridFSBucket = gridFSBucket;
 	}
 	
-	public Pair<ObjectId, String> upload(Metadatum metadatum, String elementId) throws DatastoreException {
+	public ObjectId insert(Metadatum metadatum, String elementId) throws MetadataStoreException {
+		return this.upload(metadatum, elementId);
+	}
+	
+	public ObjectId upload(Metadatum metadatum, String elementId) throws MetadataStoreException {
 		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
 		InputStream streamToUploadFrom = new ByteArrayInputStream(
 				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
@@ -72,19 +76,23 @@ public class MetadatumGridFS {
 		try {
 			fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
 		} catch (MongoGridFSException e) {
-			throw new DatastoreException("GridsFSException when uploading metadatum of element with id: " + elementId.toString(), e);
+			throw new MetadataStoreException("GridsFSException when uploading metadatum of element with id: " + elementId.toString(), e);
 		}
 		metadatum.setId(fileId.toString());
 		
-		return new Pair<ObjectId, String>(fileId, filename);
+		return fileId;
 	}
 	
-	public Metadatum download(String fileId) throws DatastoreException {
+	public Metadatum get(String fileId) throws MetadataStoreException {
+		return download(fileId);
+	}
+	
+	public Metadatum download(String fileId) throws MetadataStoreException {
 		OutputStream metadatumStream = new ByteArrayOutputStream();
 		try {
 			gridFSBucket.downloadToStream(new ObjectId(fileId), metadatumStream);
 		} catch (MongoGridFSException e) {
-			throw new DatastoreException("GridsFSException when downloading metadatum with fileId: " + fileId.toString(), e);
+			throw new MetadataStoreException("GridsFSException when downloading metadatum with fileId: " + fileId.toString(), e);
 		}
 		
 		Metadatum metadatum = new Metadatum();
@@ -93,11 +101,12 @@ public class MetadatumGridFS {
 		return metadatum;
 	}
 	
-	public List<Metadatum> find(String elementId) throws DatastoreException {
+	
+	public List<Metadatum> find(String elementId) throws MetadataStoreException {
 		return find(elementId, true);
 	}
 	
-	public List<Metadatum> find(String elementId, boolean lazy) throws DatastoreException {
+	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		
 		Metadatum metadatum = new Metadatum();
@@ -117,7 +126,8 @@ public class MetadatumGridFS {
 					if (!lazy) {
 						try {
 							metadatum.setValue(download(t.getObjectId().toString()).getValue());
-						} catch (DatastoreException e) {
+						} catch (MetadataStoreException e) {
+							logger.error(e.getMessage(), e);
 							throw new RuntimeException(e.getMessage(), e);
 						}
 					}
@@ -125,7 +135,7 @@ public class MetadatumGridFS {
 				}
 			}).iterator();
 		} catch (RuntimeException e) {
-			throw new DatastoreException(e.getMessage(), e);
+			throw new MetadataStoreException(e.getMessage(), e);
 		}
 		try {
 			while (cursor.hasNext()) {
@@ -137,28 +147,72 @@ public class MetadatumGridFS {
 		return metadata;
 	}
 	
-	public <T extends Element> List<T> find(List<T> elementIds, String xPath) {
-		return elementIds.stream().filter(new Predicate<T>() {
-			@Override
-			public boolean test(T element) {
-				List<Metadatum> metadata = null;
-				try {
-					metadata = find(element.getId(), false);
-				} catch (DatastoreException e) {
-					logger.error(e.getMessage(), e);
-				}
-				for (Metadatum metadatum: metadata) {
+	public Metadatum xPath(Metadatum metadatum, String xPath) throws MetadataStoreException {
+		Metadatum downloadedMetadatum = download(metadatum.getId());
+		try {
+			if (new XPathEvaluator(XMLConverter.stringToNode(downloadedMetadatum.getValue())).evaluate(xPath).size() > 0) {
+				return downloadedMetadatum;
+			} else {
+				return null;
+			}
+		} catch (XPathFactoryConfigurationException e) {
+			logger.error(e.getMessage(), e);
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+
+	
+	public <T extends Element> List<Metadatum> find(T element, String xPath) throws MetadataStoreException {
+		try {
+			return find(element.getId(), false).stream().filter(new Predicate<Metadatum>() {
+				@Override
+				public boolean test(Metadatum metadatum) {
 					try {
 						if (new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).size() > 0) {
 							return true;
 						}
 					} catch (XPathFactoryConfigurationException e) {
 						logger.error(e.getMessage(), e);
+						throw new RuntimeException(e.getMessage(), e);
 					}
+					return false;
 				}
-				return false;
-			}
-		}).collect(Collectors.toList());
+			}).collect(Collectors.toList());
+		} catch (RuntimeException e) {
+			throw new MetadataStoreException(e.getMessage(), e);
+		}
+	}
+	
+	public <T extends Element> List<T> find(List<T> elementIds, String xPath) throws MetadataStoreException {
+		List<T> elements = null;
+		try {
+			elements = elementIds.stream().filter(new Predicate<T>() {
+				@Override
+				public boolean test(T element) {
+					List<Metadatum> metadata = null;
+					try {
+						metadata = find(element.getId(), false);
+					} catch (MetadataStoreException e) {
+						logger.error(e.getMessage(), e);
+						throw new RuntimeException(e.getMessage(), e);
+					}
+					for (Metadatum metadatum: metadata) {
+						try {
+							if (new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).size() > 0) {
+								return true;
+							}
+						} catch (XPathFactoryConfigurationException e) {
+							logger.error(e.getMessage(), e);
+							throw new RuntimeException(e.getMessage(), e);
+						}
+					}
+					return false;
+				}
+			}).collect(Collectors.toList());
+		} catch (RuntimeException e) {
+			throw new MetadataStoreException(e.getMessage(), e);
+		}
+		return elements;
 	}
 	
 	public List<Metadatum> find(Metadatum metadatum) {
@@ -185,7 +239,7 @@ public class MetadatumGridFS {
 		return metadata;
 	}
 	
-	public List<Metadatum> find(List<Metadatum> metadataList) throws DatastoreException {
+	public List<Metadatum> find(List<Metadatum> metadataList) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		for (Metadatum metadatum : metadataList) {
 			find(metadatum).stream().collect(Collectors.toCollection(() -> metadata));
@@ -194,7 +248,7 @@ public class MetadatumGridFS {
 		return metadata;
 	}
 	
-	public Pair<ObjectId, String> getMetadatumInfo(Metadatum metadatum) throws DatastoreException {
+	public Pair<ObjectId, String> getMetadatumInfo(Metadatum metadatum) throws MetadataStoreException {
 		Pair<ObjectId, String> metadatumInfo = null;
 		MongoCursor<GridFSFile> cursor = gridFSBucket.find(buildMetadataFromDocument(metadatum))
 				/*.filter(Projections.include(FILE_ID_KEY, FILE_FILENAME_KEY))*/.limit(1).iterator();
@@ -204,7 +258,7 @@ public class MetadatumGridFS {
 				metadatumInfo = new Pair<ObjectId, String>(file.getObjectId(), file.getFilename());
 			}
 		} catch(MongoGridFSException e) {
-			throw new DatastoreException(e.getMessage(), e);
+			throw new MetadataStoreException(e.getMessage(), e);
 		} finally {
 			cursor.close();
 		}

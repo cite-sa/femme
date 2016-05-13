@@ -9,13 +9,13 @@ import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.criteria.serializer.WhereBuilderSerializer;
-import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.criteria.Where;
 import gr.cite.femme.query.criteria.WhereBuilder;
 
 public class MongoWhere implements Where<Element> {
-	private MetadatumGridFS metadatumGridFS;
+	private MetadataGridFS metadatumGridFS;
 	
 	private RootQueryDocumentBuilder rootQuery;
 	private DataElementQueryDocumentBuilder elementquery;
@@ -29,7 +29,7 @@ public class MongoWhere implements Where<Element> {
 		whereBuilder = new MongoWhereBuilder();
 	}
 	
-	public MongoWhere(MetadatumGridFS metadatumGridFS) {
+	public MongoWhere(MetadataGridFS metadatumGridFS) {
 		this.metadatumGridFS = metadatumGridFS;
 		
 		/*elementquery = new DataElementQueryDocumentBuilder(element);*/

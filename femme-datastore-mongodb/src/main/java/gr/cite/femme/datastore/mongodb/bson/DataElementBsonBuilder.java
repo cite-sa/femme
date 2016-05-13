@@ -18,7 +18,7 @@ public class DataElementBsonBuilder {
 	
 	private SystemicMetadata systemicMetadata;
 	
-	private DataElement dataElement;
+	private List<DataElement> dataElements;
 
 	private List<Collection> collections;
 
@@ -49,8 +49,8 @@ public class DataElementBsonBuilder {
 		return this;
 	}
 	
-	public DataElementBsonBuilder dataElement(DataElement dataElement) {
-		this.dataElement = dataElement;
+	public DataElementBsonBuilder dataElements(List<DataElement> dataElements) {
+		this.dataElements = dataElements;
 		return this;
 	}
 	
@@ -66,7 +66,7 @@ public class DataElementBsonBuilder {
 		dataElementObj.setEndpoint(endpoint);
 		dataElementObj.setMetadata(metadata);
 		dataElementObj.setSystemicMetadata(systemicMetadata);
-		dataElementObj.setDataElement(dataElement);
+		dataElementObj.setDataElements(dataElements);
 		dataElementObj.setCollections(collections);
 		
 		return new DataElementBson(dataElementObj);

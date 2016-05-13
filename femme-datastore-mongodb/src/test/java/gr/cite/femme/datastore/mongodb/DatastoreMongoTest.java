@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +27,7 @@ import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.datastore.mongodb.bson.DataElementBson;
-import gr.cite.femme.datastore.mongodb.utils.ElementFields;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.mongodb.Criteria;
@@ -68,7 +69,8 @@ public class DatastoreMongoTest {
 		Criteria criteria = new Criteria();
 		
 		try {
-			criteria.where(ElementFields.name()).eq("testCollection");
+			criteria.where(FieldNames.NAME).eq("testDataElement9")
+			/*.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("testDataElement8"))*/;
 			/*criteria.orOperator(
 					Criteria.query().where("name").eq("testDataElement1"),
 					Criteria.query().where("name").eq("testDataElement2"));*/
@@ -78,29 +80,35 @@ public class DatastoreMongoTest {
 		Query query = new Query();
 		query.addCriteria(criteria);
 		
-		List<Collection> r = null;
+		List<DataElement> r = null;
 		try {
-			r = mongo.<Collection>find(query, Collection.class).list();
+			/*r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");*/
+			r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");
 		} catch (IllegalElementSubtype e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		System.out.println(r);
 		
-		DataElement updatedDataElement = createDemoDataElement(null, null);
+		/*try {
+			mongo.delete(Criteria.query().where(FieldNames.NAME).eq("testDataElement"), DataElement.class);
+		} catch (DatastoreException | IllegalElementSubtype | InvalidCriteriaQueryOperation e) {
+			e.printStackTrace();
+		}*/
+		
+		/*DataElement updatedDataElement = createDemoDataElement(null, null);
 		
 		List<DataElement> des = new ArrayList<>();
 		des.add(createDemoDataElement(null, null));
 		des.add(createDemoDataElement(null, null));
 		
 		try {
-			mongo.addToCollection(des, Criteria.query().where(ElementFields.name()).eq("testCollection"));
+			mongo.addToCollection(des, Criteria.query().where(FieldNames.name()).eq("testCollection"));
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 		} catch (InvalidCriteriaQueryOperation e) {
 			logger.error(e.getMessage(), e);
-		}
+		}*/
 	}
 	
 	/*@Test*/
@@ -112,6 +120,12 @@ public class DatastoreMongoTest {
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
+	
+	/*@Test*/
+	public void insertCollections() {
+		insertCollection();
+		insertCollection();
 	}
 	
 	/*@Test*/
@@ -149,52 +163,17 @@ public class DatastoreMongoTest {
 		}
 	}*/
 	
-	/*@Test*/
-	public void listElements() {
-		List<Element> elements = null;
-		try {
-			elements = mongo.listElements();
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-		}
-		printElements(elements);
-	}
-	
-	/*@Test*/
-	public void listDataElements() {
-		List<DataElement> dataElements = null;
-		try {
-			dataElements = mongo.listDataElements();
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-		}
-		printDataElements(dataElements);
-	}
-	
-	/*@Test*/
-	public void listCollections() {
-		List<Collection> collections = null;
-		try {
-			collections = mongo.listCollections();
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-		}
-		printCollections(collections);
-	}
-	
-	
-	
 	private DataElement createDemoDataElement(String name, String endpoint) {
 		DataElement dataElement = new DataElement();
 		if (name != null) {
 			dataElement.setName(name);
 		} else {
-			dataElement.setName("testDataElement");
+			dataElement.setName("testDataElement" + RandomUtils.nextInt(0, 10));
 		}
 		if (endpoint != null) {
 			dataElement.setEndpoint(endpoint);
 		} else {
-			dataElement.setEndpoint("http://www.cite-sa/gr/");
+			dataElement.setEndpoint("http://www.cite-sa/gr/" + RandomUtils.nextInt(0, 10));
 		}
 		
 		List<Metadatum> metadata = new ArrayList<>();
@@ -202,11 +181,18 @@ public class DatastoreMongoTest {
 		metadata.add(new Metadatum("cidoc", "<dc><a>test value 2</a></dc>", "xml"));
 		dataElement.setMetadata(metadata);
 		
-		DataElement embeddedDataElement = new DataElement();
-		embeddedDataElement.setName("embeddedTestDataElement");
-		embeddedDataElement.setEndpoint("http://www.cite-sa/gr/");
+		List<DataElement> embeddedDataElements = new ArrayList<>();
+		DataElement embeddedDataElement1 = new DataElement();
+		embeddedDataElement1.setName("embeddedTestDataElement" +  + RandomUtils.nextInt(0, 10));
+		embeddedDataElement1.setEndpoint("http://www.cite-sa/gr/" +  + RandomUtils.nextInt(0, 10));
+		embeddedDataElements.add(embeddedDataElement1);
 		
-		dataElement.setDataElement(embeddedDataElement);
+		DataElement embeddedDataElement2 = new DataElement();
+		embeddedDataElement2.setName("embeddedTestDataElement" +  + RandomUtils.nextInt(11, 20));
+		embeddedDataElement2.setEndpoint("http://www.cite-sa/gr/" +  + RandomUtils.nextInt(11, 20));
+		embeddedDataElements.add(embeddedDataElement2);
+		
+		dataElement.setDataElements(embeddedDataElements);
 		
 		return dataElement;
 	}
@@ -221,7 +207,7 @@ public class DatastoreMongoTest {
 	
 	private Collection createDemoCollection() {
 		Collection collection = new Collection();
-		collection.setName("testCollection");
+		collection.setName("testCollection" + RandomUtils.nextInt(0, 10));
 		collection.setEndpoint("http://www.cite-sa/gr/");
 		
 		List<Metadatum> metadata = new ArrayList<>();
@@ -230,23 +216,9 @@ public class DatastoreMongoTest {
 		
 		List<DataElement> dataElements = new ArrayList<>();
 		dataElements.add(createDemoDataElement(null, null));
+		dataElements.add(createDemoDataElement(null, null));
 		collection.setDataElements(dataElements);
 		
 		return collection;
-	}
-	private void printElements(List<Element> elements) {
-		for (Element element : elements) {
-			System.out.println(element.toString());
-		}
-	}
-	private void printDataElements(List<DataElement> dataElements) {
-		for (DataElement dataElement : dataElements) {
-			System.out.println(dataElement.toString());
-		}
-	}
-	private void printCollections(List<Collection> collections) {
-		for (Collection collection : collections) {
-			System.out.println(collection.toString());
-		}
 	}
 }

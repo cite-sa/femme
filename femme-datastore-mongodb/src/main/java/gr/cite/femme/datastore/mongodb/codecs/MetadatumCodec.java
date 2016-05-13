@@ -29,7 +29,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.datastore.mongodb.utils.MetadatumInfo;
 import gr.cite.femme.utils.Pair;
 
@@ -43,15 +43,6 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private static final String METADATUM_NAME_KEY = "name";
 	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
 
-	private MetadatumGridFS metadatumGridFS;
-
-	public MetadatumCodec() {
-	}
-
-	public MetadatumCodec(MetadatumGridFS metadatumGridFS) {
-		this.metadatumGridFS = metadatumGridFS;
-	}
-
 	@Override
 	public void encode(BsonWriter writer, Metadatum value, EncoderContext encoderContext) {
 		writer.writeStartDocument();
@@ -61,7 +52,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		}
 		if (value.getId() != null) {
 			writer.writeObjectId(METADATUM_ID_KEY, new ObjectId(value.getId()));
-			writer.writeObjectId(METADATUM_FILE_ID_KEY, new ObjectId(value.getId()));			
+			/*writer.writeObjectId(METADATUM_FILE_ID_KEY, new ObjectId(value.getId()));*/			
 		}
 		
 		
@@ -86,7 +77,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		reader.readStartDocument();
 
 		String id = reader.readObjectId(METADATUM_ID_KEY).toString();
-		ObjectId fileId = reader.readObjectId(METADATUM_FILE_ID_KEY);
+		/*ObjectId fileId = reader.readObjectId(METADATUM_FILE_ID_KEY);*/
 		/* String fileName = reader.readString(METADATUM_FILENAME_KEY); */
 		String name = reader.readString(METADATUM_NAME_KEY);
 		String contentType = reader.readString(METADATUM_CONTENT_TYPE_KEY);
@@ -100,7 +91,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		 */
 
 		Metadatum metadatum = new Metadatum();
-		metadatum.setId(fileId.toString());
+		metadatum.setId(id.toString());
 		metadatum.setName(name);
 		metadatum.setContentType(contentType);
 

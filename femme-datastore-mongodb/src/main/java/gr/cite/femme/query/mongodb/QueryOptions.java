@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -16,18 +18,22 @@ import com.mongodb.client.MongoCursor;
 import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
+import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.datastore.mongodb.gridfs.MetadatumGridFS;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.query.IQueryOptions;
 
 public class QueryOptions<T extends Element> implements IQueryOptions<T> {
+	private static final Logger logger = LoggerFactory.getLogger(QueryOptions.class);
+	
 	MongoDatastore datastore;
 	
 	MongoCollection<T> collection;
 	
-	MetadatumGridFS metadatumGridFS;
+	MetadataStore metadataStore;
 	
 	private FindIterable<T> results;
 	
@@ -48,7 +54,7 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 			
 			String subtype = elementSubtype.getSimpleName();
 			if (subtype.equals("DataElement")) {
-				this.collection = (MongoCollection<T>) datastore.getDataElements();
+				collection = (MongoCollection<T>) datastore.getDataElements();
 				
 				if (!theQuery.isCollectionsResolved() && theQuery.getQuery().containsKey("collections")) {
 					Map<String, Object> collectionsIn = (Map<String, Object>) theQuery.getQuery().get("collections");
@@ -75,7 +81,7 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 				}
 				
 			} else if (subtype.equals("Collection")) {
-				this.collection = (MongoCollection<T>) datastore.getCollections();
+				collection = (MongoCollection<T>) datastore.getCollections();
 				
 				if (!theQuery.isDataElementsResolved() && theQuery.getQuery().containsKey("dataElements")) {
 					Map<String, Object> dataElementsIn = (Map<String, Object>) theQuery.getQuery().get("dataElements");
@@ -96,8 +102,8 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 			}
 
 			
-			this.metadatumGridFS = datastore.getMetadatumGridFS();
-			this.results = this.collection.find(new Document(theQuery.getQuery()));
+			metadataStore = datastore.getMetadataStore();
+			results = this.collection.find(new Document(theQuery.getQuery()));
 		} else {
 			throw new IllegalArgumentException("Argument must be instance of Criteria class");
 		}
@@ -164,7 +170,13 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 		} finally {
 			cursor.close();
 		}
-		return metadatumGridFS.find(elements, xPath);
+		List<T> xPathedElements = null;
+		try {
+			xPathedElements = metadataStore.find(elements, xPath);
+		} catch (MetadataStoreException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return xPathedElements;
 	}
 	
 	public List<Collection> findCollections(Criteria criteria) {
