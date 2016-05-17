@@ -64,12 +64,12 @@ public class DatastoreMongoTest {
 
 	}*/
 	
-	@Test
+	/*@Test*/
 	public void testFind() {
 		Criteria criteria = new Criteria();
 		
 		try {
-			criteria.where(FieldNames.NAME).eq("testDataElement9")
+			criteria.where(FieldNames.NAME).eq("testDataElement7")
 			/*.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("testDataElement8"))*/;
 			/*criteria.orOperator(
 					Criteria.query().where("name").eq("testDataElement1"),
@@ -81,12 +81,8 @@ public class DatastoreMongoTest {
 		query.addCriteria(criteria);
 		
 		List<DataElement> r = null;
-		try {
 			/*r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");*/
-			r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");
-		} catch (IllegalElementSubtype e) {
-			e.printStackTrace();
-		}
+		r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");
 		
 		System.out.println(r);
 		
@@ -111,7 +107,7 @@ public class DatastoreMongoTest {
 		}*/
 	}
 	
-	/*@Test*/
+	@Test
 	public void insertDataElement() {
 		DataElement dataElement = createDemoDataElement(null, null);
 		try {
@@ -178,7 +174,7 @@ public class DatastoreMongoTest {
 		
 		List<Metadatum> metadata = new ArrayList<>();
 		metadata.add(new Metadatum("dc", "<dc><a>test value 1</a></dc>", "xml"));
-		metadata.add(new Metadatum("cidoc", "<dc><a>test value 2</a></dc>", "xml"));
+		/*metadata.add(new Metadatum("test", "{testJson:{a:1, b:2}}", "json"));*/
 		dataElement.setMetadata(metadata);
 		
 		List<DataElement> embeddedDataElements = new ArrayList<>();

@@ -15,6 +15,7 @@ import gr.cite.femme.core.Element;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
+import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 
 public class MongoMetadataStore implements MetadataStore {
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataStore.class);
@@ -27,14 +28,14 @@ public class MongoMetadataStore implements MetadataStore {
 		
 	}
 	
-	public MongoMetadataStore(MongoCollection<Metadatum> metadataMongoCollection, GridFSBucket metadataGridFS) {
+	public MongoMetadataStore(MongoCollection<MetadatumJson> metadataMongoCollection, GridFSBucket metadataGridFS) {
 		this.metadataMongoCollection = new MetadataMongoCollection(metadataMongoCollection);
 		this.metadataGridFS = new MetadataGridFS(metadataGridFS);
 	}
 
 	@Override
-	public ObjectId insert(Metadatum metadatum, String elementId) throws MetadataStoreException {
-		return getMetadataStore(metadatum).insert(metadatum, elementId);
+	public String insert(Metadatum metadatum) throws MetadataStoreException {
+		return getMetadataStore(metadatum).insert(metadatum);
 	}
 
 	@Override
@@ -97,8 +98,14 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void delete(String elementId) {
-		// TODO Auto-generated method stub
+	public void delete(Metadatum metadatum) throws MetadataStoreException {
+		getMetadataStore(metadatum).delete(metadatum);
+	}
+	
+	@Override
+	public void delete(String elementId) throws MetadataStoreException {
+		metadataMongoCollection.delete(elementId);
+		metadataGridFS.delete(elementId);
 		
 	}
 

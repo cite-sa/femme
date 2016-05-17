@@ -58,17 +58,17 @@ public class MetadataGridFS implements MetadataStore {
 		this.gridFSBucket = gridFSBucket;
 	}
 	
-	public ObjectId insert(Metadatum metadatum, String elementId) throws MetadataStoreException {
-		return this.upload(metadatum, elementId);
+	public String insert(Metadatum metadatum) throws MetadataStoreException {
+		return this.upload(metadatum);
 	}
 	
-	public ObjectId upload(Metadatum metadatum, String elementId) throws MetadataStoreException {
+	public String upload(Metadatum metadatum) throws MetadataStoreException {
 		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
 		InputStream streamToUploadFrom = new ByteArrayInputStream(
 				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
 					new Document()
-					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(elementId))
+					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
 					.append(METADATUM_NAME_KEY, metadatum.getName())
 					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
 				);
@@ -76,11 +76,11 @@ public class MetadataGridFS implements MetadataStore {
 		try {
 			fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("GridsFSException when uploading metadatum of element with id: " + elementId.toString(), e);
+			throw new MetadataStoreException("GridsFSException when uploading metadatum of element with id: " + metadatum.getElementId().toString(), e);
 		}
 		metadatum.setId(fileId.toString());
 		
-		return fileId;
+		return metadatum.getId();
 	}
 	
 	public Metadatum get(String fileId) throws MetadataStoreException {
@@ -269,13 +269,19 @@ public class MetadataGridFS implements MetadataStore {
 		return gridFSBucket.find(buildMetadataFromDocument(metadatum)).filter(Projections.include("_id")).limit(1) != null;
 	}
 	
-	public void delete(String elementId) {
+	public void delete(Metadatum metadatum) {
+		gridFSBucket.delete(new ObjectId(metadatum.getId()));
+	}
+	
+	public void delete(String elementId) throws MetadataStoreException {
 		MongoCursor<GridFSFile> cursor = gridFSBucket
 				.find(Filters.eq(METADATUM_METADATA_ELEMENT_ID_PATH, new ObjectId(elementId))).iterator();
 		try {
 			while (cursor.hasNext()) {
 				gridFSBucket.delete(cursor.next().getObjectId());
 			}
+		} catch (MongoGridFSException e) {
+			throw new MetadataStoreException("Error while deleting metadatum from GridFs", e);
 		} finally {
 			cursor.close();
 		}

@@ -19,11 +19,9 @@ import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Element;
 import gr.cite.femme.datastore.api.MetadataStore;
-import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.query.IQueryOptions;
 
 public class QueryOptions<T extends Element> implements IQueryOptions<T> {
@@ -47,7 +45,7 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 		this.results = collection.find();
 	}
 	
-	public QueryOptions(Query query, MongoDatastore datastore, Class<T> elementSubtype) throws IllegalElementSubtype {
+	public QueryOptions(Query query, MongoDatastore datastore, Class<T> elementSubtype) {
 		if (query instanceof Query) {
 			Query theQuery = (Query) query;
 			this.datastore = datastore;
@@ -97,8 +95,6 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 					
 					theQuery.resolveCollections();
 				}
-			} else {
-				throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
 			}
 
 			

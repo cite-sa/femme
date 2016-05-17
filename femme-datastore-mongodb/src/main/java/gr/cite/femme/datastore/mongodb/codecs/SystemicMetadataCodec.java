@@ -36,11 +36,11 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		}
 		
 		if (value.getCreated() != null) {
-			writer.writeDateTime(SYSTEMIC_METADATA_CREATED_KEY, Instant.now().toEpochMilli());			
+			writer.writeDateTime(SYSTEMIC_METADATA_CREATED_KEY, value.getCreated().toEpochMilli());			
 		}
 		
 		if (value.getModified() != null) {
-			writer.writeDateTime(SYSTEMIC_METADATA_MODIFIED_KEY, Instant.now().toEpochMilli());			
+			writer.writeDateTime(SYSTEMIC_METADATA_MODIFIED_KEY, value.getModified().toEpochMilli());			
 		}
 		
 		/*}*/

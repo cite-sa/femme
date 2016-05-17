@@ -1,5 +1,7 @@
 package gr.cite.femme.datastore.mongodb;
 
+import org.bson.Document;
+import org.bson.codecs.DocumentCodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
@@ -14,6 +16,8 @@ import gr.cite.femme.core.DataElement;
 import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;
+import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
+import gr.cite.femme.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
 
 public class MongoDatastoreClient {
@@ -21,31 +25,35 @@ public class MongoDatastoreClient {
 	private static final String DATABASE_NAME = "femme-db";
 	private static final String COLLECTIONS_COLLECTION_NAME = "collections";
 	private static final String DATA_ELEMENTS_COLLECTION_NAME = "dataElements";
-	private static final String METADATA_COLLECTION_NAME = "metadata";
-	private static final String METADATA_BUCKET_NAME = "metadata";
+	private static final String METADATA_COLLECTION_NAME = "metadataJson";
+	private static final String METADATA_BUCKET_NAME = "metadataGridFS";
 
 	private MongoClient client;
 	private MongoDatabase database;
 	private MongoCollection<Collection> collections;
 	private MongoCollection<DataElement> dataElements;
-	private MongoCollection<Metadatum> metadata;
+	private MongoCollection<MetadatumJson> metadataJson;
 	private GridFSBucket metadataGridFS;
 	
 	public MongoDatastoreClient() {
 		client = new MongoClient(DATABASE_HOST);
 		database = client.getDatabase(DATABASE_NAME);
+		
+		MongoCollection<Document> docs = database.getCollection("test");
 
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
+						MongoClient.getDefaultCodecRegistry(),
 						CodecRegistries.fromProviders(
 								new ElementCodecProvider(),
 								new MetadatumCodecProvider(),
+								new MetadatumJsonCodecProvider(),
 								new SystemicMetadataCodecProvider()),
 				MongoClient.getDefaultCodecRegistry());
 
 		collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
 		dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
-		metadata = database.getCollection(METADATA_COLLECTION_NAME, Metadatum.class).withCodecRegistry(codecRegistry);
+		metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
 		metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
 	}
 	
@@ -55,14 +63,16 @@ public class MongoDatastoreClient {
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
 						CodecRegistries.fromProviders(
+								new DocumentCodecProvider(),
 								new ElementCodecProvider(),
 								new MetadatumCodecProvider(),
+								new MetadatumJsonCodecProvider(),
 								new SystemicMetadataCodecProvider()),
 				MongoClient.getDefaultCodecRegistry());
 
 		collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
 		dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
-		metadata = database.getCollection(METADATA_COLLECTION_NAME, Metadatum.class).withCodecRegistry(codecRegistry);
+		metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
 		metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
 	}
 
@@ -74,8 +84,8 @@ public class MongoDatastoreClient {
 		return dataElements;
 	}
 	
-	public MongoCollection<Metadatum> getMetadata() {
-		return metadata;
+	public MongoCollection<MetadatumJson> getMetadataJson() {
+		return metadataJson;
 	}
 	
 	public GridFSBucket getMetadataGridFS() {

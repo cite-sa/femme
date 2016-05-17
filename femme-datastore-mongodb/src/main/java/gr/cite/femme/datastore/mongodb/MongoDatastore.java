@@ -1,5 +1,6 @@
 package gr.cite.femme.datastore.mongodb;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,14 +56,14 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		mongoClient = new MongoDatastoreClient();
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadata(), mongoClient.getMetadataGridFS());
+		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
 	}
 
 	public MongoDatastore(MongoDatabase db) {
 		mongoClient = new MongoDatastoreClient(db);
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadata(), mongoClient.getMetadataGridFS());
+		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
 	}
 
 	public MongoCollection<Collection> getCollections() {
@@ -84,7 +85,8 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) throws DatastoreException {
 		for (Metadatum metadatum : metadata) {
 			try {
-				metadataStore.insert(metadatum, elementId.toString());
+				metadatum.setElementId(elementId.toString());
+				metadataStore.insert(metadatum);
 			} catch (MetadataStoreException e) {
 				logger.error(e.getMessage(), e);
 				throw new DatastoreException("Inserting element metadata failed.");
@@ -95,6 +97,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 
 	@Override
 	public <T extends Element> T insert(T element) throws DatastoreException {
+		Instant now = Instant.now();
 		element.setId(new ObjectId().toString());
 		insertMetadata(element.getMetadata(), element.getId());
 
@@ -110,6 +113,8 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 				}
 
 				try {
+					collection.getSystemicMetadata().setCreated(now);
+					collection.getSystemicMetadata().setModified(now);
 					collections.insertOne(collection);
 				} catch (MongoException e) {
 					throw new DatastoreException("Collection " + collection.getName() + " insertion failed.", e);
@@ -123,11 +128,17 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 					}
 				}
 				if (collection.getDataElements().size() > 0) {
+					for (DataElement dataElement: collection.getDataElements()) {
+						dataElement.getSystemicMetadata().setCreated(now);
+						dataElement.getSystemicMetadata().setModified(now);
+					}
 					dataElements.insertMany(collection.getDataElements());
 
 				}
 			} else if (element instanceof DataElement) {
 				DataElement dataElement = (DataElement) element;
+				dataElement.getSystemicMetadata().setCreated(now);
+				dataElement.getSystemicMetadata().setModified(now);
 				dataElements.insertOne(dataElement);
 
 				if (dataElement.getCollections().size() > 0) {
@@ -287,8 +298,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	}
 
 	@Override
-	public <T extends Element> void delete(Criteria criteria, Class<T> elementSubtype)
-			throws DatastoreException, IllegalElementSubtype {
+	public <T extends Element> void delete(Criteria criteria, Class<T> elementSubtype) throws DatastoreException {
 		int deletedCount = 0;
 		String subtype = elementSubtype.getSimpleName();
 
@@ -349,7 +359,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		
 	}
 
-	@Override
+	/*@Override
 	public <T extends Element> Element find(String id, Class<T> elementSubtype) throws IllegalElementSubtype {
 		String subtype = elementSubtype.getSimpleName();
 		if (subtype.equals("DataElement")) {
@@ -360,21 +370,11 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
 		}
 
-	}
+	}*/
 
 	@Override
-	public <T extends Element> IQueryOptions<T> find(Query query, Class<T> elementSubtype)
-			throws IllegalElementSubtype {
+	public <T extends Element> IQueryOptions<T> find(Query query, Class<T> elementSubtype) {
 		return new QueryOptions<T>(query, this, elementSubtype);
-		
-		/*String subtype = elementSubtype.getSimpleName();
-		if (subtype.equals("DataElement")) {
-			return (QueryOptions<T>) new QueryOptions<DataElement>(query, this);
-		} else if (subtype.equals("Collection")) {
-			return (QueryOptions<T>) new QueryOptions<Collection>(query, this);
-		} else {
-			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
-		}*/
 	}
 
 	/*
