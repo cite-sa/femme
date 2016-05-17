@@ -39,8 +39,6 @@ public class MongoDatastoreClient {
 		client = new MongoClient(DATABASE_HOST);
 		database = client.getDatabase(DATABASE_NAME);
 		
-		MongoCollection<Document> docs = database.getCollection("test");
-
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
 						MongoClient.getDefaultCodecRegistry(),
