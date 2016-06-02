@@ -1,4 +1,4 @@
-package gr.cite.femme.core.serializer;
+/*package gr.cite.femme.core.serializer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,3 +35,4 @@ public class DataElementSerializerTest {
 	}
 
 }
+*/

@@ -72,7 +72,7 @@ public class CriteriaQuerySerializerTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// System.out.println(serializedJson);
+		 System.out.println(serializedJson);
 
 		@SuppressWarnings("unchecked")
 		CriteriaQuery<DataElement> actualQuery = mapper.readValue(serializedJson, CriteriaQuerySerializer.class);
