@@ -69,11 +69,11 @@ public class DatastoreMongoTest {
 		Criteria criteria = new Criteria();
 		
 		try {
-			criteria.where(FieldNames.NAME).eq("testDataElement7")
-			/*.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("testDataElement8"))*/;
-			/*criteria.orOperator(
+			criteria.where(FieldNames.NAME).eq("testDataElement9").and("").eq(Criteria.query().where("").eq(5));
+			/*.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("testDataElement8"));*/
+			criteria.orOperator(
 					Criteria.query().where("name").eq("testDataElement1"),
-					Criteria.query().where("name").eq("testDataElement2"));*/
+					Criteria.query().where("name").eq("testDataElement2"));
 		} catch (InvalidCriteriaQueryOperation e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -82,7 +82,7 @@ public class DatastoreMongoTest {
 		
 		List<DataElement> r = null;
 			/*r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");*/
-		r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");
+		r = mongo.<DataElement>find(query, DataElement.class).list()/*.xPath("//a[text()=\"test value 1\"]")*/;
 		
 		System.out.println(r);
 		
@@ -107,7 +107,7 @@ public class DatastoreMongoTest {
 		}*/
 	}
 	
-	@Test
+	/*@Test*/
 	public void insertDataElement() {
 		DataElement dataElement = createDemoDataElement(null, null);
 		try {
@@ -118,8 +118,11 @@ public class DatastoreMongoTest {
 		}
 	}
 	
-	/*@Test*/
+	@Test
 	public void insertCollections() {
+		insertCollection();
+		insertCollection();
+		insertCollection();
 		insertCollection();
 		insertCollection();
 	}
@@ -174,7 +177,7 @@ public class DatastoreMongoTest {
 		
 		List<Metadatum> metadata = new ArrayList<>();
 		metadata.add(new Metadatum("dc", "<dc><a>test value 1</a></dc>", "xml"));
-		/*metadata.add(new Metadatum("test", "{testJson:{a:1, b:2}}", "json"));*/
+		metadata.add(new Metadatum("test", "{testJson:{a:1, b:2}}", "json"));
 		dataElement.setMetadata(metadata);
 		
 		List<DataElement> embeddedDataElements = new ArrayList<>();
@@ -218,3 +221,27 @@ public class DatastoreMongoTest {
 		return collection;
 	}
 }
+
+
+
+/*db.collections.aggregate([
+	{$match:
+		{$or: [
+		       		{"name": "testCollection5"},
+		       		{"name": "testCollection7"}
+		       ]
+	   }
+	},
+	{$unwind: "$dataElements"},
+	{$lookup : {
+		from : "dataElements",
+		localField : "dataElements._id",
+		foreignField : "_id",
+		as : "joinedDataElements"
+	}},
+	{$match : {
+		"joinedDataElements": {
+			$ne: []
+		}
+	}
+}]).pretty()*/

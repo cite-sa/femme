@@ -32,6 +32,7 @@ import gr.cite.femme.datastore.api.Datastore;
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.DatastoreException;
 import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
+import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore;
@@ -59,12 +60,12 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
 	}
 
-	public MongoDatastore(MongoDatabase db) {
+	/*public MongoDatastore(MongoDatabase db) {
 		mongoClient = new MongoDatastoreClient(db);
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
 		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
-	}
+	}*/
 
 	public MongoCollection<Collection> getCollections() {
 		return collections;
@@ -141,9 +142,9 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 				dataElement.getSystemicMetadata().setModified(now);
 				dataElements.insertOne(dataElement);
 
-				if (dataElement.getCollections().size() > 0) {
+				/*if (dataElement.getCollections().size() > 0) {
 					collections.insertMany(dataElement.getCollections());
-				}
+				}*/
 			}
 		} catch (MongoException e) {
 			try {
@@ -219,7 +220,17 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	}
 
 	@Override
-	public Collection addToCollection(DataElement dataElement, ICriteria criteria) throws DatastoreException {
+	public DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException {
+		try {
+			return addToCollection(dataElement, Criteria.query().where(FieldNames.ID).eq(new ObjectId(collectionId)));
+		} catch (InvalidCriteriaQueryOperation e) {
+			logger.error(e.getMessage(), e);
+			throw new DatastoreException(e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public DataElement addToCollection(DataElement dataElement, ICriteria criteria) throws DatastoreException {
 		Collection updatedCollection = null;
 		
 		logger.debug("addToCollection criteria query: " + new Document(criteria.getCriteria()).toJson().toString());
@@ -246,7 +257,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		} else {
 			logger.info("No collection updated");
 		}
-		return updatedCollection;
+		return dataElement;
 	}
 
 	@Override
@@ -371,36 +382,21 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		}
 
 	}*/
+	
+	@Override
+	public Collection getCollection(String id) {
+		return collections.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+	}
+	
+	@Override
+	public DataElement getDataElement(String id) {
+		return dataElements.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+	}
 
 	@Override
 	public <T extends Element> IQueryOptions<T> find(Query query, Class<T> elementSubtype) {
 		return new QueryOptions<T>(query, this, elementSubtype);
 	}
-
-	/*
-	 * public List<Element> find(Element element) throws DatastoreException {
-	 * List<Element> elements = new ArrayList<>(); if (element.getMetadata() !=
-	 * null && (element.getMetadata().size() == 0 ||
-	 * element.getMetadata().stream().allMatch(metadatum -> metadatum.getValue()
-	 * == null))) { MongoCursor<Element> cursor =
-	 * elementCollection.find(buildElementBson(element)).iterator(); try { while
-	 * (cursor.hasNext()) { Element elementFromDB = cursor.next(); for
-	 * (Metadatum metadatum : elementFromDB.getMetadata()) { Metadatum
-	 * gridFSDownload = metadatumGridfs.download(metadatum.getId());
-	 * metadatum.setValue(gridFSDownload.getValue()); }
-	 * elements.add(elementFromDB); } } finally { cursor.close(); } } else {
-	 * metadatumGridfs.find(element.getMetadata());
-	 * 
-	 * MongoCursor<Element> cursor =
-	 * elementCollection.find(buildElementBson(element)).iterator(); try { while
-	 * (cursor.hasNext()) { Element elementFromDB = cursor.next(); for
-	 * (Metadatum metadatum : elementFromDB.getMetadata()) { Metadatum
-	 * gridFSDownload = metadatumGridfs.download(metadatum.getId());
-	 * metadatum.setValue(gridFSDownload.getValue()); }
-	 * elements.add(elementFromDB); } } finally { cursor.close(); } }
-	 * 
-	 * return elements; }
-	 */
 
 	@Override
 	public void remove(Element dataElement, Collection collection) throws DatastoreException {

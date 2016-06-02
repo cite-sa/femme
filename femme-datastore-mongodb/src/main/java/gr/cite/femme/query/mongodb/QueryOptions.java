@@ -3,7 +3,6 @@ package gr.cite.femme.query.mongodb;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -11,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.Function;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -46,16 +46,13 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 	}
 	
 	public QueryOptions(Query query, MongoDatastore datastore, Class<T> elementSubtype) {
-		if (query instanceof Query) {
-			Query theQuery = (Query) query;
 			this.datastore = datastore;
 			
-			String subtype = elementSubtype.getSimpleName();
-			if (subtype.equals("DataElement")) {
+			if (elementSubtype == DataElement.class) {
 				collection = (MongoCollection<T>) datastore.getDataElements();
 				
-				if (!theQuery.isCollectionsResolved() && theQuery.getQuery().containsKey("collections")) {
-					Map<String, Object> collectionsIn = (Map<String, Object>) theQuery.getQuery().get("collections");
+				if (query != null && !query.isCollectionsResolved() && query.getQuery().containsKey("collections")) {
+					Map<String, Object> collectionsIn = (Map<String, Object>) query.getQuery().get("collections");
 					
 					/*Criteria collectionCriteria = (Criteria) collectionElemMatch.get("$in");
 					List<Document> colls = findCollections(collectionCriteria).stream().map(new Function<Collection, Document>() {
@@ -66,43 +63,35 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 					}).collect(Collectors.toList());
 					collectionElemMatch.put("$in", colls);*/
 					
-					collectionsIn.put("$in", 
-							findCollections((Criteria)collectionsIn.get("$in")).stream()
-							.map(new Function<Collection, Document>() {
-								@Override
-								public Document apply(Collection coll) {
-									return new Document().append("_id", new ObjectId(coll.getId()));
-								}
-							}).collect(Collectors.toList()));
+					List<Document> resolvedCollections = new ArrayList<>();
+					datastore.getCollections().find(new Document(((Criteria)collectionsIn.get("$in")).getCriteria()))
+					.map(collection -> {
+						return new Document().append("_id", new ObjectId(collection.getId()));
+					}).into(resolvedCollections);
 					
-					theQuery.resolveCollections();
+					collectionsIn.put("$in", resolvedCollections);
+					query.resolveCollections();
 				}
 				
-			} else if (subtype.equals("Collection")) {
+			} else if (elementSubtype == Collection.class) {
 				collection = (MongoCollection<T>) datastore.getCollections();
 				
-				if (!theQuery.isDataElementsResolved() && theQuery.getQuery().containsKey("dataElements")) {
-					Map<String, Object> dataElementsIn = (Map<String, Object>) theQuery.getQuery().get("dataElements");
+				if (query != null && !query.isDataElementsResolved() && query.getQuery().containsKey("dataElements")) {
+					Map<String, Object> dataElementsIn = (Map<String, Object>) query.getQuery().get("dataElements");
 					
-					dataElementsIn.put("$in", 
-							findDataElements((Criteria)dataElementsIn.get("$in")).stream()
-							.map(new Function<DataElement, Document>() {
-								@Override
-								public Document apply(DataElement dataEl) {
-									return new Document().append("_id", new ObjectId(dataEl.getId()));
-								}
-							}).collect(Collectors.toList()));
-					
-					theQuery.resolveCollections();
+					List<Document> resolvedDataElements = new ArrayList<>();
+					datastore.getDataElements().find(new Document(((Criteria)dataElementsIn.get("$in")).getCriteria()))
+					.map(dataElement -> {
+						return new Document().append("_id", new ObjectId(dataElement.getId()));
+					}).into(resolvedDataElements);
+				
+					dataElementsIn.put("$in", resolvedDataElements);
+					query.resolveCollections();
 				}
 			}
-
 			
 			metadataStore = datastore.getMetadataStore();
-			results = this.collection.find(new Document(theQuery.getQuery()));
-		} else {
-			throw new IllegalArgumentException("Argument must be instance of Criteria class");
-		}
+			results = query == null ? this.collection.find() : this.collection.find(new Document(query.getQuery())); 
 	}
 	
 	@Override
@@ -154,50 +143,30 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 	public MongoCursor<T> iterator() {
 		return results.iterator();
 	}
-
+	
 	@Override
 	public List<T> xPath(String xPath) {
 		List<T> elements = new ArrayList<>();
 		MongoCursor<T> cursor = (MongoCursor<T>) results.iterator();
 		try {
 			while (cursor.hasNext()) {
-				elements.add(cursor.next());
+				T element = cursor.next();
+				if (metadataStore.find(element, xPath) != null) {
+					elements.add(element);					
+				}
+				/*elements.add(cursor.next());*/
 			}
+		}  catch (MetadataStoreException e) {
+			logger.error(e.getMessage(), e);
 		} finally {
 			cursor.close();
 		}
-		List<T> xPathedElements = null;
+		/*List<T> xPathedElements = null;
 		try {
 			xPathedElements = metadataStore.find(elements, xPath);
 		} catch (MetadataStoreException e) {
 			logger.error(e.getMessage(), e);
-		}
-		return xPathedElements;
-	}
-	
-	public List<Collection> findCollections(Criteria criteria) {
-		List<Collection> collections = new ArrayList<>();
-		MongoCursor<Collection> cursor = datastore.getCollections().find(new Document(criteria.getCriteria())).iterator();
-		try {
-			while (cursor.hasNext()) {
-				collections.add(cursor.next());
-			}
-		} finally {
-			cursor.close();
-		}
-		return collections;
-	}
-	
-	public List<DataElement> findDataElements(Criteria criteria) {
-		List<DataElement> dataElements = new ArrayList<>();
-		MongoCursor<DataElement> cursor = datastore.getDataElements().find(new Document(criteria.getCriteria())).iterator();
-		try {
-			while (cursor.hasNext()) {
-				dataElements.add(cursor.next());
-			}
-		} finally {
-			cursor.close();
-		}
-		return dataElements;
+		}*/
+		return elements;
 	}
 }

@@ -237,7 +237,6 @@ public class ElementCodec implements CollectibleCodec<Element> {
         			Metadatum metadatum = codecRegistry.get(Metadatum.class).decode(reader, decoderContext);
         			metadatum.setElementId(id);
         			metadata.add(metadatum);
-        			/*metadata.add(codecRegistry.get(Metadatum.class).decode(reader, decoderContext));*/
         		}
         		reader.readEndArray();
             } else if (fieldName.equals("systemicMetadata")) {

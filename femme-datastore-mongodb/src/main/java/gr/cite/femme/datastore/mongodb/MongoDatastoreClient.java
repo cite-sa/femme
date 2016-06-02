@@ -1,7 +1,5 @@
 package gr.cite.femme.datastore.mongodb;
 
-import org.bson.Document;
-import org.bson.codecs.DocumentCodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
@@ -13,7 +11,6 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 
 import gr.cite.femme.core.Collection;
 import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
@@ -61,7 +58,7 @@ public class MongoDatastoreClient {
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
 						CodecRegistries.fromProviders(
-								new DocumentCodecProvider(),
+								/*new DocumentCodecProvider(),*/
 								new ElementCodecProvider(),
 								new MetadatumCodecProvider(),
 								new MetadatumJsonCodecProvider(),

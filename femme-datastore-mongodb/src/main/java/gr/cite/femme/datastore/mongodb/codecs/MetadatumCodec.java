@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.bson.BsonReader;
 import org.bson.BsonString;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
@@ -74,24 +75,26 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 
 	@Override
 	public Metadatum decode(BsonReader reader, DecoderContext decoderContext) {
+		String id = null, name = null, contentType = null;
+		
 		reader.readStartDocument();
-
-		String id = reader.readObjectId(METADATUM_ID_KEY).toString();
-		/*ObjectId fileId = reader.readObjectId(METADATUM_FILE_ID_KEY);*/
-		/* String fileName = reader.readString(METADATUM_FILENAME_KEY); */
-		String name = reader.readString(METADATUM_NAME_KEY);
-		String contentType = reader.readString(METADATUM_CONTENT_TYPE_KEY);
-
+		
+		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+            String fieldName = reader.readName();
+            
+            if (fieldName.equals(METADATUM_ID_KEY)) {
+            	id = reader.readObjectId().toString();
+            } else if (fieldName.equals(METADATUM_NAME_KEY)) {
+            	name = reader.readString();
+            } else if (fieldName.equals(METADATUM_CONTENT_TYPE_KEY)) {
+            	contentType = reader.readString();
+            }
+		}
+		
 		reader.readEndDocument();
 
-		/*
-		 * Metadatum metadatum = metadatumGridFS.download(fileId);
-		 * metadatum.setId(id); metadatum.setName(name);
-		 * metadatum.setContentType(contentType);
-		 */
-
 		Metadatum metadatum = new Metadatum();
-		metadatum.setId(id.toString());
+		metadatum.setId(id);
 		metadatum.setName(name);
 		metadatum.setContentType(contentType);
 

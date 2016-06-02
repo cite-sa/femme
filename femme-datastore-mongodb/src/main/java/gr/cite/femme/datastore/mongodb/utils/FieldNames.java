@@ -12,6 +12,8 @@ public class FieldNames {
 	
 	public static final String DATA_ELEMENTS = "dataElements";
 	
+	public static final String METADATA_ELEMENT_ID = "elementId";
+	
 	public static final String FILENAME = "fileName";
 	public static final String FILE_ID = "fileId";
 	public static final String ELEMENT_ID = "elementId";

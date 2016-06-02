@@ -55,7 +55,12 @@ public class MongoMetadataStore implements MetadataStore {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
+	@Override
+	public <T extends Element> T find(T element, String xPath) throws MetadataStoreException {
+		return null;
+	}
+	
 	@Override
 	public <T extends Element> List<T> find(List<T> elements, String xPath) throws MetadataStoreException {
 		try {

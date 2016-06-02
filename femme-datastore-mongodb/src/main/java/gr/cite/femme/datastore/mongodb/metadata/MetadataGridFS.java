@@ -160,10 +160,31 @@ public class MetadataGridFS implements MetadataStore {
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
+	
+	public boolean xPath(List<Metadatum> metadata, String xPath) throws XPathFactoryConfigurationException {
+		for (Metadatum metadatum: metadata) {
+			if (new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).size() > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	
-	public <T extends Element> List<Metadatum> find(T element, String xPath) throws MetadataStoreException {
+	public <T extends Element> T find(T element, String xPath) throws MetadataStoreException {
 		try {
+			List<Metadatum> metadata = find(element.getId()); 
+			if (xPath(metadata, xPath)) {
+				element.setMetadata(metadata);
+				return element;
+			} else {
+				return null;
+			}
+		} catch (XPathFactoryConfigurationException e) {
+			logger.error(e.getMessage(), e);
+			throw new MetadataStoreException("XPath on element with id: " + element.getId() + " failed", e);
+		}
+		/*try {
 			return find(element.getId(), false).stream().filter(new Predicate<Metadatum>() {
 				@Override
 				public boolean test(Metadatum metadatum) {
@@ -180,7 +201,7 @@ public class MetadataGridFS implements MetadataStore {
 			}).collect(Collectors.toList());
 		} catch (RuntimeException e) {
 			throw new MetadataStoreException(e.getMessage(), e);
-		}
+		}*/
 	}
 	
 	public <T extends Element> List<T> find(List<T> elementIds, String xPath) throws MetadataStoreException {
