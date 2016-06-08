@@ -33,7 +33,7 @@ public class WCSFemmeClient implements FemmeClient {
 		webTarget = client.target(FEMME_URL);
 	}
 	
-	public static Collection toCollection(WCSResponse response) throws ParseException {
+	public static Collection toCollection(String endpoint, WCSResponse response) throws ParseException {
 		Collection collection = new Collection();
 		
 		collection.setEndpoint(response.getEndpoint());
@@ -65,8 +65,15 @@ public class WCSFemmeClient implements FemmeClient {
 
 	@Override
 	public String insert(DataElement dataElement) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		String insertedDataElementId = webTarget
+				.path("dataElements")
+				.request()
+				.post(Entity.entity(dataElement, MediaType.APPLICATION_JSON), String.class);
+		
+		logger.debug("Collection " + insertedDataElementId + " has been successfully inserted");
+		
+		return insertedDataElementId;
 	}
 
 	@Override
