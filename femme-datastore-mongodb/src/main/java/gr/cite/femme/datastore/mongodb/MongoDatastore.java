@@ -34,6 +34,8 @@ import gr.cite.femme.datastore.exceptions.DatastoreException;
 import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
+import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
+import gr.cite.femme.datastore.mongodb.cache.MongoXPathCacheManager;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore;
 import gr.cite.femme.datastore.mongodb.utils.Documentizer;
@@ -57,15 +59,15 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		mongoClient = new MongoDatastoreClient();
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
+		metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS(), new MongoXPathCacheManager(this));
 	}
 
-	/*public MongoDatastore(MongoDatabase db) {
-		mongoClient = new MongoDatastoreClient(db);
+	public MongoDatastore(String dbHost, String dbName) {
+		mongoClient = new MongoDatastoreClient(dbHost, dbName);
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		this.metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS());
-	}*/
+		metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS(), new MongoXPathCacheManager(this));
+	}
 
 	public MongoCollection<Collection> getCollections() {
 		return collections;
@@ -82,7 +84,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	public MetadataStore getMetadataStore() {
 		return metadataStore;
 	}
-
+	
 	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) throws DatastoreException {
 		for (Metadatum metadatum : metadata) {
 			try {
@@ -148,7 +150,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 			}
 		} catch (MongoException e) {
 			try {
-				metadataStore.delete(element.getId());
+				metadataStore.deleteAll(element.getId());
 			} catch (MetadataStoreException e1) {
 				logger.error(e1.getMessage(), e1);
 			}
@@ -208,7 +210,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		} catch (MongoException e) {
 			for (Element element : elements) {
 				try {
-					metadataStore.delete(element.getId());
+					metadataStore.deleteAll(element.getId());
 				} catch (MetadataStoreException e1) {
 					logger.error(e1.getMessage(), e1);
 				}
@@ -329,7 +331,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 				}
 				// TODO: remove DataElement id from Collection
 				try {
-					metadataStore.delete(element.getId());
+					metadataStore.deleteAll(element.getId());
 				} catch (MetadataStoreException e) {
 					logger.error(e.getMessage(), e);
 				}
@@ -344,7 +346,7 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 				}
 				// TODO: remove Collection id from DataElements
 				try {
-					metadataStore.delete(element.getId());
+					metadataStore.deleteAll(element.getId());
 				} catch (MetadataStoreException e) {
 					logger.error(e.getMessage(), e);
 				}
@@ -403,20 +405,4 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 
 	}
 
-
-	/*
-	 * private ElementBson buildElementBson(Element element) { ElementBson
-	 * elementBson = null; if (element instanceof DataElement) { elementBson =
-	 * new
-	 * DataElementBsonBuilder().id(element.getId()).endpoint(element.getEndpoint
-	 * ()) .name(element.getName()).metadata(element.getMetadata())
-	 * .systemicMetadata(element.getSystemicMetadata())
-	 * .dataElement(((DataElement) element).getDataElement()).build(); } else if
-	 * (element instanceof Collection) { elementBson = new
-	 * CollectionBsonBuilder().id(element.getId()).endpoint(element.getEndpoint(
-	 * )) .name(element.getName()).metadata(element.getMetadata())
-	 * .systemicMetadata(element.getSystemicMetadata())
-	 * .dataElements(((Collection) element).getDataElements()).build(); } return
-	 * elementBson; }
-	 */
 }

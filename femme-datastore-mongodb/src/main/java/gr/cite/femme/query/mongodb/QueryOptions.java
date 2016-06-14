@@ -3,7 +3,15 @@ package gr.cite.femme.query.mongodb;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -23,18 +31,18 @@ import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.query.IQueryOptions;
+import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 
 public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 	private static final Logger logger = LoggerFactory.getLogger(QueryOptions.class);
 	
-	MongoDatastore datastore;
+	private MongoDatastore datastore;
 	
-	MongoCollection<T> collection;
+	private MongoCollection<T> collection;
 	
-	MetadataStore metadataStore;
+	private MetadataStore metadataStore;
 	
 	private FindIterable<T> results;
-	
 	
 	public QueryOptions() {
 		
@@ -146,27 +154,50 @@ public class QueryOptions<T extends Element> implements IQueryOptions<T> {
 	
 	@Override
 	public List<T> xPath(String xPath) {
+		
 		List<T> elements = new ArrayList<>();
 		MongoCursor<T> cursor = (MongoCursor<T>) results.iterator();
+		
+		List<Future<T>> futures = new ArrayList<Future<T>>();
+		ExecutorService executor = Executors.newFixedThreadPool(50);
+		
 		try {
 			while (cursor.hasNext()) {
 				T element = cursor.next();
-				if (metadataStore.find(element, xPath) != null) {
+				
+				futures.add(executor.submit(new Callable<T>() {
+	
+					@Override
+					public T call() throws Exception {
+						if (metadataStore.xPath(element, xPath) != null) {
+							return element;					
+						}
+						return null;
+					}
+				}));
+				
+				/*if (metadataStore.find(element, xPath) != null) {
 					elements.add(element);					
-				}
-				/*elements.add(cursor.next());*/
+				}*/
 			}
-		}  catch (MetadataStoreException e) {
-			logger.error(e.getMessage(), e);
+		/*}  catch (MetadataStoreException e) {
+			logger.error(e.getMessage(), e);*/
 		} finally {
+			executor.shutdown();
+			
+			for(Future<T> future : futures) {
+				try {
+					elements.add(future.get());
+				} catch (InterruptedException e) {
+					logger.error(e.getMessage(), e);
+				} catch (ExecutionException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+			
 			cursor.close();
 		}
-		/*List<T> xPathedElements = null;
-		try {
-			xPathedElements = metadataStore.find(elements, xPath);
-		} catch (MetadataStoreException e) {
-			logger.error(e.getMessage(), e);
-		}*/
+		
 		return elements;
 	}
 }

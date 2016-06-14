@@ -1,10 +1,7 @@
 package gr.cite.femme.query.serialization.mongodb;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,13 +15,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.collect.Lists;
 
 import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
-import gr.cite.femme.query.ICriteria;
-import gr.cite.femme.query.IWhere;
 import gr.cite.femme.query.mongodb.Criteria;
-import gr.cite.femme.query.mongodb.Query;
 import gr.cite.femme.query.mongodb.Where;
 
 @JsonSerialize(using = CustomCriteriaSerializer.class)

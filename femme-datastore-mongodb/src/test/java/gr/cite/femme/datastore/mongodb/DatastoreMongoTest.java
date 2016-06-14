@@ -1,5 +1,8 @@
 package gr.cite.femme.datastore.mongodb;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -64,16 +67,20 @@ public class DatastoreMongoTest {
 
 	}*/
 	
-	/*@Test*/
+	@Test
 	public void testFind() {
 		Criteria criteria = new Criteria();
 		
 		try {
-			criteria.where(FieldNames.NAME).eq("testDataElement9").and("").eq(Criteria.query().where("").eq(5));
-			/*.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("testDataElement8"));*/
-			criteria.orOperator(
+			criteria/*.where(FieldNames.NAME).eq("frt00009392_07_if166l_trr3")*/
+				.inCollection(Criteria.query().where(FieldNames.ENDPOINT)
+						.eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities"));
+			/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities")
+				.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("hrl0000c067_07_if185l_trr3"));*/
+			/*criteria.orOperator(
 					Criteria.query().where("name").eq("testDataElement1"),
-					Criteria.query().where("name").eq("testDataElement2"));
+					Criteria.query().where("name").eq("testDataElement2"));*/
+			/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities");*/
 		} catch (InvalidCriteriaQueryOperation e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -82,9 +89,35 @@ public class DatastoreMongoTest {
 		
 		List<DataElement> r = null;
 			/*r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");*/
-		r = mongo.<DataElement>find(query, DataElement.class).list()/*.xPath("//a[text()=\"test value 1\"]")*/;
 		
-		System.out.println(r);
+		List<Duration> totalDuration = new ArrayList<>();
+		for (int i = 0; i < 1; i ++) {
+			Instant start = Instant.now();
+			
+			r = mongo.<DataElement>find(query, DataElement.class)/*.limit(1)*//*.list()*/
+					.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
+					/*.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");*/
+			
+			Instant end = Instant.now();
+			
+			totalDuration.add(Duration.between(start, end));
+		}
+		/*Instant start = Instant.now();
+		
+		r = mongo.<DataElement>find(query, DataElement.class).limit(1)
+				.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
+				.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
+		
+		Instant end = Instant.now();
+		
+		System.out.println(Duration.between(start, end));*/
+		for (Duration duration: totalDuration) {
+			System.out.println("Total time: " + duration);
+		}
+		
+		System.out.println(r.size());
+		
+		/*System.out.println(r);*/
 		
 		/*try {
 			mongo.delete(Criteria.query().where(FieldNames.NAME).eq("testDataElement"), DataElement.class);
@@ -118,7 +151,7 @@ public class DatastoreMongoTest {
 		}
 	}
 	
-	@Test
+	/*@Test*/
 	public void insertCollections() {
 		insertCollection();
 		insertCollection();

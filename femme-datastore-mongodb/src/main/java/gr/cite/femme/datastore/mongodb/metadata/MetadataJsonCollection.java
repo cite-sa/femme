@@ -15,8 +15,9 @@ import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 
-public class MetadataMongoCollection implements MetadataStore {
+public class MetadataJsonCollection implements MongoMetadataCollection {
 
 	private MongoCollection<MetadatumJson> metadataCollection;
 	
@@ -30,41 +31,37 @@ public class MetadataMongoCollection implements MetadataStore {
 		return metadatum;
 	};
 
-	public MetadataMongoCollection() {
+	public MetadataJsonCollection() {
 
 	}
 
-	public MetadataMongoCollection(MongoCollection<MetadatumJson> metadataCollection) {
+	public MetadataJsonCollection(MongoCollection<MetadatumJson> metadataCollection) {
 		this.metadataCollection = metadataCollection;
 	}
 
-	@Override
 	public String insert(Metadatum metadatum) throws MetadataStoreException {
 		MetadatumJson metadatumJson = new MetadatumJson(metadatum);
 		metadataCollection.insertOne(metadatumJson);
 		return metadatumJson.getId();
 	}
 
-	@Override
 	public Metadatum get(String metadatumId) throws MetadataStoreException {
 		MetadatumJson metadatumJson = metadataCollection.find(Filters.eq(FieldNames.ID, metadatumId)).limit(1).first();
 		return new Metadatum(metadatumJson.getId(), metadatumJson.getElementId(), metadatumJson.getName(),
 				metadatumJson.getValue(), metadatumJson.getContentType());
 	}
 
-	@Override
 	public List<Metadatum> find(String elementId) throws MetadataStoreException {
 		return metadataCollection.find(Filters.eq(FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
 				.map(metadatumTransformation).into(new ArrayList<>());
 	}
 	
-	@Override
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
+	/*@Override
 	public <T extends Element> T find(T element, String xPath) throws MetadataStoreException {
 		return null;
 	}
@@ -91,17 +88,21 @@ public class MetadataMongoCollection implements MetadataStore {
 	public Metadatum xPath(Metadatum metadatum, String xPath) throws MetadataStoreException {
 		// TODO Auto-generated method stub
 		return null;
+	}*/
+
+	public void delete(Metadatum metadatum) {
+		// TODO Auto-generated method stub
+
 	}
 
-	@Override
-	public void delete(Metadatum metadatum) throws MetadataStoreException {
+	public void deleteAll(String elementId) throws MetadataStoreException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void delete(String elementId) throws MetadataStoreException {
+	public List<String> xPath(Metadatum metadatum, String xPath) throws MetadataStoreException {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 }

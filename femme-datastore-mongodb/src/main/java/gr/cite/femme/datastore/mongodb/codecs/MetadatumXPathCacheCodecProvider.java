@@ -4,18 +4,17 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import com.mongodb.client.gridfs.GridFSBucket;
-
 import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.core.MetadatumXPathCache;
 
-public class MetadatumCodecProvider implements CodecProvider {
-	@SuppressWarnings("unchecked")
+public class MetadatumXPathCacheCodecProvider implements CodecProvider {
+
 	@Override
 	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
-		if (clazz == Metadatum.class) {
-			return (Codec<T>) new MetadatumCodec(registry);
+		if (clazz == MetadatumXPathCache.class) {
+			return (Codec<T>) new MetadatumXPathCacheCodec();
 		}
 		return null;
 	}
+
 }
