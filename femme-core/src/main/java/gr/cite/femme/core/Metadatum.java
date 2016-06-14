@@ -1,5 +1,8 @@
 package gr.cite.femme.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Metadatum {
 
 	private String id;
@@ -12,19 +15,24 @@ public class Metadatum {
 	
 	private String contentType;
 	
+	private List<MetadatumXPathCache> xPathCache;
+	
 	public Metadatum() {
+		this.xPathCache = new ArrayList<>();
 	}
 	
 	public Metadatum(String name, String value, String contentType) {
 		this.name = name;
 		this.value = value;
 		this.contentType = contentType;
+		this.xPathCache = new ArrayList<>();
 	}
 	public Metadatum(String id, String name, String value, String contentType) {
 		this.id = id;
 		this.name = name;
 		this.value = value;
 		this.contentType = contentType;
+		this.xPathCache = new ArrayList<>();
 	}
 	public Metadatum(String id, String elementId, String name, String value, String contentType) {
 		this.id = id;
@@ -32,6 +40,7 @@ public class Metadatum {
 		this.name = name;
 		this.value = value;
 		this.contentType = contentType;
+		this.xPathCache = new ArrayList<>();
 	}
 	
 	public String getId() {
@@ -73,6 +82,15 @@ public class Metadatum {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
+	
+	public List<MetadatumXPathCache> getXPathCache() {
+		return xPathCache;
+	}
+
+	public void setXPathCache(List<MetadatumXPathCache> xPathCache) {
+		this.xPathCache = xPathCache;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder metadataBuilder = new StringBuilder();

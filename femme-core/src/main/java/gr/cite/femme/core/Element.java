@@ -91,6 +91,7 @@ public class Element {
 	public void setSystemicMetadata(SystemicMetadata systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
 	}
+
 	@Override
 	public String toString() {
 		StringBuilder elementBuilder = new StringBuilder();
