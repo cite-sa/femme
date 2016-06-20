@@ -36,11 +36,11 @@ public class WCSRequest {
 
 		// TODO Content-type:
 		// multipart/x-mixed-replace;boundary=End
-		logger.warn("-----------------------------------------------------------------------");
+		/*logger.warn("-----------------------------------------------------------------------");
 		logger.warn("-----------------------------------------------------------------------");
 		logger.warn("--  TODO  read Content-type: multipart/x-mixed-replace;boundary=End  --");
 		logger.warn("-----------------------------------------------------------------------");
-		logger.warn("-----------------------------------------------------------------------");
+		logger.warn("-----------------------------------------------------------------------");*/
 		// FIXME delete if
 		if (responseString.startsWith("\r\n--End")) {
 			responseString = responseString.replaceAll("--End--", "").replaceAll("--End", "")
