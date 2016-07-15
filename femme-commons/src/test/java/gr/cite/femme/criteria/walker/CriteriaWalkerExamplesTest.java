@@ -5,12 +5,12 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.criteria.serializer.CriteriaQuerySerializer;
 import gr.cite.femme.criteria.utils.PrintCriteriaQuery;
 import gr.cite.femme.criteria.walker.CriteriaWalker;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 

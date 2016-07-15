@@ -9,14 +9,14 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumXPathCacheCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
 
 public class MongoDatastoreClient {
 	/*private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";*/
@@ -37,25 +37,7 @@ public class MongoDatastoreClient {
 	/*private MongoCollection<MetadatumXPathCache> metadataIndex;*/
 	
 	public MongoDatastoreClient() {
-		
-		client = new MongoClient(DATABASE_HOST);
-		database = client.getDatabase(DATABASE_NAME);
-		
-		CodecRegistry codecRegistry = CodecRegistries
-				.fromRegistries(
-						MongoClient.getDefaultCodecRegistry(),
-						CodecRegistries.fromProviders(
-								new ElementCodecProvider(),
-								new MetadatumCodecProvider(),
-								new MetadatumXPathCacheCodecProvider(),
-								new MetadatumJsonCodecProvider(),
-								new SystemicMetadataCodecProvider()),
-				MongoClient.getDefaultCodecRegistry());
-
-		collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
-		dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
-		metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
-		metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
+		this(DATABASE_HOST, DATABASE_NAME);
 	}
 	
 	public MongoDatastoreClient(String dbHost, String dbName) {

@@ -2,10 +2,10 @@ package gr.cite.femme.datastore.api;
 
 import java.util.List;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.datastore.exceptions.DatastoreException;
+import gr.cite.femme.exceptions.DatastoreException;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.IQueryOptions;
@@ -29,7 +29,9 @@ public interface Datastore<R extends ICriteria, S extends IQuery<R>>  {
 	
 	public <T extends Element> IQueryOptions<T> find(S query, Class<T> elementSubtype);
 	
-	public Collection getCollection(String id);
+	public Collection getCollection(String id) throws DatastoreException;
 	
-	public DataElement getDataElement(String id);
+	public DataElement getDataElement(String id) throws DatastoreException;
+	
+	public DataElement getDataElementByName(String id) throws DatastoreException;
 }

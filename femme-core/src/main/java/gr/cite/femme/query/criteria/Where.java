@@ -1,7 +1,7 @@
 package gr.cite.femme.query.criteria;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 
 public interface Where<T> {
 

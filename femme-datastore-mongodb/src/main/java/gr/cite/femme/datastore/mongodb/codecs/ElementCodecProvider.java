@@ -4,9 +4,9 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
 
 public class ElementCodecProvider implements CodecProvider {
 	@SuppressWarnings("unchecked")

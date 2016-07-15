@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 
 public class MetadataQueryDocumentBuilder {

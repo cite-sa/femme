@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.client;
+package gr.cite.earthserver.wcs.core;
 
 import java.net.URI;
 
@@ -8,6 +8,8 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import gr.cite.earthserver.wcs.core.WCSResponse;
 
 public class WCSRequest {
 	private static final Logger logger = LoggerFactory.getLogger(WCSRequest.class);

@@ -1,6 +1,6 @@
 package gr.cite.femme.datastore.mongodb.utils;
 
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Metadatum;
 
 public class MetadatumInfo {
 	private String fileId;

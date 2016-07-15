@@ -1,7 +1,6 @@
 package gr.cite.femme.criteria.mongodb;
 
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +16,13 @@ import org.slf4j.LoggerFactory;
 import com.github.fakemongo.junit.FongoRule;
 import com.mongodb.client.MongoCursor;
 
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.mongodb.DatastoreMongoTest;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.mongodb.Criteria;

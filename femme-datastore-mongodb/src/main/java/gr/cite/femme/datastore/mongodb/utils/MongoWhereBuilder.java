@@ -1,7 +1,7 @@
 package gr.cite.femme.datastore.mongodb.utils;
 
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.Where;
 import gr.cite.femme.query.criteria.WhereBuilder;

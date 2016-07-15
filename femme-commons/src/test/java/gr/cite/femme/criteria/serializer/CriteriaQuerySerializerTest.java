@@ -9,10 +9,10 @@ import org.junit.Test;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.criteria.serializer.CriteriaQuerySerializer;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 

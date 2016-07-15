@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.bson.Document;
 
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.criteria.serializer.WhereBuilderSerializer;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.criteria.Where;
 import gr.cite.femme.query.criteria.WhereBuilder;

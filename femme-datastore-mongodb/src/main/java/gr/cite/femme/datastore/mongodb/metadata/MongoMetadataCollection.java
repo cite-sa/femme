@@ -2,16 +2,16 @@ package gr.cite.femme.datastore.mongodb.metadata;
 
 import java.util.List;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.datastore.exceptions.MetadataStoreException;
+import gr.cite.femme.exceptions.MetadataStoreException;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 
 public interface MongoMetadataCollection {
 	
-	public String insert(Metadatum metadatum) throws MetadataStoreException;
+	public void insert(Metadatum metadatum) throws MetadataStoreException;
 
-	public Metadatum get(String metadatumId) throws MetadataStoreException;
+	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 	

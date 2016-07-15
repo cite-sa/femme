@@ -20,13 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
 import gr.cite.femme.datastore.api.Datastore;
-import gr.cite.femme.datastore.exceptions.DatastoreException;
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.exceptions.DatastoreException;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.mongodb.Criteria;
@@ -105,7 +105,15 @@ public class FemmeResource {
 	@Path("collections/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCollection(@PathParam("id") String id) {
-		return Response.ok(datastore.getCollection(id)).build();
+		Collection collection = null;
+		try {
+			collection = datastore.getCollection(id);
+			return Response.ok(collection).build();
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage());
+		}
+		
 	}
 	
 	@POST
@@ -140,11 +148,32 @@ public class FemmeResource {
 	}
 	
 	
-	@GET
+	/*@GET
 	@Path("dataElements/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getDataElement(@PathParam("id") String id) {
-		return Response.ok(datastore.getDataElement(id)).build();
+		DataElement dataElement;
+		try {
+			dataElement = datastore.getDataElement(id);
+			return Response.ok(dataElement).build();
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage());
+		}
+	}*/
+	
+	@GET
+	@Path("dataElements/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getDataElement(@PathParam("name") String name) {
+		DataElement dataElement;
+		try {
+			dataElement = datastore.getDataElementByName(name);
+			return Response.ok(dataElement).build();
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage());
+		}
 	}
 	
 	@GET

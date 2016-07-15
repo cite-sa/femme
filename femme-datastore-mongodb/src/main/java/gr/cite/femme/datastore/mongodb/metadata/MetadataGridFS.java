@@ -30,12 +30,12 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.api.MetadataStore;
-import gr.cite.femme.datastore.exceptions.DatastoreException;
-import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
+import gr.cite.femme.exceptions.DatastoreException;
+import gr.cite.femme.exceptions.MetadataStoreException;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.utils.Pair;
 import gr.cite.scarabaeus.utils.xml.XMLConverter;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
@@ -63,14 +63,22 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	}
 	
 	@Override
-	public String insert(Metadatum metadatum) throws MetadataStoreException {
-		return this.upload(metadatum);
+	public void insert(Metadatum metadatum) throws MetadataStoreException {
+		this.upload(metadatum);
 	}
 	
-	private String upload(Metadatum metadatum) throws MetadataStoreException {
+	private void upload(Metadatum metadatum) throws MetadataStoreException {
 		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
-		InputStream streamToUploadFrom = new ByteArrayInputStream(
-				metadatum.getValue().getBytes(StandardCharsets.UTF_8));
+		
+		String value;
+		if (metadatum.getContentType().contains("xml")) {
+			value = metadatum.getValue().replaceAll(">\\s+<", "><").trim();			
+		} else {
+			value = metadatum.getValue();
+		}
+		
+		InputStream streamToUploadFrom = new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8));
+		
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
 					new Document()
 					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
@@ -85,12 +93,11 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		}
 		metadatum.setId(fileId.toString());
 		
-		return metadatum.getId();
 	}
 	
 	@Override
-	public Metadatum get(String metadatumId) throws MetadataStoreException {
-		return download(metadatumId);
+	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
+		return download(metadatum.getId());
 	}
 	
 	private Metadatum download(String fileId) throws MetadataStoreException {

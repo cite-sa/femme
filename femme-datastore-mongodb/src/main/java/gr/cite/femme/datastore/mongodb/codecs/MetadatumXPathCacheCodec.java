@@ -18,9 +18,9 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.core.MetadatumXPathCache;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.model.MetadatumXPathCache;
 
 public class MetadatumXPathCacheCodec implements CollectibleCodec<MetadatumXPathCache> {
 	

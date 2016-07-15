@@ -5,7 +5,7 @@ import org.bson.BsonDocumentWrapper;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import gr.cite.femme.core.Collection;
+import gr.cite.femme.model.Collection;
 
 public class CollectionBson extends ElementBson implements Bson {
 	private Collection collection;

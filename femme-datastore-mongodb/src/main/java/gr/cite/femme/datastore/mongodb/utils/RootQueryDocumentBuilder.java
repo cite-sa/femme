@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 
-import gr.cite.femme.core.Element;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 
 public class RootQueryDocumentBuilder {

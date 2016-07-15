@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.femme.client;
+package gr.cite.femme.client;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -10,16 +10,13 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gr.cite.earthserver.wcs.client.WCSResponse;
-import gr.cite.earthserver.wcs.utils.ParseException;
-import gr.cite.earthserver.wcs.utils.WCSParseUtils;
 import gr.cite.femme.client.FemmeClient;
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.client.api.FemmeClientAPI;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
 
-public class WCSFemmeClient implements FemmeClient {
-	private static final Logger logger = LoggerFactory.getLogger(WCSFemmeClient.class);
+public class FemmeClient implements FemmeClientAPI {
+	private static final Logger logger = LoggerFactory.getLogger(FemmeClient.class);
 	
 	private final static String FEMME_URL = "http://localhost:8081/femme-application/femme/";
 	
@@ -28,41 +25,16 @@ public class WCSFemmeClient implements FemmeClient {
 	private WebTarget webTarget;
 	
 	
-	public WCSFemmeClient() {
+	public FemmeClient() {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
 		webTarget = client.target(FEMME_URL);
 	}
 	
-	public static Collection toCollection(String endpoint, WCSResponse response) throws ParseException {
-		Collection collection = new Collection();
-		
-		collection.setEndpoint(response.getEndpoint());
-		collection.setName(WCSParseUtils.getServerName(response.getResponse()));
-		
-		collection.getMetadata().add(toMetadatum(response));
-		
-		return collection;
+	public FemmeClient(String femmeUrl) {
+		client = ClientBuilder.newClient().register(JacksonFeature.class);
+		webTarget = client.target(femmeUrl);
 	}
 	
-	public static DataElement toDataElement(WCSResponse response) throws ParseException {
-		DataElement dataElement = new DataElement();
-		
-		dataElement.setName(WCSParseUtils.getCoverageId(response.getResponse()));
-		dataElement.setEndpoint(response.getEndpoint());
-		
-		dataElement.getMetadata().add(toMetadatum(response));
-		
-		return dataElement;
-	}
-	
-	public static Metadatum toMetadatum(WCSResponse response) {
-		Metadatum metadatum = new Metadatum();
-		metadatum.setContentType(response.getContentType().toString());
-		metadatum.setValue(response.getResponse());
-		return metadatum;
-	}
-
-
 	@Override
 	public String insert(DataElement dataElement) {
 		

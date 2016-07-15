@@ -2,14 +2,14 @@ package gr.cite.femme.datastore.api;
 
 import java.util.List;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.datastore.exceptions.MetadataStoreException;
+import gr.cite.femme.exceptions.MetadataStoreException;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 
 public interface MetadataStore {
-	public String insert(Metadatum metadatum) throws MetadataStoreException ;
+	public void insert(Metadatum metadatum) throws MetadataStoreException ;
 	
-	public Metadatum get(String fileId) throws MetadataStoreException;
+	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
 	
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 	

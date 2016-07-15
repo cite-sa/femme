@@ -1,4 +1,4 @@
-package gr.cite.femme.datastore.mongodb.cache;
+/*package gr.cite.femme.datastore.mongodb.cache;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 	@Override
 	public <T extends Element> void checkAndCreateIndexOnXPath(Metadatum metadatum, String xpath, List<String> xPathResult, T element) {
 		
-		/*List<MetadatumXPathCache> metadatumIndexes =  metadatum.getIndex().stream().filter(new Predicate<MetadatumXPathCache>() {
+		List<MetadatumXPathCache> metadatumIndexes =  metadatum.getIndex().stream().filter(new Predicate<MetadatumXPathCache>() {
 
 			@Override
 			public boolean test(MetadatumXPathCache index) {
@@ -55,7 +55,7 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 				}
 				return false;
 			}
-		}).collect(Collectors.toList());*/
+		}).collect(Collectors.toList());
 		
 		boolean indexExists = false;
 		boolean indexUnchanged = false;
@@ -78,13 +78,13 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 					
 				}
 			}
-			/*for (MetadatumXPathCache metadatumIndex: metadatum.getIndex()) {
+			for (MetadatumXPathCache metadatumIndex: metadatum.getIndex()) {
 				if (metadatumIndex.getXPath().equals(xpath)) {
 					metadatumIndex.setValues(xPathResult);
 					newIndex = metadatumIndex;
 					indexExists = true;
 				}
-			}*/
+			}
 			
 			if (!indexExists) {
 				updatedIndex = new MetadatumXPathCache();
@@ -97,13 +97,13 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 				if (!indexUnchanged) {
 					getMongoCollection(element).updateOne(
 						Filters.eq(FieldNames.ID, new ObjectId(metadatum.getElementId())),
-						/*Filters.and(
+						Filters.and(
 								Filters.eq(FieldNames.ID, new ObjectId(metadatum.getElementId())),
-								Filters.eq(FieldNames.METADATA + "." + "index." + updatedIndexPosition + "", value)),*/
+								Filters.eq(FieldNames.METADATA + "." + "index." + updatedIndexPosition + "", value)),
 						Updates.set(
 							"metadata." + getIndexOfMetadatum(metadatum, element) + ".index." + updatedIndexPosition,
 							updatedIndex
-							/*new Document().append("_id", new ObjectId()).append("xPath", xpath).append("values", xPathResult)*/
+							new Document().append("_id", new ObjectId()).append("xPath", xpath).append("values", xPathResult)
 						)
 					);
 				}
@@ -113,7 +113,7 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 						Updates.addToSet(
 							"metadata." + getIndexOfMetadatum(metadatum, element) + ".index",
 							updatedIndex
-							/*new Document().append("_id", new ObjectId()).append("xPath", xpath).append("values", xPathResult)*/
+							new Document().append("_id", new ObjectId()).append("xPath", xpath).append("values", xPathResult)
 						)
 					);
 			}
@@ -144,3 +144,4 @@ public class MongoXPathCacheManager implements XPathCacheManager {
 		return -1;
 	}
 }
+*/

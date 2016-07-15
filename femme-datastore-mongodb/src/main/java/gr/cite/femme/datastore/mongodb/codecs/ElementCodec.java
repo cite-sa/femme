@@ -14,11 +14,11 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.core.SystemicMetadata;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.model.SystemicMetadata;
 
 public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String ELEMENT_ID_KEY = "_id";
@@ -31,7 +31,6 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String DATA_ELEMENT_COLLECTIONS_KEY = "collections";
 	
 	private static final String COLLECTION_DATA_ELEMENTS_KEY = "dataElements";
-	/*private static final String COLLECTION_IS_COLLECTION_KEY = "isCollection";*/
 	
 	private static final String METADATUM_ID_KEY = "_id";
 	private static final String METADATUM_FILENAME_KEY = "fileName";

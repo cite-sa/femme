@@ -24,22 +24,22 @@ import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.api.Datastore;
 import gr.cite.femme.datastore.api.MetadataStore;
-import gr.cite.femme.datastore.exceptions.DatastoreException;
-import gr.cite.femme.datastore.exceptions.IllegalElementSubtype;
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
-import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
-import gr.cite.femme.datastore.mongodb.cache.MongoXPathCacheManager;
+/*import gr.cite.femme.datastore.mongodb.cache.MongoXPathCacheManager;*/
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore;
 import gr.cite.femme.datastore.mongodb.utils.Documentizer;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.exceptions.DatastoreException;
+import gr.cite.femme.exceptions.IllegalElementSubtype;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.exceptions.MetadataStoreException;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IQuery;
 import gr.cite.femme.query.IQueryOptions;
@@ -48,6 +48,7 @@ import gr.cite.femme.query.mongodb.Query;
 import gr.cite.femme.query.mongodb.QueryOptions;
 
 public class MongoDatastore implements Datastore<Criteria, Query>  {
+	
 	private static final Logger logger = LoggerFactory.getLogger(MongoDatastore.class);
 
 	MongoDatastoreClient mongoClient;
@@ -59,14 +60,14 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 		mongoClient = new MongoDatastoreClient();
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS(), new MongoXPathCacheManager(this));
+		metadataStore = new MongoMetadataStore(mongoClient);
 	}
 
-	public MongoDatastore(String dbHost, String dbName) {
+	public MongoDatastore(String dbHost, String dbName, String metadataIndexHost) {
 		mongoClient = new MongoDatastoreClient(dbHost, dbName);
 		collections = mongoClient.getCollections();
 		dataElements = mongoClient.getDataElements();
-		metadataStore = new MongoMetadataStore(mongoClient.getMetadataJson(), mongoClient.getMetadataGridFS(), new MongoXPathCacheManager(this));
+		metadataStore = new MongoMetadataStore(mongoClient, metadataIndexHost);
 	}
 
 	public MongoCollection<Collection> getCollections() {
@@ -386,13 +387,27 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	}*/
 	
 	@Override
-	public Collection getCollection(String id) {
+	public Collection getCollection(String id) throws DatastoreException {
+		Collection collection;
+		collection = collections.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+		collection.setMetadata(getMetadata(collection));
 		return collections.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
 	}
 	
 	@Override
-	public DataElement getDataElement(String id) {
-		return dataElements.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+	public DataElement getDataElement(String id) throws DatastoreException {
+		DataElement dataElement;
+		dataElement = dataElements.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+		dataElement.setMetadata(getMetadata(dataElement));
+		return dataElement;
+	}
+	
+	@Override
+	public DataElement getDataElementByName(String name) throws DatastoreException {
+		DataElement dataElement;
+		dataElement = dataElements.find(Filters.eq(FieldNames.NAME, name)).limit(1).first();
+		dataElement.setMetadata(getMetadata(dataElement));
+		return dataElement;
 	}
 
 	@Override
@@ -403,6 +418,19 @@ public class MongoDatastore implements Datastore<Criteria, Query>  {
 	@Override
 	public void remove(Element dataElement, Collection collection) throws DatastoreException {
 
+	}
+	
+	public <T extends Element> List<Metadatum> getMetadata(T element) throws DatastoreException {
+		try {
+			return metadataStore.find(element.getId(), false);
+		} catch (MetadataStoreException e) {
+			throw new DatastoreException("Error during metadatum retrieval", e);
+		}
+		/*try {
+			return metadataStore.get(element.getId());
+		} catch(MetadataStoreException e) {
+			throw new DatastoreException("Error during metadatum retrieval", e);
+		}*/
 	}
 
 }

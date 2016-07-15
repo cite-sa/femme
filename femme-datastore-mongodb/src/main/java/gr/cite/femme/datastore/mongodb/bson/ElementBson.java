@@ -5,7 +5,7 @@ import org.bson.BsonDocumentWrapper;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import gr.cite.femme.core.Element;
+import gr.cite.femme.model.Element;
 
 public class ElementBson implements Bson {
 	private Element element;

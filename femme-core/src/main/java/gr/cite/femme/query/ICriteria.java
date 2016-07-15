@@ -3,7 +3,7 @@ package gr.cite.femme.query;
 import java.util.List;
 import java.util.Map;
 
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.query.IWhere;
 
 public interface ICriteria {

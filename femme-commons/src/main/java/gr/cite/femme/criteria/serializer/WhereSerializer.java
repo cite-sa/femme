@@ -1,7 +1,7 @@
 package gr.cite.femme.criteria.serializer;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.criteria.Where;
 import gr.cite.femme.query.criteria.WhereBuilder;

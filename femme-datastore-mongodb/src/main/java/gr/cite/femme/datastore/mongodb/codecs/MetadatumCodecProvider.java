@@ -6,8 +6,8 @@ import org.bson.codecs.configuration.CodecRegistry;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 
-import gr.cite.femme.core.Metadatum;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.model.Metadatum;
 
 public class MetadatumCodecProvider implements CodecProvider {
 	@SuppressWarnings("unchecked")

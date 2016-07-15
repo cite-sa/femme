@@ -23,13 +23,13 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
 import gr.cite.femme.datastore.api.MetadataStore;
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
-import gr.cite.femme.datastore.exceptions.MetadataStoreException;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.exceptions.MetadataStoreException;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.IQueryOptions;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 

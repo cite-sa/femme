@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.client;
+package gr.cite.earthserver.wcs.core;
 
 import java.util.concurrent.ExecutionException;
 

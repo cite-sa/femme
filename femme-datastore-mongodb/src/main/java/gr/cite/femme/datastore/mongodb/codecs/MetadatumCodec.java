@@ -29,14 +29,12 @@ import org.slf4j.LoggerFactory;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
-import gr.cite.femme.core.DataElement;
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.core.MetadatumXPathCache;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
-import gr.cite.femme.datastore.mongodb.utils.MetadatumInfo;
-import gr.cite.femme.utils.Pair;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.model.MetadatumXPathCache;
 
 public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private static final Logger logger = LoggerFactory.getLogger(MetadatumCodec.class);
@@ -77,7 +75,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 			writer.writeString(METADATUM_CONTENT_TYPE_KEY, value.getContentType());
 		}
 
-		if (value.getXPathCache() != null) {
+		/*if (value.getXPathCache() != null) {
 			writer.writeStartArray(METADATUM_XPATH_CACHE_KEY);
 			
 			for (MetadatumXPathCache metadatumIndex: value.getXPathCache()) {
@@ -85,7 +83,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 			}
 				
 			writer.writeEndArray();
-		}
+		}*/
 		
 		writer.writeEndDocument();
 	}
@@ -98,7 +96,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	@Override
 	public Metadatum decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null, name = null, contentType = null;
-		List<MetadatumXPathCache> metadatumIndexes = null;
+		/*List<MetadatumXPathCache> metadatumIndexes = null;*/
 		
 		reader.readStartDocument();
 		
@@ -111,7 +109,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
             	name = reader.readString();
             } else if (fieldName.equals(METADATUM_CONTENT_TYPE_KEY)) {
             	contentType = reader.readString();
-            } else if (fieldName.equals(METADATUM_XPATH_CACHE_KEY)) {
+            }/* else if (fieldName.equals(METADATUM_XPATH_CACHE_KEY)) {
             	metadatumIndexes = new ArrayList<>();
             	
             	reader.readStartArray();
@@ -119,7 +117,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
         			metadatumIndexes.add((MetadatumXPathCache) codecRegistry.get(MetadatumXPathCache.class).decode(reader, decoderContext));
         		}
         		reader.readEndArray();
-            }
+            }*/
 		}
 		
 		reader.readEndDocument();
@@ -128,7 +126,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		metadatum.setId(id);
 		metadatum.setName(name);
 		metadatum.setContentType(contentType);
-		metadatum.setXPathCache(metadatumIndexes);
+		/*metadatum.setXPathCache(metadatumIndexes);*/
 
 		return metadatum;
 	}

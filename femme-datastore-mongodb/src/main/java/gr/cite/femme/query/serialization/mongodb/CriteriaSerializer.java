@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.query.mongodb.Criteria;
 import gr.cite.femme.query.mongodb.Where;
 

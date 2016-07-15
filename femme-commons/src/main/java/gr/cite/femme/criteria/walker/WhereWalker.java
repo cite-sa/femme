@@ -1,7 +1,7 @@
 package gr.cite.femme.criteria.walker;
 
-import gr.cite.femme.core.Element;
 import gr.cite.femme.criteria.serializer.WhereSerializer;
+import gr.cite.femme.model.Element;
 import gr.cite.femme.query.criteria.CriteriaQuery;
 import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
 import gr.cite.femme.query.criteria.Where;

@@ -2,8 +2,8 @@ package gr.cite.femme.datastore.mongodb.cache;
 
 import java.util.List;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.ICriteria;
 
 public interface XPathCacheManager {

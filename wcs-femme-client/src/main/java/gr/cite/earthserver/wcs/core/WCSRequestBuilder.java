@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.client;
+package gr.cite.earthserver.wcs.core;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;

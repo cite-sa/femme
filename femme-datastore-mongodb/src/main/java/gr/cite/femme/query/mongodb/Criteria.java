@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.datastore.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
 import gr.cite.femme.query.ICriteria;
 import gr.cite.femme.query.IWhere;
 

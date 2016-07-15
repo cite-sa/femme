@@ -12,7 +12,7 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.core.SystemicMetadata;
+import gr.cite.femme.model.SystemicMetadata;
 
 public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>{
 	private static final String SYSTEMIC_METADATA_ID_KEY = "_id";

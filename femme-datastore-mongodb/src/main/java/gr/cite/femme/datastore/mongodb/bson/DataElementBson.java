@@ -5,7 +5,7 @@ import org.bson.BsonDocumentWrapper;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import gr.cite.femme.core.DataElement;
+import gr.cite.femme.model.DataElement;
 
 public class DataElementBson extends ElementBson implements Bson {
 	DataElement dataElement;

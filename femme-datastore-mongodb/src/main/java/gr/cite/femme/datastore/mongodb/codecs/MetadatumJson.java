@@ -1,6 +1,6 @@
 package gr.cite.femme.datastore.mongodb.codecs;
 
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Metadatum;
 
 public class MetadatumJson extends Metadatum {
 	public MetadatumJson() {

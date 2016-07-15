@@ -2,9 +2,9 @@ package gr.cite.femme.datastore.mongodb.bson;
 
 import java.util.List;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
-import gr.cite.femme.core.SystemicMetadata;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.model.SystemicMetadata;
 
 public class ElementBsonBuilder {
 	protected String id;

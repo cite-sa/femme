@@ -1,9 +1,9 @@
-package gr.cite.femme.client;
+package gr.cite.femme.client.api;
 
-import gr.cite.femme.core.Collection;
-import gr.cite.femme.core.DataElement;
+import gr.cite.femme.model.Collection;
+import gr.cite.femme.model.DataElement;
 
-public interface FemmeClient {
+public interface FemmeClientAPI {
 
 	public String insert(DataElement dataElement);
 

@@ -3,8 +3,8 @@ package gr.cite.femme.datastore.mongodb.utils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.core.Element;
-import gr.cite.femme.core.Metadatum;
+import gr.cite.femme.model.Element;
+import gr.cite.femme.model.Metadatum;
 
 public class Documentizer {
 	private static final String ELEMENT_ID_KEY = "_id";

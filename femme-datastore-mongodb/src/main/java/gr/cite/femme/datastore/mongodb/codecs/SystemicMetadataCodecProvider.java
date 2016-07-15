@@ -4,7 +4,7 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import gr.cite.femme.core.SystemicMetadata;
+import gr.cite.femme.model.SystemicMetadata;
 
 public class SystemicMetadataCodecProvider implements CodecProvider {
 	@SuppressWarnings("unchecked")
