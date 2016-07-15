@@ -1,0 +1,25 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"	
+	xsi:schemaLocation="http://www.springframework.org/schema/beans	
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd">
+   
+   <context:property-placeholder location="classpath:index.properties"/>
+   
+	<bean id="mongoMetadataIndex" class="gr.cite.femme.index.mongodb.MongoMetadataIndex">
+		<constructor-arg value="${index.db.host}"/>
+		<constructor-arg value="${index.db.name}"/>
+	</bean>
+   
+   <bean id="metadataIndexResource" class="gr.cite.femme.index.resources.MetadataIndexResource">
+   		<constructor-arg ref="mongoMetadataIndex" />
+   </bean>
+	
+	<context:annotation-config/>
+	<context:component-scan base-package="gr.cite.femme.index"/>
+</beans>
