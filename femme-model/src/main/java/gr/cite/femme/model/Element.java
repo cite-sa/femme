@@ -3,16 +3,26 @@ package gr.cite.femme.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonInclude(Include.NON_EMPTY)
 public class Element {
 
+	@JsonProperty
 	private String id;
 	
+	@JsonProperty
 	private String name;
 	
+	@JsonProperty
 	private String endpoint;
 
+	@JsonProperty
 	private List<Metadatum> metadata;
 
+	@JsonProperty
 	private SystemicMetadata systemicMetadata;
 	
 	public Element() {

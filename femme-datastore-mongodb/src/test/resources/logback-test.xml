@@ -8,7 +8,7 @@
 		</layout>
 	</appender>
 
-	<logger name="gr.cite.femme" level="debug"
+	<logger name="gr.cite.femme" level="info"
 		additivity="false">
 		<appender-ref ref="STDOUT" />
 	</logger>
@@ -19,17 +19,35 @@
 	</root>
 
 </configuration>
-<!-- <configuration>
-	<appender name="STDOUT" class="ch.qos.logback.core.FileAppender">
-		<file>oaiprovider.log</file>
-		<layout class="ch.qos.logback.classic.PatternLayout">
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-		</layout>
+<!-- <?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property name="WEBAPP_LOGS" value="/home/kapostolopoulos/apache-tomcat-8.5.4/logs" />
+
+	<appender name="FILE-AUDIT"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>./logs/femme-application.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+		</encoder>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			rollover daily
+			<fileNamePattern>./logs/archived/trending.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+
 	</appender>
 
-	<logger></logger>
+	<logger name="gr.cite.femme" level="INFO" additivity="false">
+		<appender-ref ref="FILE-AUDIT" />
+	</logger>
 
-	<root level="info">
-		<appender-ref ref="STDOUT" />
+	<root level="INFO">
+		<appender-ref ref="FILE-AUDIT" />
 	</root>
+
 </configuration> -->

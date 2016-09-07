@@ -1,26 +1,33 @@
 package gr.cite.femme.utils;
 
 public class Pair<T, S> {
-	private T first;
-	private S second;
+	
+	private T left;
+	
+	private S right;
 	
 	public Pair() {
 		
 	}
-	public Pair(T first, S second) {
-			this.first = first;
-			this.second = second;
+	
+	public Pair(T left, S right) {
+			this.left = left;
+			this.right = right;
 	}
-	public T getFirst() {
-		return this.first;
+	
+	public T getLeft() {
+		return this.left;
 	}
-	public void setFirst(T first) {
-		this.first = first;
+	
+	public void setLeft(T left) {
+		this.left = left;
 	}
-	public S getSecond() {
-		return this.second;
+	
+	public S getRight() {
+		return this.right;
 	}
-	public void setSecond(S second) {
-		this.second = second;
+	
+	public void setRight(S right) {
+		this.right = right;
 	}
 }

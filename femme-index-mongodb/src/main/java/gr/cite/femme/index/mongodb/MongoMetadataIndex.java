@@ -32,9 +32,9 @@ public class MongoMetadataIndex implements MetadataIndexClient {
 		metadatumIndex.setElementId(metadatum.getElementId());
 		metadatumIndex.setContentType(metadatum.getContentType());
 		
-		if (metadatum.getContentType().contains("xml")) {
+		if (metadatum.getContentType().toLowerCase().contains("xml")) {
 			metadatumIndex.setValue(XmlJsonConverter.xmlToJson(metadatum.getValue()));
-		}
+		} else if (metadatum.getContentType().toLowerCase().contains("json"))
 		
 		indexCollection.insertOne(metadatumIndex);
 		

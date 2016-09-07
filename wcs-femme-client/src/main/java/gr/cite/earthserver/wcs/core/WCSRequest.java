@@ -33,7 +33,8 @@ public class WCSRequest {
 		String responseString = response.readEntity(String.class);
 
 		if (response.getStatus() >= 300) {
-			throw new WCSRequestException(responseString, response.getStatus());
+			logger.error(endpoint + ":" + responseString);
+			throw new WCSRequestException(endpoint + ":" + responseString, response.getStatus());
 		}
 
 		// TODO Content-type:

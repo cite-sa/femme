@@ -8,7 +8,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>gr.cite.femme</groupId>
-			<artifactId>femme-core</artifactId>
+			<artifactId>femme-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

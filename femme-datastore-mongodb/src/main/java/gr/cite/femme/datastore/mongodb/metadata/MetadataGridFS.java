@@ -39,6 +39,8 @@ import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.utils.Pair;
 import gr.cite.scarabaeus.utils.xml.XMLConverter;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
+import gr.cite.scarabaues.utils.xml.exceptions.XMLConversionException;
+import gr.cite.scarabaues.utils.xml.exceptions.XPathEvaluationException;
 
 public class MetadataGridFS implements MongoMetadataCollection {
 	private static final Logger logger = LoggerFactory.getLogger(MetadataGridFS.class);
@@ -134,6 +136,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 				@Override
 				public Metadatum apply(GridFSFile t) {
 					Metadatum metadatum = new Metadatum();
+					metadatum.setId(t.getObjectId().toString());
 					metadatum.setElementId(t.getMetadata().getObjectId(METADATUM_ELEMENT_ID_KEY).toString());
 					metadatum.setName(t.getMetadata().getString(METADATUM_NAME_KEY));
 					metadatum.setContentType(t.getMetadata().getString(METADATUM_CONTENT_TYPE_KEY));
@@ -174,6 +177,12 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		} catch (XPathFactoryConfigurationException e) {
 			logger.error(e.getMessage(), e);
 			throw new RuntimeException(e.getMessage(), e);
+		} catch (XPathEvaluationException e1) {
+			logger.error(e1.getMessage(), e1);
+			throw new RuntimeException(e1.getMessage(), e1);
+		} catch (XMLConversionException e2) {
+			logger.error(e2.getMessage(), e2);
+			throw new RuntimeException(e2.getMessage(), e2);
 		}
 	}
 	

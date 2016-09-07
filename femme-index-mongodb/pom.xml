@@ -5,6 +5,10 @@
 	<artifactId>femme-index-mongodb</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<properties>
+		<mongodb.version>3.3.0</mongodb.version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -19,7 +23,7 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-			<version>3.2.2</version>
+			<version>${mongodb.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>gr.cite.commons</groupId>

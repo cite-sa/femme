@@ -49,9 +49,9 @@ public class MongoMetadataStore implements MetadataStore {
 	@Override
 	public void insert(Metadatum metadatum) throws MetadataStoreException {
 		getMetadataStore(metadatum).insert(metadatum);
-		if (metadatum.getId() != null && isIndexable(metadatum)) {
+		/*if (metadatum.getId() != null && isIndexable(metadatum)) {
 			metadataIndexClient.index(metadatum);
-		}
+		}*/
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public List<Metadatum> find(String elementId) throws MetadataStoreException {
-		return find(elementId, true);
+		return find(elementId, false);
 	}
 
 	@Override
@@ -173,7 +173,9 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 	
 	private boolean isIndexable(Metadatum metadatum) {
-		if (metadatum.getContentType() != null && metadatum.getContentType().contains("xml")) {
+		if (metadatum.getContentType() != null 
+				&&(metadatum.getContentType().toLowerCase().contains("xml") 
+						|| metadatum.getContentType().toLowerCase().contains("json"))) {
 			return true;
 		}
 		return false;

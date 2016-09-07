@@ -1,23 +1,27 @@
 package gr.cite.femme.model;
 
-import java.time.Instant;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class SystemicMetadata {
 	
 	private String id;
 	
-	private Instant created;
+	private DateTime created;
 	
-	private Instant modified;
+	private DateTime modified;
 	
 	private Map<String, MetadataStatistics> xPathFrequencies;
+	
 
 	public SystemicMetadata() {
 		
 	}
 	
-	public SystemicMetadata(String id, Instant created, Instant modified) {
+	public SystemicMetadata(String id, DateTime created, DateTime modified) {
 		this.id = id;
 		this.created = created;
 		this.modified = modified;
@@ -29,16 +33,16 @@ public class SystemicMetadata {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public Instant getCreated() {
+	public DateTime getCreated() {
 		return created;
 	}
-	public void setCreated(Instant created) {
+	public void setCreated(DateTime created) {
 		this.created = created;
 	}
-	public Instant getModified() {
+	public DateTime getModified() {
 		return modified;
 	}
-	public void setModified(Instant modified) {
+	public void setModified(DateTime modified) {
 		this.modified = modified;
 	}
 

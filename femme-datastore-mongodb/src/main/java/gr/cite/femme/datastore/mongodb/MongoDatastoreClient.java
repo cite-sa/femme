@@ -8,6 +8,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.model.Indexes;
+import com.vividsolutions.jts.awt.GeometryCollectionShape;
 
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;
@@ -15,11 +17,12 @@ import gr.cite.femme.datastore.mongodb.codecs.MetadatumXPathCacheCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
+import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 
 public class MongoDatastoreClient {
-	/*private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";*/
+	//private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
 	private static final String DATABASE_HOST = "localhost:27017";
 	private static final String DATABASE_NAME = "femme-db";
 	private static final String COLLECTIONS_COLLECTION_NAME = "collections";
@@ -60,6 +63,9 @@ public class MongoDatastoreClient {
 		dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
 		metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
 		metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
+		
+		createIndexes();
+		
 	}
 
 	public MongoCollection<Collection> getCollections() {
@@ -80,5 +86,9 @@ public class MongoDatastoreClient {
 
 	public void close() {
 		client.close();
+	}
+	
+	private void createIndexes() {
+		database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending("metadata.elementId"));
 	}
 }

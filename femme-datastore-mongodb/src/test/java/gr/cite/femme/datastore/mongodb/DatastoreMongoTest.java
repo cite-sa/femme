@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,20 +27,19 @@ import gr.cite.femme.datastore.mongodb.bson.DataElementBson;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.IllegalElementSubtype;
-import gr.cite.femme.exceptions.InvalidCriteriaQueryOperation;
+import gr.cite.femme.exceptions.InvalidQueryOperation;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
-import gr.cite.femme.query.criteria.CriteriaQuery;
-import gr.cite.femme.query.criteria.UnsupportedQueryOperationException;
-import gr.cite.femme.query.mongodb.Criteria;
-import gr.cite.femme.query.mongodb.Query;
-import gr.cite.femme.query.mongodb.QueryOptions;
+import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.query.mongodb.CriterionMongo;
+import gr.cite.femme.query.mongodb.QueryMongo;
 
 public class DatastoreMongoTest {
 	private static final Logger logger = LoggerFactory.getLogger(DatastoreMongoTest.class);
-	MongoDatastore mongo;
+	
+	private MongoDatastore mongo;
 	
 	/*@Rule
 	public FongoRule fongoRule = new FongoRule("femme-db");*/
@@ -67,41 +67,38 @@ public class DatastoreMongoTest {
 
 	}*/
 	
-	@Test
-	public void testFind() {
-		Criteria criteria = new Criteria();
+	/*@Test*/
+	public void testFind() throws DatastoreException, InvalidQueryOperation {
+		CriterionMongo criteria = null;
 		
-		try {
-			criteria/*.where(FieldNames.NAME).eq("frt00009392_07_if166l_trr3")*/
-				.inCollection(Criteria.query().where(FieldNames.ENDPOINT)
-						.eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities"));
-			/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities")
-				.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("hrl0000c067_07_if185l_trr3"));*/
-			/*criteria.orOperator(
-					Criteria.query().where("name").eq("testDataElement1"),
-					Criteria.query().where("name").eq("testDataElement2"));*/
-			/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities");*/
-		} catch (InvalidCriteriaQueryOperation e) {
-			logger.error(e.getMessage(), e);
-		}
-		Query query = new Query();
-		query.addCriteria(criteria);
+		criteria = CriterionBuilderMongo.root().eq(FieldNames.ID, "578cb5dc57e0281c22507205").end();
+		/*criteria.where(FieldNames.NAME).eq("frt00009392_07_if166l_trr3")
+			.inCollection(Criteria.query().where(FieldNames.ENDPOINT)
+					.eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities"));*/
+		/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities")
+			.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("hrl0000c067_07_if185l_trr3"));*/
+		/*criteria.orOperator(
+				Criteria.query().where("name").eq("testDataElement1"),
+				Criteria.query().where("name").eq("testDataElement2"));*/
+		/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities");*/
+		
+		QueryMongo query = QueryMongo.query().addCriterion(criteria);
 		
 		List<DataElement> r = null;
-			/*r = mongo.<DataElement>find(query, DataElement.class).xPath("//a[text()=\"test value 1\"]");*/
+		r = mongo.<DataElement>find(query, DataElement.class).list();/*.xPath("//a[text()=\"test value 1\"]");*/
 		
 		List<Duration> totalDuration = new ArrayList<>();
-		for (int i = 0; i < 1; i ++) {
+		/*or (int i = 0; i < 1; i ++) {
 			Instant start = Instant.now();
 			
-			r = mongo.<DataElement>find(query, DataElement.class)/*.limit(1)*//*.list()*/
+			r = mongo.<DataElement>find(query, DataElement.class).limit(1).list()
 					.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
-					/*.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");*/
+					.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
 			
 			Instant end = Instant.now();
 			
 			totalDuration.add(Duration.between(start, end));
-		}
+		}*/
 		/*Instant start = Instant.now();
 		
 		r = mongo.<DataElement>find(query, DataElement.class).limit(1)
@@ -140,11 +137,21 @@ public class DatastoreMongoTest {
 		}*/
 	}
 	
-	/*@Test*/
+	@Test
 	public void insertDataElement() {
 		DataElement dataElement = createDemoDataElement(null, null);
+		dataElement.setId(new ObjectId().toString());
 		try {
+			/*mongo.insert(dataElement);
+			
+			DataElement newDataElement = new DataElement();
+			newDataElement.setId(dataElement.getId());
+			newDataElement.setName("new name");
+			
+			mongo.insert(newDataElement);*/
+			
 			mongo.insert(dataElement);
+			
 			System.out.println("ok");
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);

@@ -13,7 +13,8 @@ import gr.cite.femme.model.Collection;
 
 public class MetadataIndexMongoClient {
 
-	private static final String DATABASE_HOST = "localhost:27017";
+	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
+	//private static final String DATABASE_HOST = "localhost:27017";
 	private static final String DATABASE_NAME = "femme-db";
 	private static final String METADATA_INDEX_COLLECTION_NAME = "metadataIndex";
 
