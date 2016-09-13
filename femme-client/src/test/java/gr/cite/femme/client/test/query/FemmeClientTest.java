@@ -46,9 +46,9 @@ public class FemmeClientTest {
 		System.out.println(criterion);
 	}
 	
-	//@Test
+	@Test
 	public void testDatastore() throws FemmeDatastoreException {
-		DataElement dataElement = new DataElement();
+		/*DataElement dataElement = new DataElement();
 		dataElement.setName("testName");
 		dataElement.setEndpoint("testEndpoint");
 		
@@ -57,10 +57,15 @@ public class FemmeClientTest {
 		List<DataElement> stored = client.getDataElementByEndpoint(dataElement.getEndpoint());
 		for (DataElement element: stored) {
 			System.out.println(element.toString());
-		}
+		}*/
+		
+		QueryClient query = new QueryClient();
+		query.addCriterion(CriterionBuilderClient.root().eq("endpoint", "test").end());
+		
+		client.findCollections(query, null, null);
 	}
 	
-	@Test
+	//@Test
 	public void queryDatastore() throws FemmeDatastoreException {
 		Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
 		System.out.println(collection.getEndpoint());

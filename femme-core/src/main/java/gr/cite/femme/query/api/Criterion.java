@@ -1,7 +1,7 @@
 package gr.cite.femme.query.api;
 
-public interface CriterionInterface {
+public interface Criterion {
 	
-	public <T extends CriterionInterface> Operator<T> root();
+	public <T extends Criterion> Operator<T> root();
 	
 }

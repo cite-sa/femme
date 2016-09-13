@@ -27,6 +27,8 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.query.mongodb.CriterionMongo;
+import gr.cite.femme.query.api.Criterion;
+import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
 import gr.cite.femme.query.mongodb.QueryMongo;
 
@@ -37,81 +39,13 @@ public class FemmeResource {
 	
 	private static final Logger logger = LoggerFactory.getLogger(FemmeResource.class);
 	
-	private Datastore<CriterionMongo, QueryMongo> datastore;
+	private Datastore<Criterion, Query<Criterion>> datastore;
 
 	@Inject
-	public FemmeResource(Datastore<CriterionMongo, QueryMongo> datastore) {
+	public FemmeResource(Datastore<Criterion, Query<Criterion>> datastore) {
 		this.datastore = datastore;
 	}
-
-	@GET
-	@Path("ping")
-	public Response ping() {
-		return Response.ok("pong").build();
-	}
-
-	@POST
-	@Path("collections/collection")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<String> insert(Collection collection) {
-		String insertedCollection = null;
-		FemmeResponse<String> response = new FemmeResponse<>();
-		
-		try {
-			insertedCollection = datastore.insert(collection);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedCollection);
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
-		}
-		
-		return response;
-	}
 	
-	@POST
-	@Path("dataElements/dataElement")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<String> insert(DataElement dataElement) {
-		String insertedDataElement = null;
-		FemmeResponse<String> response = new FemmeResponse<>();
-		
-		try {
-			insertedDataElement = datastore.insert(dataElement);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedDataElement);
-		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
-			logger.error(e.getMessage(), e);
-		}
-
-		return response;
-	}
-
-	@POST
-	@Path("collections/{collectionId}/dataElements/dataElement")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<String> addToCollection(@PathParam("collectionId") String collectionId, DataElement dataElement) {
-		DataElement insertedDataElement = null;
-		FemmeResponse<String> response = new FemmeResponse<>();
-		
-		try {
-			insertedDataElement = datastore.addToCollection(dataElement, collectionId);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedDataElement.getId());
-		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
-			logger.error(e.getMessage(), e);
-		}
-
-		return response;
-	}
 	
 	@POST
 	@Path("collections")
@@ -123,7 +57,7 @@ public class FemmeResource {
 
 		FemmeResponse<CollectionList> response = new FemmeResponse<>();
 		
-		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class);
+		QueryOptions<Collection> queryOptions = datastore.find(null, Collection.class);
 		
 		if (limit != null) {
 			queryOptions.limit(limit);
@@ -167,7 +101,7 @@ public class FemmeResource {
 	@Path("dataElements")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<DataElementList> findDataElements(
-			QueryMongo query,
+			Query<Criterion> query,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("xpath") String xpath) {
@@ -195,7 +129,7 @@ public class FemmeResource {
 
 	}
 	
-	@GET
+	/*@GET
 	@Path("collections/{collectionId}/dataElements")
 	public FemmeResponse<DataElementList> getDataElements(
 			@PathParam("collectionId") String collectionId,
@@ -205,9 +139,9 @@ public class FemmeResource {
 		FemmeResponse<DataElementList> response = new FemmeResponse<>();
 		
 		try {
+			Query<? extends Criterion> query = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().end());inCollection(Lists.newArrayList("collectionId"))
 			dataElements = datastore.
-					find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().end()/*inCollection(Lists.newArrayList("collectionId"))*/),
-					DataElement.class).limit(limit).skip(offset).list();
+					find(query, DataElement.class).limit(limit).skip(offset).list();
 			
 			response.setStatus(true);
 			response.setMessage("ok");
@@ -261,6 +195,6 @@ public class FemmeResource {
 		
 		return response;
 
-	}
+	}*/
 	
 }

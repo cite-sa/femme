@@ -32,6 +32,7 @@ import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
+import gr.cite.femme.datastore.mongodb.core.InsertStatus;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Element;
@@ -52,6 +53,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	private static final String METADATUM_NAME_KEY = "name";
 	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
 	private static final String METADATUM_METADATA_KEY = "metadata";
+	private static final String METADATUM_STATUS_KEY = "status";
 	private static final String METADATUM_METADATA_ELEMENT_ID_PATH = METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY;
 	
 	private GridFSBucket gridFSBucket;
@@ -86,7 +88,9 @@ public class MetadataGridFS implements MongoMetadataCollection {
 					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
 					.append(METADATUM_NAME_KEY, metadatum.getName())
 					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
+					.append(METADATUM_STATUS_KEY, InsertStatus.PENDING.getStatus())
 				);
+		
 		ObjectId fileId;
 		try {
 			fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);

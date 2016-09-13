@@ -17,6 +17,9 @@
 		<constructor-arg value="${datastore.index.host}"/>
 	</bean>
    
+   <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
+   		<constructor-arg ref="mongoDatastore" />
+   </bean>
    <bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
    		<constructor-arg ref="mongoDatastore" />
    </bean>

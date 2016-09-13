@@ -2,7 +2,7 @@ package gr.cite.femme.query.api;
 
 import java.util.List;
 
-public interface Operator<T extends CriterionInterface> {
+public interface Operator<T extends Criterion> {
 
 	public Operator<T> or(List<T> criteria);
 	

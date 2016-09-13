@@ -2,7 +2,7 @@ package gr.cite.femme.query.api;
 
 import java.util.List;
 
-public interface Query<T extends CriterionInterface> {
+public interface Query<T extends Criterion> {
 	
 	public Query<T> addCriterion(T criterion);
 	

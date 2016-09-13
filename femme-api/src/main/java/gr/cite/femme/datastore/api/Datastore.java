@@ -6,11 +6,11 @@ import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
-import gr.cite.femme.query.api.CriterionInterface;
+import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
 
-public interface Datastore<R extends CriterionInterface, S extends Query<R>>  {
+public interface Datastore<R extends Criterion, S extends Query<R>>  {
 	<T extends Element> String insert(T element) throws DatastoreException;
 	
 	<T extends Element> List<String> insert(List<T> elements) throws DatastoreException;
