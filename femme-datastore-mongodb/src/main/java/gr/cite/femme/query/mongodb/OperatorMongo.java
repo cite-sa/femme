@@ -1,28 +1,21 @@
 package gr.cite.femme.query.mongodb;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import gr.cite.femme.query.api.Operator;
 import gr.cite.femme.query.mongodb.ComparisonOperatorMongo.ComparisonOperator;
+import gr.cite.femme.query.mongodb.InclusionOperatorMongo.InclusionOperator;
 import gr.cite.femme.query.mongodb.LogicalOperatorMongo.LogicalOperator;
-import gr.cite.femme.utils.Pair;
 
 @JsonInclude(Include.NON_EMPTY)
 public class OperatorMongo implements Operator<CriterionMongo> {
-	
-	private static final Logger logger = LoggerFactory.getLogger(OperatorMongo.class);
 	
 	private CriterionMongo criterion;
 	
@@ -32,6 +25,9 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 	@JsonProperty
 	private List<LogicalOperatorMongo> logicalOperators;
 	
+	@JsonProperty
+	private List<InclusionOperatorMongo> inclusionOperators;
+	
 	/*@JsonSetter
 	public void setCriterion(CriterionMongo criterion) {
 		this.criterion = criterion;
@@ -40,12 +36,14 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 	public OperatorMongo() {
 		comparisonOperators = new ArrayList<>();
 		logicalOperators = new ArrayList<>();
+		inclusionOperators = new ArrayList<>();
 	}
 	
 	public OperatorMongo(CriterionMongo criterion) {
 		this.criterion = criterion;
 		comparisonOperators = new ArrayList<>();
 		logicalOperators = new ArrayList<>();
+		inclusionOperators = new ArrayList<>();
 	}
 
 	@Override
@@ -120,6 +118,32 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 		return this;
 	}
 	
+	@Override
+	public OperatorMongo inCollections(List<CriterionMongo> collectionCriteria) {
+		addInclusionOperator(InclusionOperator.IN_COLLECTIONS, collectionCriteria);
+		return this;
+	}
+	
+	@Override
+	public OperatorMongo inAnyCollection(List<CriterionMongo> collectionCriteria) {
+		addInclusionOperator(InclusionOperator.IN_ANY_COLLECTION, collectionCriteria);
+		return this;
+	}
+
+	@Override
+	public OperatorMongo hasDataElements(List<CriterionMongo> dataElementCriteria) {
+		addInclusionOperator(InclusionOperator.HAS_DATA_ELEMENTS, dataElementCriteria);
+		return this;
+	}
+	
+	
+
+	@Override
+	public OperatorMongo hasAnyDataElement(List<CriterionMongo> dataElementCriteria) {
+		addInclusionOperator(InclusionOperator.HAS_ANY_DATA_ELEMENT, dataElementCriteria);
+		return this;
+	}
+	
 	private void addLogicalOperator(LogicalOperator logicalOperatorType, List<CriterionMongo> criteria) {
 		LogicalOperatorMongo logicalOperator = new LogicalOperatorMongo();
 		switch (logicalOperatorType) {
@@ -179,6 +203,29 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 		comparisonOperators.add(comparisonOperator);
 	}
 	
+	private void addInclusionOperator(InclusionOperator inclusionOperatorType, List<CriterionMongo> criteria) {
+		InclusionOperatorMongo inclusionOperator = new InclusionOperatorMongo();
+		switch (inclusionOperatorType) {
+		case IN_COLLECTIONS:
+			inclusionOperator.inCollections(criteria);
+			break;
+		case IN_ANY_COLLECTION:
+			inclusionOperator.inAnyCollection(criteria);
+			break;
+		case HAS_DATA_ELEMENTS:
+			inclusionOperator.hasDataElements(criteria);
+			break;
+		case HAS_ANY_DATA_ELEMENT:
+			inclusionOperator.hasAnyDataElement(criteria);
+			break;
+			
+		default:
+			break;
+		}
+		
+		inclusionOperators.add(inclusionOperator);
+	}
+	
 	public CriterionMongo end() {
 		return criterion;
 	}
@@ -192,37 +239,18 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 	}
 	
 	protected Document build() {
+		
 		Document doc = new Document();
-		//List<Pair<>> operators = new ArrayList<>();
 		 
 		comparisonOperators.stream().map(comparisonOperator -> comparisonOperator.build())
 			.forEach(pair -> doc.append(pair.getLeft(), pair.getRight()));
 		logicalOperators.stream().map(logicalOperator -> logicalOperator.build())
 			.forEach(pair -> doc.append(pair.getLeft(), pair.getRight()));
+		inclusionOperators.stream().map(inclusionOperator -> inclusionOperator.build())
+			.forEach(pair -> doc.append(pair.getLeft(), pair.getRight()));
 		
-		/*doc.append("$and", operators);*/
 		return doc;
-		/*for (ComparisonOperatorMongo comparisonOperator: comparisonOperators) {
-			doc.append(comparisonOperator.getField(),
-					new Document().append(comparisonOperator.getOperator().getComparisonOperatorCode(), comparisonOperator.getValue()));
-		}*/
 		
-		/*String string = "";
-		
-		List<String> operators = new ArrayList<>();
-		comparisonOperators.stream().map(comparisonOperator -> comparisonOperator.build()).forEach(operators::add);
-		logicalOperators.stream().map(logicalOperator -> logicalOperator.build()).forEach(operators::add);
-		
-		Iterator<String> operatorsIterator = operators.iterator();
-		while (operatorsIterator.hasNext()) {
-			string += operatorsIterator.next();
-			if (operatorsIterator.hasNext()) {
-				string += ",";
-			}
-			
-		}*/
-
-		/*return operators;*/
 	}
-	
+
 }

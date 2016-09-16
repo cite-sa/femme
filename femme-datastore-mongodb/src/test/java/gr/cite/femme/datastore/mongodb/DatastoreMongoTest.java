@@ -1,9 +1,11 @@
 package gr.cite.femme.datastore.mongodb;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,6 +20,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fakemongo.Fongo;
 import com.github.fakemongo.junit.FongoRule;
 import com.mongodb.client.MongoCursor;
@@ -67,11 +71,17 @@ public class DatastoreMongoTest {
 
 	}*/
 	
-	/*@Test*/
-	public void testFind() throws DatastoreException, InvalidQueryOperation {
-		CriterionMongo criteria = null;
+	@Test
+	public void testFind() throws DatastoreException, InvalidQueryOperation, IOException {
+		CriterionMongo finalCriterion = null;
+		CriterionMongo dataElementCriterion = null;
+		CriterionMongo collectionCriterion = null;
 		
-		criteria = CriterionBuilderMongo.root().eq(FieldNames.ID, "578cb5dc57e0281c22507205").end();
+		dataElementCriterion = CriterionBuilderMongo.root().eq(FieldNames.NAME, "frt00014174_07_if166s_trr3").end();
+		collectionCriterion = CriterionBuilderMongo.root()
+				.inAnyCollection(Arrays.asList(CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, "http://access.planetserver.eu:8080/rasdaman/ows").end()))
+				.end();
+		
 		/*criteria.where(FieldNames.NAME).eq("frt00009392_07_if166l_trr3")
 			.inCollection(Criteria.query().where(FieldNames.ENDPOINT)
 					.eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities"));*/
@@ -81,8 +91,15 @@ public class DatastoreMongoTest {
 				Criteria.query().where("name").eq("testDataElement1"),
 				Criteria.query().where("name").eq("testDataElement2"));*/
 		/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities");*/
+		/*finalCriterion = */
+		QueryMongo query = QueryMongo.query().addCriterion(dataElementCriterion).addCriterion(collectionCriterion);
 		
-		QueryMongo query = QueryMongo.query().addCriterion(criteria);
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(query);
+		
+		QueryMongo mongoQuery = mapper.readValue(json, QueryMongo.class);
+		
+		System.out.println(mongoQuery.build());
 		
 		List<DataElement> r = null;
 		r = mongo.<DataElement>find(query, DataElement.class).list();/*.xPath("//a[text()=\"test value 1\"]");*/
@@ -137,7 +154,7 @@ public class DatastoreMongoTest {
 		}*/
 	}
 	
-	@Test
+	//@Test
 	public void insertDataElement() {
 		DataElement dataElement = createDemoDataElement(null, null);
 		dataElement.setId(new ObjectId().toString());

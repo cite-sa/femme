@@ -35,6 +35,8 @@ import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.DateTime;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.query.api.Criterion;
+import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
 import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.query.mongodb.CriterionMongo;
@@ -453,13 +455,14 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	}
 
 	@Override
-	public <T extends Element> QueryOptions<T> find(QueryMongo query, Class<T> elementSubtype) {
-		return new QueryOptionsBuilderMongo<T>().find(query, this, elementSubtype);
+	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
+		QueryMongo queryMongo = (QueryMongo) query;
+		return new QueryOptionsBuilderMongo<T>().find(queryMongo, this, elementSubtype);
 	}
 	
 	@Override
-	public <T extends Element> long count(QueryMongo query, Class<T> elementSubtype) {
-		return new QueryOptionsBuilderMongo<T>().count(query, this, elementSubtype);
+	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
+		return new QueryOptionsBuilderMongo<T>().count((QueryMongo)query, this, elementSubtype);
 	}
 	
 

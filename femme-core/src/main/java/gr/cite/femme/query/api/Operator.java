@@ -27,4 +27,12 @@ public interface Operator<T extends Criterion> {
 	public Operator<T> in(String field, Object value);
 	
 	public Operator<T> nin(String field, Object value);
+	
+	public Operator<T> inCollections(List<T> criteria);
+	
+	public Operator<T> inAnyCollection(List<T> criteria);
+	
+	public Operator<T> hasDataElements(List<T> criteria);
+	
+	public Operator<T> hasAnyDataElement(List<T> criteria);
 }

@@ -12,9 +12,11 @@ import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
 import gr.cite.scarabaues.utils.xml.exceptions.XMLConversionException;
 import gr.cite.scarabaues.utils.xml.exceptions.XPathEvaluationException;
 
-public class WCSParseUtils {
+public final class WCSParseUtils {
 	
-	private static final Logger logger = LoggerFactory.getLogger(WCSParseUtils.class); 
+	private WCSParseUtils() {
+		
+	}
 
 	public static List<String> getCoverageIds(String getCapabilitiesXML) throws ParseException {
 		try {

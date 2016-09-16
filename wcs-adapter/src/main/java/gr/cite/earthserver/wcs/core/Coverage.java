@@ -5,9 +5,9 @@ import java.util.List;
 public class Coverage {
 	
 	private String id;
-
-	private String name;
 	
+	private String coverageId;
+
 	private String metadata;
 	
 	private List<Server> servers;
@@ -21,12 +21,12 @@ public class Coverage {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getCoverageId() {
+		return coverageId;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setCoverageId(String coverageId) {
+		this.coverageId = coverageId;
 	}
 
 	public String getMetadata() {

@@ -41,20 +41,20 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 
 	@Override
-	public String getCoverageId(List<String> endpoint) {
+	public List<String> getCoverageIds(List<String> endpoint) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getCoverageId(List<String> endpoint, String xPath) {
+	public List<String> getCoverageIds(List<String> endpoint, String xPath) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Server getServer(String id) throws FemmeDatastoreException {
-		return WCSFemmeMapper.collectionToServer(femmeClient.getCollectionById(id));
+	public Server getServer(String endpoint) throws FemmeDatastoreException {
+		return WCSFemmeMapper.collectionToServer(femmeClient.getCollectionByEndpoint(endpoint));
 	}
 	
 	@Override
@@ -64,15 +64,19 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Server> getServers(Integer limit, Integer offset) throws FemmeDatastoreException {
-		return femmeClient.getCollections(limit, offset).stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
-			.collect(Collectors.toList());
+		return null;/*femmeClient.getCollections(limit, offset).stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
+			.collect(Collectors.toList());*/
 	}
 
-	@Override
-	public Coverage getCoverage(String id) throws FemmeDatastoreException {
+	public Coverage getCoverageById(String id) throws FemmeDatastoreException {
 		return WCSFemmeMapper.dataElementToCoverage(femmeClient.getDataElementById(id));
 	}
 	
+	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeDatastoreException {
+		return null;/*femmeClient.getDataElementsByName(coverageId).stream()
+				.map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+				.collect(Collectors.toList());*/
+	}
 
 	@Override
 	public List<Coverage> getCoverages() throws FemmeDatastoreException {
@@ -81,25 +85,31 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeDatastoreException {
-		return femmeClient.getDataElements(limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
-			.collect(Collectors.toList());
+		return null;/*femmeClient.getDataElements(limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+			.collect(Collectors.toList());*/
 	}
 	
 	@Override
-	public List<Coverage> getCoverages(String endpoint) throws FemmeDatastoreException {
-		return getCoverages(endpoint, null, null);
+	public List<Coverage> getCoveragesInServer(String endpoint) throws FemmeDatastoreException {
+		return getCoveragesInServer(endpoint, null, null);
 	}
 	
 	@Override
-	public List<Coverage> getCoverages(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException {
-		return femmeClient.getDataElements(endpoint, limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
-			.collect(Collectors.toList());
+	public List<Coverage> getCoveragesInServer(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException {
+		return null;/*femmeClient.getDataElementsInCollection(endpoint, limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+			.collect(Collectors.toList());*/
+	}
+
+	@Override
+	public List<String> getCoverageIds() throws FemmeDatastoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Coverage getCoverageInServerByCoverageId(String endpoint, String coverageId) throws FemmeDatastoreException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
-	public static void main(String[] args) throws FemmeDatastoreException {
-		WCSAdapter adapter = new WCSAdapter();
-		
-		Coverage coverage = adapter.getCoverage("57989b5466bccb3195c399e5");
-		System.out.println(coverage.toString());
-	}
 }

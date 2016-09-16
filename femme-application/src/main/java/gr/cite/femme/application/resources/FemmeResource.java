@@ -1,5 +1,6 @@
 package gr.cite.femme.application.resources;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -31,9 +32,10 @@ import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
 import gr.cite.femme.query.mongodb.QueryMongo;
+import gr.cite.femme.query.mongodb.QueryOptionsMongo;
 
 @Component
-@Path("femme")
+@Path("")
 @Produces(MediaType.APPLICATION_JSON)
 public class FemmeResource {
 	
@@ -46,9 +48,15 @@ public class FemmeResource {
 		this.datastore = datastore;
 	}
 	
+	@GET
+	@Path("ping")
+	public Response ping() {
+		return Response.ok("pong").build();
+	}
 	
 	@POST
 	@Path("collections")
+	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<CollectionList> findCollections(
 			QueryMongo query,
 			@QueryParam("limit") Integer limit,
@@ -57,18 +65,12 @@ public class FemmeResource {
 
 		FemmeResponse<CollectionList> response = new FemmeResponse<>();
 		
-		QueryOptions<Collection> queryOptions = datastore.find(null, Collection.class);
-		
-		if (limit != null) {
-			queryOptions.limit(limit);
-		}
-		if (offset != null) {
-			queryOptions.skip(offset);
-		}
+		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class).limit(limit).skip(offset);
 		
 		try {
 			List<Collection> collections = queryOptions.list();
 			response.setStatus(true).setMessage("ok").setEntity(new CollectionList(collections));
+			logger.info("Query on Collections: " + query.build());
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			response.setStatus(false).setMessage(e.getMessage());
@@ -80,14 +82,12 @@ public class FemmeResource {
 	
 	@GET
 	@Path("collections/{id}")
-	public FemmeResponse<Collection> getCollection(@PathParam("id") String id) {
+	public FemmeResponse<Collection> getCollectionById(@PathParam("id") String id) {
 		Collection collection = null;
 		FemmeResponse<Collection> response = new FemmeResponse<>();
 		try {
 			collection = datastore.getCollection(id);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(collection);
+			response.setStatus(true).setMessage("ok").setEntity(collection);
 		} catch (DatastoreException e) {
 			response.setStatus(false);
 			response.setMessage(e.getMessage());
@@ -98,28 +98,45 @@ public class FemmeResource {
 	}
 	
 	@POST
+	@Path("collections/count")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public FemmeResponse<Long> countCollections(
+			QueryMongo query,
+			@QueryParam("xpath") String xpath) {
+
+		FemmeResponse<Long> response = new FemmeResponse<>();
+		
+		// TODO Add XPath
+		long count = datastore.count(query, Collection.class);
+		response.setStatus(true).setMessage("ok").setEntity(count);
+		
+		return response;
+
+	}
+	
+	@POST
 	@Path("dataElements")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<DataElementList> findDataElements(
-			Query<Criterion> query,
+			QueryMongo query,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xpath) {
+			@QueryParam("xpath") String xPath) {
 
 		FemmeResponse<DataElementList> response = new FemmeResponse<>();
 		
-		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class);
-		if (limit != null) {
-			queryOptions.limit(limit);
-		}
-		if (offset != null) {
-			queryOptions.skip(offset);
-		}
-
+		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
 		
 		try {
-			List<DataElement> dataElements = queryOptions.list();
+			List<DataElement> dataElements = null;
+			if (xPath != null && !xPath.equals("")) {
+				dataElements = queryOptions.xPath(xPath);				
+			} else {
+				dataElements = queryOptions.list();
+			}
+			 
 			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
+			logger.info("Query on DataElements: " + query.build());
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			response.setStatus(false).setMessage(e.getMessage());
@@ -129,26 +146,32 @@ public class FemmeResource {
 
 	}
 	
-	/*@GET
+	@GET
 	@Path("collections/{collectionId}/dataElements")
-	public FemmeResponse<DataElementList> getDataElements(
-			@PathParam("collectionId") String collectionId,
+	public FemmeResponse<DataElementList> getDataElementsInCollection(
+			@PathParam("endpoint") String collectionEndpoint,
 			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset) {
+			@QueryParam("offset") Integer offset,
+			@QueryParam("xpath") String xPath) {
 		List<DataElement> dataElements = null;
 		FemmeResponse<DataElementList> response = new FemmeResponse<>();
 		
 		try {
-			Query<? extends Criterion> query = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().end());inCollection(Lists.newArrayList("collectionId"))
-			dataElements = datastore.
-					find(query, DataElement.class).limit(limit).skip(offset).list();
+			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
+					CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
+							CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, collectionEndpoint).end()))
+					.end());
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
 			
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(new DataElementList(dataElements));
+			if (xPath != null && !xPath.equals("")) {
+				dataElements = queryOptions.xPath(xPath);
+			} else {
+				dataElements = queryOptions.list();
+			}
+			
+			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
 		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
+			response.setStatus(false).setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
 
@@ -167,13 +190,11 @@ public class FemmeResource {
 					DataElement.class);
 			
 			DataElement dataElement = query.limit(1).first();
-
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(dataElement);
+			response.setStatus(true).setMessage("ok").setEntity(dataElement);
+			
+			logger.info("DataElement " + id + " found");
 		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
+			response.setStatus(false).setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
 
@@ -190,11 +211,12 @@ public class FemmeResource {
 
 		FemmeResponse<Long> response = new FemmeResponse<>();
 		
+		// TODO Add XPath
 		long count = datastore.count(query, DataElement.class);
 		response.setStatus(true).setMessage("ok").setEntity(count);
 		
 		return response;
 
-	}*/
+	}
 	
 }

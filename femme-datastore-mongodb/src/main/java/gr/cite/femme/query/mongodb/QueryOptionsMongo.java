@@ -1,23 +1,30 @@
 package gr.cite.femme.query.mongodb;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.InvalidQueryOperation;
 import gr.cite.femme.exceptions.MetadataStoreException;
@@ -49,6 +56,8 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	
 	public QueryOptionsMongo(QueryMongo query, MongoDatastore datastore, Class<T> elementSubtype) {
 			this.datastore = datastore;
+			
+			Document queryDocument = postProcessQuery(query, datastore);
 			
 			if (elementSubtype == DataElement.class) {
 				collection = (MongoCollection<T>) datastore.getDataElements();
@@ -84,10 +93,11 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 			}
 			
 			metadataStore = datastore.getMetadataStore();
-			results = query == null ? this.collection.find() : this.collection.find(query.build()); 
+//			results = query == null ? this.collection.find() : this.collection.find(query.build()); 
+			results = this.collection.find(queryDocument);
 			
 			if (query != null) {
-				logger.debug("Query: " + query.build().toJson());
+				logger.debug("Query: " + queryDocument.toJson());
 			}
 	}
 	
@@ -225,6 +235,58 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 		}
 		
 		return elements;
+	}
+	
+	private Document postProcessQuery(QueryMongo query, MongoDatastore datastore) {
+		if (query != null) {
+			Document queryDocument = query.build();
+			Document inclusionOperatorDocument = findInclusionOperator(queryDocument);
+			
+			List<Collection> collections = new ArrayList<>();
+			datastore.getCollections().find(new Document("$and", inclusionOperatorDocument.get("$in_any_collection")))
+				/*.projection(Projections.include(FieldNames.ID))*/
+				.into(collections);
+			System.out.println(queryDocument);
+			inclusionOperatorDocument.remove("$in_any_collection");
+			
+			List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
+			
+			inclusionOperatorDocument.append(FieldNames.DATA_ELEMENT_COLLECTION_ID,
+				new Document("$in", collectionIds));
+			
+			return queryDocument;
+		} else {
+			return new Document();
+		}
+		
+	}
+	
+	private Document findInclusionOperator(Object document) {
+		
+		Document inclusion = null;
+		String className = document.getClass().getSimpleName();
+		
+		if (className.equals("Document")) {
+			Iterator<Entry<String, Object>> iterator = ((Document)document).entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<String, Object> doc = iterator.next();
+				if (doc.getKey().equals("$in_any_collection")) {
+					
+					System.out.println("found");
+					
+					inclusion = (Document)document;
+				} else {
+					inclusion = findInclusionOperator(doc.getValue());
+				}
+			}
+		} else if (className.contains("List")) {
+			for (Document doc : (List<Document>)document) {
+				inclusion = findInclusionOperator(doc);
+			}
+		}
+		
+		return inclusion;
+		
 	}
 
 }

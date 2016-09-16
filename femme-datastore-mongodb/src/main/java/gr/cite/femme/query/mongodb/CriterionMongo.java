@@ -3,8 +3,6 @@ package gr.cite.femme.query.mongodb;
 import java.util.Map;
 
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -14,8 +12,6 @@ import gr.cite.femme.query.api.Criterion;
 
 @JsonInclude(Include.NON_EMPTY)
 public class CriterionMongo implements Criterion {
-	
-	private static final Logger logger = LoggerFactory.getLogger(CriterionMongo.class);
 	
 	@JsonProperty
 	private OperatorMongo root;

@@ -12,7 +12,7 @@ import gr.cite.femme.query.api.LogicalOperator;
 public class LogicalOperatorClient implements LogicalOperator<CriterionClient> {
 	
 	@JsonProperty
-	private LogicalOperators logicalOperator;
+	private LogicalOperators operator;
 	
 	@JsonProperty
 	private List<CriterionClient> criteria;
@@ -20,25 +20,25 @@ public class LogicalOperatorClient implements LogicalOperator<CriterionClient> {
 
 	@Override
 	public void or(List<CriterionClient> criteria) {
-		logicalOperator = LogicalOperators.OR;
+		operator = LogicalOperators.OR;
 		this.criteria = criteria;
 	}
 
 	@Override
 	public void and(List<CriterionClient> criteria) {
-		logicalOperator = LogicalOperators.AND;
+		operator = LogicalOperators.AND;
 		this.criteria = criteria;
 	}
 
 	@Override
 	public void not(List<CriterionClient> criteria) {
-		logicalOperator = LogicalOperators.NOT;
+		operator = LogicalOperators.NOT;
 		this.criteria = criteria;
 	}
 
 	@Override
 	public void nor(List<CriterionClient> criteria) {
-		logicalOperator = LogicalOperators.NOR;
+		operator = LogicalOperators.NOR;
 		this.criteria = criteria;
 	}
 

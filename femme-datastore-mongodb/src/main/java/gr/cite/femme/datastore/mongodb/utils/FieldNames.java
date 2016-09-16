@@ -9,6 +9,7 @@ public class FieldNames {
 	
 	public static final String SUB_DATA_ELEMENTS = "subDataElements";
 	public static final String COLLECTIONS = "collections";
+	public static final String DATA_ELEMENT_COLLECTION_ID = COLLECTIONS + "." + ID;
 	
 	public static final String DATA_ELEMENTS = "dataElements";
 	

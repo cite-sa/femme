@@ -16,24 +16,33 @@ public interface WCSAdapterAPI {
 	
 	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeDatastoreException ;
 	
-	public String getCoverageId(List<String> endpoint) throws FemmeDatastoreException;
 	
-	public String getCoverageId(List<String> endpoint, String xPath) throws FemmeDatastoreException;
+	public List<String> getCoverageIds() throws FemmeDatastoreException;
 	
-	public Server getServer(String id) throws FemmeDatastoreException;
+	public List<String> getCoverageIds(List<String> endpoint) throws FemmeDatastoreException;
+	
+	public List<String> getCoverageIds(List<String> endpoint, String xPath) throws FemmeDatastoreException;
+	
+	
+	public Server getServer(String endpoint) throws FemmeDatastoreException;
 	
 	public List<Server> getServers() throws FemmeDatastoreException;
 	
 	public List<Server> getServers(Integer limit, Integer offset)  throws FemmeDatastoreException;
 	
-	public Coverage getCoverage(String id) throws FemmeDatastoreException;
+	
+	public Coverage getCoverageById(String id) throws FemmeDatastoreException;
+	
+	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeDatastoreException;
+	
+	public Coverage getCoverageInServerByCoverageId(String endpoint, String coverageId) throws FemmeDatastoreException;
 	
 	public List<Coverage> getCoverages() throws FemmeDatastoreException;
 	
 	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeDatastoreException;
 	
-	public List<Coverage> getCoverages(String endpoint) throws FemmeDatastoreException;
+	public List<Coverage> getCoveragesInServer(String endpoint) throws FemmeDatastoreException;
 	
-	public List<Coverage> getCoverages(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException;
+	public List<Coverage> getCoveragesInServer(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException;
 	
 }

@@ -1,12 +1,9 @@
 package gr.cite.femme.query.mongodb;
 
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.client.model.Filters;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import gr.cite.femme.query.api.ComparisonOperator;
@@ -14,8 +11,6 @@ import gr.cite.femme.utils.Pair;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ComparisonOperatorMongo implements ComparisonOperator {
-	
-	private static final Logger logger = LoggerFactory.getLogger(ComparisonOperatorMongo.class); 
 	
 	protected static enum ComparisonOperator {
 		EQ("$eq"),
@@ -38,6 +33,7 @@ public class ComparisonOperatorMongo implements ComparisonOperator {
 		}
 		
 	}
+	
 	@JsonProperty
 	private String field;
 	

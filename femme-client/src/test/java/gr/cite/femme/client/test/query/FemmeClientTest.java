@@ -16,6 +16,7 @@ import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
+import gr.cite.femme.query.mongodb.CriterionMongo;
 
 public class FemmeClientTest {
 	
@@ -26,7 +27,7 @@ public class FemmeClientTest {
 		client = new FemmeClient();
 	}
 	
-	//@Test
+	@Test
 	public void testCriteriaSerialization() throws IOException {
 		CriterionClient criteria = CriterionBuilderClient.root()
 				.or(Arrays.asList(
@@ -41,12 +42,12 @@ public class FemmeClientTest {
 		String json = mapper.writeValueAsString(criteria);
 		System.out.println(json);
 		
-		CriterionClient criterion = mapper.readValue(json, CriterionClient.class);
+		CriterionMongo criterion = mapper.readValue(json, CriterionMongo.class);
 		
 		System.out.println(criterion);
 	}
 	
-	@Test
+//	@Test
 	public void testDatastore() throws FemmeDatastoreException {
 		/*DataElement dataElement = new DataElement();
 		dataElement.setName("testName");
@@ -62,7 +63,7 @@ public class FemmeClientTest {
 		QueryClient query = new QueryClient();
 		query.addCriterion(CriterionBuilderClient.root().eq("endpoint", "test").end());
 		
-		client.findCollections(query, null, null);
+//		client.findDataElements(query, null, null);
 	}
 	
 	//@Test
@@ -72,7 +73,7 @@ public class FemmeClientTest {
 		
 		QueryClient queryForCollection = new QueryClient();
 		queryForCollection.addCriterion(CriterionBuilderClient.root().eq("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows").end());
-		List<Collection> collections = client.findCollections(queryForCollection, null, null);
+		List<Collection> collections = client.findCollections(queryForCollection, null, null, null);
 		for (Collection collectionFromList: collections) {
 			System.out.println("Collection from list: " + collectionFromList.getEndpoint());
 		}

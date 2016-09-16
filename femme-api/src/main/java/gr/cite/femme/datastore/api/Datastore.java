@@ -27,9 +27,9 @@ public interface Datastore<R extends Criterion, S extends Query<R>>  {
 	
 	<T extends Element> void delete(S query, Class<T> elementSubtype) throws DatastoreException;
 	
-	public <T extends Element> QueryOptions<T> find(S query, Class<T> elementSubtype);
+	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
-	public <T extends Element> long count(S query, Class<T> elementSubtype);
+	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
 	public Collection getCollection(String id) throws DatastoreException;
 	

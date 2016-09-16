@@ -20,6 +20,9 @@ public class OperatorClient implements Operator<CriterionClient> {
 	@JsonProperty
 	private List<LogicalOperatorClient> logicalOperators;
 	
+	@JsonProperty
+	private List<InclusionOperatorClient> inclusionOperators;
+	
 	
 	public OperatorClient() {
 			
@@ -29,6 +32,7 @@ public class OperatorClient implements Operator<CriterionClient> {
 		this.criterion = criterion;
 		comparisonOperators = new ArrayList<>();
 		logicalOperators = new ArrayList<>();
+		inclusionOperators = new ArrayList<>();
 	}
 
 	@Override
@@ -180,17 +184,52 @@ public class OperatorClient implements Operator<CriterionClient> {
 		return criterion;
 	}
 
-	/*private void initializeComparisonOperatorsList() {
-		if (comparisonOperators == null) {
-			comparisonOperators = new ArrayList<>();
-		}
-	}
-	
-	private void initializeLogicalOperatorsList() {
-		if (logicalOperators == null) {
-			logicalOperators = new ArrayList<>();
-		}
+	@Override
+	public Operator<CriterionClient> inCollections(List<CriterionClient> criteria) {
 		
-	}*/
+		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
+		inclusionOperator.inCollections(criteria);
+		
+		inclusionOperators.add(inclusionOperator);
+		
+		return this;
+		
+	}
+
+	@Override
+	public Operator<CriterionClient> inAnyCollection(List<CriterionClient> criteria) {
+		
+		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
+		inclusionOperator.inAnyCollection(criteria);
+		
+		inclusionOperators.add(inclusionOperator);
+		
+		return this;
+		
+	}
+
+	@Override
+	public Operator<CriterionClient> hasDataElements(List<CriterionClient> criteria) {
+		
+		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
+		inclusionOperator.hasDataElements(criteria);
+		
+		inclusionOperators.add(inclusionOperator);
+		
+		return this;
+		
+	}
+
+	@Override
+	public Operator<CriterionClient> hasAnyDataElement(List<CriterionClient> criteria) {
+		
+		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
+		inclusionOperator.hasAnyDataElement(criteria);
+		
+		inclusionOperators.add(inclusionOperator);
+		
+		return this;
+		
+	}
 
 }

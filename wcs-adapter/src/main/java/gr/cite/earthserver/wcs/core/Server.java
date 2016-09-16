@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.core;
+ package gr.cite.earthserver.wcs.core;
 
 public class Server {
 	

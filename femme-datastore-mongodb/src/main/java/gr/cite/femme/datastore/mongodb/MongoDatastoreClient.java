@@ -22,8 +22,8 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 
 public class MongoDatastoreClient {
-	//private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
-	private static final String DATABASE_HOST = "localhost:27017";
+	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
+//	private static final String DATABASE_HOST = "localhost:27017";
 	private static final String DATABASE_NAME = "femme-db";
 	private static final String COLLECTIONS_COLLECTION_NAME = "collections";
 	private static final String DATA_ELEMENTS_COLLECTION_NAME = "dataElements";

@@ -25,10 +25,12 @@ import gr.cite.femme.query.mongodb.CriterionMongo;
 import gr.cite.femme.query.mongodb.QueryMongo;
 
 @Component
-@Path("femme/admin")
+@Path("admin")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class FemmeAdminResource {
 	
-private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.class);
 	
 	private Datastore<Criterion, Query<Criterion>> datastore;
 
@@ -42,23 +44,20 @@ private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.
 	public Response ping() {
 		return Response.ok("pong").build();
 	}
-
+	
 	@POST
 	@Path("collections/collection")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<String> insert(Collection collection) {
-		String insertedCollection = null;
+		String id = null;
 		FemmeResponse<String> response = new FemmeResponse<>();
 		
 		try {
-			insertedCollection = datastore.insert(collection);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedCollection);
+			id = datastore.insert(collection);
+			response.setStatus(true).setMessage("ok").setEntity(id);
+			logger.info("Collection " + id + " successfully inserted");
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
+			response.setStatus(false).setMessage(e.getMessage());
 		}
 		
 		return response;
@@ -66,20 +65,17 @@ private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.
 	
 	@POST
 	@Path("dataElements/dataElement")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<String> insert(DataElement dataElement) {
-		String insertedDataElement = null;
+		String id = null;
 		FemmeResponse<String> response = new FemmeResponse<>();
 		
 		try {
-			insertedDataElement = datastore.insert(dataElement);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedDataElement);
+			id = datastore.insert(dataElement);
+			response.setStatus(true).setMessage("ok").setEntity(id);
+			logger.info("DataElement " + id + " successfully inserted");
 		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
+			response.setStatus(false).setMessage(e.getMessage());
 		}
 
 		return response;
@@ -87,20 +83,17 @@ private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.
 
 	@POST
 	@Path("collections/{collectionId}/dataElements/dataElement")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public FemmeResponse<String> addToCollection(@PathParam("collectionId") String collectionId, DataElement dataElement) {
 		DataElement insertedDataElement = null;
 		FemmeResponse<String> response = new FemmeResponse<>();
 		
 		try {
 			insertedDataElement = datastore.addToCollection(dataElement, collectionId);
-			response.setStatus(true);
-			response.setMessage("ok");
-			response.setEntity(insertedDataElement.getId());
+			response.setStatus(true).setMessage("ok").setEntity(insertedDataElement.getId());
+			logger.info("DataElement " + dataElement.getId() + " successfully added to Collection " + collectionId);
 		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
+			response.setStatus(false).setMessage(e.getMessage());
 		}
 
 		return response;

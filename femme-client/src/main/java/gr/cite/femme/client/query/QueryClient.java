@@ -20,7 +20,7 @@ public class QueryClient implements Query<CriterionClient> {
 	}
 	
 	@Override
-	public Query<CriterionClient> addCriterion(CriterionClient criterion) {
+	public QueryClient addCriterion(CriterionClient criterion) {
 		criteria.add(criterion);
 		return this;
 	}

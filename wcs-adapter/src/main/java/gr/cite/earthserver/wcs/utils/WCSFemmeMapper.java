@@ -1,9 +1,6 @@
 package gr.cite.earthserver.wcs.utils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import gr.cite.earthserver.wcs.core.Coverage;
@@ -13,10 +10,15 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Metadatum;
 
-public class WCSFemmeMapper {
+public final class WCSFemmeMapper {
 
 	private static final String GET_CAPABILITIES = "GetCapabilities";
+
 	private static final String DESCRIBE_COVERAGE = "DescribeCoverage";
+	
+	private WCSFemmeMapper() {
+		
+	}
 
 	public static Collection fromServer(String endpoint, WCSResponse response) throws ParseException {
 		Collection collection = new Collection();
@@ -51,36 +53,22 @@ public class WCSFemmeMapper {
 	public static Coverage dataElementToCoverage(DataElement dataElement) {
 		Coverage coverage = new Coverage();
 		coverage.setId(dataElement.getId());
-		coverage.setName(dataElement.getName());
+		coverage.setCoverageId(dataElement.getName());
 
-		
 		List<Server> servers = null;
 		if (dataElement.getCollections() != null) {
 			servers = dataElement.getCollections().stream().map(collection -> collectionToServer(collection))
 					.collect(Collectors.toList());
 		}
-		 coverage.setServers(servers); 
+		coverage.setServers(servers);
 
-		String metadata = null;
-		List<Metadatum> metadataList = null;
+		String describeCoverage = "";
 		if (dataElement.getMetadata() != null) {
-			metadataList = dataElement.getMetadata().stream().filter(new Predicate<Metadatum>() {
-
-				@Override
-				public boolean test(Metadatum metadatum) {
-					if (metadatum != null) {
-						return "DescribeCoverage".equals(metadatum.getName());
-					}
-					return false;
-
-				}
-			}).collect(Collectors.toList());
-			if (metadataList.size() > 0) {
-				metadata = metadataList.get(0).getValue();
-			}
+			describeCoverage = dataElement.getMetadata().stream()
+					.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
+					.findFirst().get().getValue();
 		}
-
-		coverage.setMetadata(metadata);
+		coverage.setMetadata(describeCoverage);
 
 		return coverage;
 	}
@@ -89,23 +77,14 @@ public class WCSFemmeMapper {
 		Server server = new Server();
 		server.setId(collection.getId());
 		server.setEndpoint(collection.getEndpoint());
-		
 
-		String metadata = null;
-		List<Metadatum> metadataList = null;
+		String describeCoverage = "";
 		if (collection.getMetadata() != null) {
-			metadataList = collection.getMetadata().stream().filter(new Predicate<Metadatum>() {
-	
-				@Override
-				public boolean test(Metadatum metadatum) {
-					return metadatum.getName().equals("GetCapabilities");
-				}
-			}).collect(Collectors.toList());
-			if (metadataList.size() > 0) {
-				metadata = metadataList.get(0).getValue();
-			}
+			describeCoverage = collection.getMetadata().stream()
+					.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
+					.findFirst().get().getValue();
 		}
-		server.setMetadata(metadata);
+		server.setMetadata(describeCoverage);
 
 		return server;
 	}
