@@ -4,12 +4,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import gr.cite.femme.client.query.QueryClient;
+import gr.cite.femme.utils.Pair;
 
 public class WCSAdapterServers {
 	
 	private WCSAdapterRequest request;
 	
-	private Multimap<String, String> serversProperties;
+	private Multimap<String, String> andServerAttributes;
+	
+	private Multimap<String, String> orServerAttributes;
 	
 	private boolean and;
 	
@@ -18,13 +21,49 @@ public class WCSAdapterServers {
 	private String xPath;
 	
 	public WCSAdapterServers() {
-		serversProperties = ArrayListMultimap.create();
+		andServerAttributes = ArrayListMultimap.create();
+		orServerAttributes = ArrayListMultimap.create();
 		and = false;
 		or = false;
 	}
 	
 	public WCSAdapterServers(WCSAdapterRequest request) {
+		andServerAttributes = ArrayListMultimap.create();
+		orServerAttributes = ArrayListMultimap.create();
+		and = false;
+		or = false;
+		
 		this.request = request;
+	}
+	
+	public WCSAdapterServers and() {
+		and = true;
+		or = false;
+		
+		return this;
+	}
+	
+	public WCSAdapterServers or() {
+		and = false;
+		or = true;
+		
+		return this;
+	}
+	
+	public WCSAdapterServers attribute(Pair<String, String> attribute) {
+		
+		if (and) {
+			andServerAttributes.put(attribute.getLeft(), attribute.getRight());
+		} else if (or) {
+			orServerAttributes.put(attribute.getLeft(), attribute.getRight());
+		}
+		
+		return this;
+	}
+	
+	public WCSAdapterServers xPath(String xPath) {
+		this.xPath = xPath;
+		return this;
 	}
 	
 	public WCSAdapterRequest getRequest() {
@@ -35,12 +74,20 @@ public class WCSAdapterServers {
 		this.request = request;
 	}
 
-	public Multimap<String, String> getServersProperties() {
-		return serversProperties;
+	public Multimap<String, String> getAndServerAttributes() {
+		return andServerAttributes;
 	}
 
-	public void setServersProperties(Multimap<String, String> serversProperties) {
-		this.serversProperties = serversProperties;
+	public void setAndServerAttributes(Multimap<String, String> andServerAttributes) {
+		this.andServerAttributes = andServerAttributes;
+	}
+
+	public Multimap<String, String> getOrServerAttributes() {
+		return orServerAttributes;
+	}
+
+	public void setOrServerAttributes(Multimap<String, String> andServerAttributes) {
+		this.orServerAttributes = andServerAttributes;
 	}
 
 	public boolean isAnd() {
@@ -65,32 +112,5 @@ public class WCSAdapterServers {
 
 	public void setxPath(String xPath) {
 		this.xPath = xPath;
-	}
-
-	public WCSAdapterServers and(Multimap<String, String> serversProperties) {
-		this.serversProperties = serversProperties;
-		and = true;
-		or = false;
-		return this;
-	}
-	
-	public WCSAdapterServers or(Multimap<String, String> serversProperties) {
-		this.serversProperties = serversProperties;
-		and = false;
-		or = true;
-		return this;
-	}
-	
-	public WCSAdapterServers xPath(String xPath) {
-		this.xPath = xPath;
-		return this;
-	}
-	
-	public WCSAdapterCoverages coverages() {
-		return new WCSAdapterCoverages(request);
-	}
-	
-	public QueryClient get() {
-		return request.mapToQuery();
 	}
 }

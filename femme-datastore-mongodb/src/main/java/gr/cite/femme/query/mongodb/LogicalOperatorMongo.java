@@ -75,10 +75,11 @@ public class LogicalOperatorMongo implements LogicalOperator<CriterionMongo> {
 	protected Pair<String, List<Document>> build() {
 		
 		List<Document> criteriaDocuments = new ArrayList<>();
-		for (CriterionMongo criterion : criteria) {
-			criteriaDocuments.add(criterion.build());
+		if (criteria != null) {
+			for (CriterionMongo criterion : criteria) {
+				criteriaDocuments.add(criterion.build());
+			}
 		}
-		
 		
 		Pair<String, List<Document>> pair = new Pair<>(operator.getLogicalOperatorCode(), criteriaDocuments);
 		return pair;

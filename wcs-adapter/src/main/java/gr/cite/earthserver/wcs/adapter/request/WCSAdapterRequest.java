@@ -21,6 +21,11 @@ public class WCSAdapterRequest {
 		coverages = new WCSAdapterCoverages();
 	}
 	
+	public WCSAdapterRequest(WCSAdapterServers servers, WCSAdapterCoverages coverages) {
+		this.servers = servers;
+		this.coverages = coverages;
+	}
+	
 	public static WCSAdapterRequest request() {
 		return new WCSAdapterRequest();
 	}
@@ -30,57 +35,71 @@ public class WCSAdapterRequest {
 		return servers;
 	}
 	
-	protected void execute() {
-		
+	public WCSAdapterCoverages coverages() {
+		coverages = new WCSAdapterCoverages(this);
+		return coverages;
 	}
-
-	protected WCSAdapterServers getServers() {
+	
+	public WCSAdapterServers getServers() {
 		return servers;
 	}
 
-	protected void setServers(WCSAdapterServers servers) {
+	public void setServers(WCSAdapterServers servers) {
 		this.servers = servers;
 	}
 
-	protected WCSAdapterCoverages getCoverages() {
+	public WCSAdapterCoverages getCoverages() {
 		return coverages;
 	}
 
-	protected void setCoverages(WCSAdapterCoverages coverages) {
+	public void setCoverages(WCSAdapterCoverages coverages) {
 		this.coverages = coverages;
 	}
 	
-	protected QueryClient mapToQuery() {
-		CriterionClient coverageCriterion;
-		OperatorClient coverageOperator = CriterionBuilderClient.root();
+	public QueryClient mapToQuery() {
+		/*CriterionClient coverageCriterion;
+		OperatorClient coverageOperator = CriterionBuilderClient.root();*/
 		
-		List<CriterionClient> coverageCriteria = coverages != null ?
-			coverages.getCoveragesProperties().entries().stream().map(property -> {
+		List<CriterionClient> andCoverageCriteria = coverages != null ?
+				coverages.getAndCoverageAttributes().entries().stream().map(property -> {
+					return CriterionBuilderClient.root().eq(property.getKey(), property.getValue()).end();
+				}).collect(Collectors.toList()) :
+					new ArrayList<>();
+				
+		List<CriterionClient> orCoverageCriteria = coverages != null ?
+			coverages.getOrCoverageAttributes().entries().stream().map(property -> {
 				return CriterionBuilderClient.root().eq(property.getKey(), property.getValue()).end();
 			}).collect(Collectors.toList()) :
 				new ArrayList<>();
 		
-		if (coverages.isAnd()) {
-			coverageOperator.and(coverageCriteria);
-		} else if (coverages.isOr()) {
-			coverageOperator.or(coverageCriteria);
+		OperatorClient coverageOperator = CriterionBuilderClient.root();
+		if (andCoverageCriteria.size() > 0) {
+			coverageOperator.and(andCoverageCriteria);
 		}
+		if (orCoverageCriteria.size() > 0) {
+			coverageOperator.or(orCoverageCriteria);
+		}
+	
 		
-		
-		List<CriterionClient> serverCriteria = servers!= null ? 
-				servers.getServersProperties().entries().stream().map(property -> {
+		List<CriterionClient> andServerCriteria = servers!= null ? 
+				servers.getAndServerAttributes().entries().stream().map(property -> {
+					return CriterionBuilderClient.root().eq(property.getKey(), property.getValue()).end();
+				}).collect(Collectors.toList()) :
+					new ArrayList<>();
+				
+		List<CriterionClient> orServerCriteria = servers!= null ? 
+				servers.getOrServerAttributes().entries().stream().map(property -> {
 					return CriterionBuilderClient.root().eq(property.getKey(), property.getValue()).end();
 				}).collect(Collectors.toList()) :
 					new ArrayList<>();
 		
-		if (servers.isAnd()) {
-			CriterionClient andServerCriterion = CriterionBuilderClient.root().and(serverCriteria).end();
-			coverageOperator.inCollections(Arrays.asList(andServerCriterion));
-		} else if (servers.isOr()) {
-			CriterionClient orServerCriterion = CriterionBuilderClient.root().or(serverCriteria).end();
-			coverageOperator.inAnyCollection(Arrays.asList(orServerCriterion));
+		if (andServerCriteria.size() > 0) {
+			coverageOperator.inCollections(andServerCriteria);
+		} else if (orServerCriteria.size() > 0) {
+			coverageOperator.inAnyCollection(orServerCriteria);
 		}
-		coverageCriterion = coverageOperator.end();
+			
+		CriterionClient coverageCriterion = coverageOperator.end();
 		
 		return new QueryClient().addCriterion(coverageCriterion);
 	}

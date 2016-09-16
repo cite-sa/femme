@@ -4,12 +4,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import gr.cite.femme.client.query.QueryClient;
+import gr.cite.femme.utils.Pair;
 
 public class WCSAdapterCoverages {
 	
 	private WCSAdapterRequest request;
 	
-	private Multimap<String, String> coveragesProperties;
+	private Multimap<String, String> andCoverageAttributes;
+	
+	private Multimap<String, String> orCoverageAttributes;
 	
 	private boolean and;
 	
@@ -17,48 +20,89 @@ public class WCSAdapterCoverages {
 	
 	private String xPath;
 	
-	
 	public WCSAdapterCoverages() {
-		coveragesProperties = ArrayListMultimap.create();
+		andCoverageAttributes = ArrayListMultimap.create();
+		orCoverageAttributes = ArrayListMultimap.create();
 		and = false;
 		or = false;
 	}
 	
 	public WCSAdapterCoverages(WCSAdapterRequest request) {
-		coveragesProperties = ArrayListMultimap.create();
+		andCoverageAttributes = ArrayListMultimap.create();
+		orCoverageAttributes = ArrayListMultimap.create();
+		and = false;
+		or = false;
+		
 		this.request = request;
-		this.request.setCoverages(this);
 	}
 	
-	protected WCSAdapterRequest getRequest() {
+	public WCSAdapterCoverages and() {
+		and = true;
+		or = false;
+		
+		return this;
+	}
+	
+	public WCSAdapterCoverages or() {
+		and = false;
+		or = true;
+		
+		return this;
+	}
+	
+	public WCSAdapterCoverages attribute(Pair<String, String> attribute) {
+		
+		if (and) {
+			andCoverageAttributes.put(attribute.getLeft(), attribute.getRight());
+		} else if (or) {
+			orCoverageAttributes.put(attribute.getLeft(), attribute.getRight());
+		}
+		
+		return this;
+	}
+	
+	public WCSAdapterCoverages xPath(String xPath) {
+		this.xPath = xPath;
+		return this;
+	}
+	
+	public WCSAdapterRequest getRequest() {
 		return request;
 	}
 
-	protected void setRequest(WCSAdapterRequest request) {
+	public void setRequest(WCSAdapterRequest request) {
 		this.request = request;
 	}
 
-	protected Multimap<String, String> getCoveragesProperties() {
-		return coveragesProperties;
+	public Multimap<String, String> getAndCoverageAttributes() {
+		return andCoverageAttributes;
 	}
 
-	protected void setCoveragesProperties(Multimap<String, String> coveragesProperties) {
-		this.coveragesProperties = coveragesProperties;
+	public void setAndCoverageAttributes(Multimap<String, String> andCoverageAttributes) {
+		this.andCoverageAttributes = andCoverageAttributes;
 	}
 
-	protected boolean isAnd() {
+	public Multimap<String, String> getOrCoverageAttributes() {
+		return orCoverageAttributes;
+	}
+
+	public void setOrCoverageAttributes(Multimap<String, String> orCoverageAttributes) {
+		this.orCoverageAttributes = orCoverageAttributes;
+	}
+
+	public boolean isAnd() {
 		return and;
 	}
 
-	protected void setAnd(boolean and) {
+	public void setAnd(boolean and) {
 		this.and = and;
 	}
 
-	protected boolean isOr() {
+	public boolean isOr() {
 		return or;
 	}
 
-	protected void setOr(boolean or) {
+	public void setOr(boolean or) {
 		this.or = or;
 	}
 
@@ -68,28 +112,5 @@ public class WCSAdapterCoverages {
 
 	public void setxPath(String xPath) {
 		this.xPath = xPath;
-	}
-
-	public WCSAdapterCoverages and(Multimap<String, String> coveragesProperties) {
-		this.coveragesProperties = coveragesProperties;
-		and = true;
-		or = false;
-		return this;
-	}
-	
-	public WCSAdapterCoverages or(Multimap<String, String> coveragesProperties) {
-		this.coveragesProperties = coveragesProperties;
-		and = false;
-		or = true;
-		return this;
-	}
-	
-	public WCSAdapterCoverages xPath(String xPath) {
-		this.xPath = xPath;
-		return this;
-	}
-	
-	public QueryClient get() {
-		return request.mapToQuery();
 	}
 }

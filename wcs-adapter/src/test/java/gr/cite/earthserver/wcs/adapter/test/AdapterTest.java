@@ -9,16 +9,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import gr.cite.earthserver.wcs.adapter.request.WCSAdapterCoverages;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterRequest;
+import gr.cite.earthserver.wcs.adapter.request.WCSAdapterServers;
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeDatastoreException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.model.DataElement;
+import gr.cite.femme.utils.Pair;
 
 public class AdapterTest {
 	
-	//@Test
+	@Test
 	public void test() throws JsonProcessingException, FemmeDatastoreException {
 		Multimap<String, String> serverProperties = ArrayListMultimap.create();
 		Multimap<String, String> coverageProperties = ArrayListMultimap.create();
@@ -27,15 +30,29 @@ public class AdapterTest {
 		coverageProperties.put("name", "frt00014174_07_if166s_trr3");
 //		coverageProperties.put("id", "2");
 		
-		QueryClient query = WCSAdapterRequest.request()
-				.servers().or(serverProperties)
-				/*.coverages().or(coverageProperties)*/
-				.get();
+		WCSAdapterServers servers = new WCSAdapterServers();
+		WCSAdapterCoverages coverages = new WCSAdapterCoverages();
+		
+		servers
+			.or()
+			.attribute(new Pair<String, String>("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows"));
+		
+		coverages
+		.or()
+		.attribute(new Pair<String, String>("name", "frt00014174_07_if166s_trr3"));
+		
+		WCSAdapterRequest request = new WCSAdapterRequest(servers, coverages);
 		
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString(query);
 		
-		System.out.println(json);
+		/*String jsonRequest = mapper.writeValueAsString(request);
+		System.out.println(jsonRequest);*/
+		
+		
+		QueryClient query = request.mapToQuery();
+		
+		String jsonQuery = mapper.writeValueAsString(query);
+		System.out.println(jsonQuery);
 		
 		FemmeClientAPI femmeClient = new FemmeClient();
 		List<DataElement> dataElements = femmeClient.findDataElements(query, 5, null, null);
