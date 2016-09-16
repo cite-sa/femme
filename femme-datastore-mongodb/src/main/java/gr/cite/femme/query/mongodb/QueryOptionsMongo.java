@@ -242,17 +242,18 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 			Document queryDocument = query.build();
 			Document inclusionOperatorDocument = findInclusionOperator(queryDocument);
 			
-			List<Collection> collections = new ArrayList<>();
-			datastore.getCollections().find(new Document("$and", inclusionOperatorDocument.get("$in_any_collection")))
-				/*.projection(Projections.include(FieldNames.ID))*/
-				.into(collections);
-			System.out.println(queryDocument);
-			inclusionOperatorDocument.remove("$in_any_collection");
-			
-			List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
-			
-			inclusionOperatorDocument.append(FieldNames.DATA_ELEMENT_COLLECTION_ID,
-				new Document("$in", collectionIds));
+			if (inclusionOperatorDocument != null) {
+				List<Collection> collections = new ArrayList<>();
+				datastore.getCollections().find(new Document("$and", inclusionOperatorDocument.get("$in_any_collection")))
+					/*.projection(Projections.include(FieldNames.ID))*/
+					.into(collections);
+				System.out.println(queryDocument);
+				inclusionOperatorDocument.remove("$in_any_collection");
+				
+				List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
+				
+				inclusionOperatorDocument.append(FieldNames.DATA_ELEMENT_COLLECTION_ID, new Document("$in", collectionIds));
+			}
 			
 			return queryDocument;
 		} else {

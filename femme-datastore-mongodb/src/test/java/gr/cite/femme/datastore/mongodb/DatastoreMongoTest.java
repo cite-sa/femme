@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fakemongo.Fongo;
-import com.github.fakemongo.junit.FongoRule;
 import com.mongodb.client.MongoCursor;
 
 import gr.cite.femme.datastore.mongodb.MongoDatastore;

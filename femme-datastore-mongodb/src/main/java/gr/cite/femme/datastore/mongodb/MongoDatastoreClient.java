@@ -9,7 +9,6 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.model.Indexes;
-import com.vividsolutions.jts.awt.GeometryCollectionShape;
 
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumCodecProvider;

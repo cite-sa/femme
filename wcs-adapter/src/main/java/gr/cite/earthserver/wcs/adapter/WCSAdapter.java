@@ -64,8 +64,8 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Server> getServers(Integer limit, Integer offset) throws FemmeDatastoreException {
-		return null;/*femmeClient.getCollections(limit, offset).stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
-			.collect(Collectors.toList());*/
+		return femmeClient.getCollections(limit, offset).stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
+			.collect(Collectors.toList());
 	}
 
 	public Coverage getCoverageById(String id) throws FemmeDatastoreException {
@@ -73,9 +73,9 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 	
 	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeDatastoreException {
-		return null;/*femmeClient.getDataElementsByName(coverageId).stream()
+		return femmeClient.getDataElementsByName(coverageId).stream()
 				.map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
-				.collect(Collectors.toList());*/
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -85,8 +85,8 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeDatastoreException {
-		return null;/*femmeClient.getDataElements(limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
-			.collect(Collectors.toList());*/
+		return femmeClient.getDataElements(limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+			.collect(Collectors.toList());
 	}
 	
 	@Override
@@ -96,8 +96,8 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Coverage> getCoveragesInServer(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException {
-		return null;/*femmeClient.getDataElementsInCollection(endpoint, limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
-			.collect(Collectors.toList());*/
+		return femmeClient.getDataElementsInCollection(endpoint, limit, offset).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+			.collect(Collectors.toList());
 	}
 
 	@Override

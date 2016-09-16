@@ -25,13 +25,13 @@ public class FemmeResourceTest {
 	private WebTarget webTarget;
 	
 	
-	@Before
+	//@Before
 	public void init() {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
-		webTarget = client.target("http://localhost:8081/femme-application/femme/");
+		webTarget = client.target("http://localhost:8081/femme-application/");
 	}
 	
-	@Test
+	//@Test
 	public void insert() {
 		Collection collection = createDemoCollection();
 		

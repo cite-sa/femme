@@ -79,7 +79,7 @@ public final class WCSFemmeMapper {
 		server.setEndpoint(collection.getEndpoint());
 
 		String describeCoverage = "";
-		if (collection.getMetadata() != null) {
+		if (collection.getMetadata() != null && collection.getMetadata().size() > 0) {
 			describeCoverage = collection.getMetadata().stream()
 					.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
 					.findFirst().get().getValue();
