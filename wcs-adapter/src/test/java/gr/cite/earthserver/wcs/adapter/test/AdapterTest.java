@@ -23,11 +23,8 @@ public class AdapterTest {
 	
 	//@Test
 	public void test() throws JsonProcessingException, FemmeDatastoreException {
-		Multimap<String, String> serverProperties = ArrayListMultimap.create();
-		Multimap<String, String> coverageProperties = ArrayListMultimap.create();
-		serverProperties.put("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows");
 //		serverProperties.put("endpoint", "endpoint2");
-		coverageProperties.put("name", "frt00014174_07_if166s_trr3");
+//		coverageProperties.put("name", "frt00014174_07_if166s_trr3");
 //		coverageProperties.put("id", "2");
 		
 		WCSAdapterServers servers = new WCSAdapterServers();
@@ -35,11 +32,12 @@ public class AdapterTest {
 		
 		servers
 			.or()
-			.attribute(new Pair<String, String>("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows"));
+			.attribute(new Pair<String, String>("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows"))
+			.attribute(new Pair<String, String>("endpoint", "https://rsg.pml.ac.uk/rasdaman/ows"));
 		
-		coverages
+		/*coverages
 		.or()
-		.attribute(new Pair<String, String>("name", "frt00014174_07_if166s_trr3"));
+		.attribute(new Pair<String, String>("name", "frt00014174_07_if166s_trr3"));*/
 		
 		WCSAdapterRequest request = new WCSAdapterRequest(servers, coverages);
 		

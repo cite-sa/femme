@@ -244,7 +244,7 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 			
 			if (inclusionOperatorDocument != null) {
 				List<Collection> collections = new ArrayList<>();
-				datastore.getCollections().find(new Document("$and", inclusionOperatorDocument.get("$in_any_collection")))
+				datastore.getCollections().find(new Document("$or", inclusionOperatorDocument.get("$in_any_collection")))
 					/*.projection(Projections.include(FieldNames.ID))*/
 					.into(collections);
 				System.out.println(queryDocument);
