@@ -12,6 +12,8 @@ import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeDatastoreException;
 import gr.cite.femme.client.api.FemmeClientAPI;
+import gr.cite.femme.query.api.Criterion;
+import gr.cite.femme.query.api.Query;
 
 public class WCSAdapter implements WCSAdapterAPI {
 	
@@ -77,7 +79,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 				.map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
 				.collect(Collectors.toList());
 	}
-
+	
 	@Override
 	public List<Coverage> getCoverages() throws FemmeDatastoreException {
 		return getCoverages(null, null);
@@ -110,6 +112,13 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public Coverage getCoverageInServerByCoverageId(String endpoint, String coverageId) throws FemmeDatastoreException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, Integer limit, Integer offset,
+			String xPath) throws FemmeDatastoreException {
+		return femmeClient.findDataElements(query, limit, offset, xPath).stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
+		.collect(Collectors.toList());
 	}
 	
 }

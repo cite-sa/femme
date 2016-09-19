@@ -7,6 +7,9 @@ import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.femme.client.FemmeDatastoreException;
+import gr.cite.femme.model.DataElement;
+import gr.cite.femme.query.api.Criterion;
+import gr.cite.femme.query.api.Query;
 
 public interface WCSAdapterAPI {
 	
@@ -44,5 +47,7 @@ public interface WCSAdapterAPI {
 	public List<Coverage> getCoveragesInServer(String endpoint) throws FemmeDatastoreException;
 	
 	public List<Coverage> getCoveragesInServer(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException;
+	
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException;
 	
 }

@@ -21,7 +21,7 @@ import gr.cite.femme.utils.Pair;
 
 public class AdapterTest {
 	
-	@Test
+	//@Test
 	public void test() throws JsonProcessingException, FemmeDatastoreException {
 		Multimap<String, String> serverProperties = ArrayListMultimap.create();
 		Multimap<String, String> coverageProperties = ArrayListMultimap.create();
