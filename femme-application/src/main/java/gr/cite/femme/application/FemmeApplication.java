@@ -12,7 +12,7 @@ import gr.cite.femme.application.resources.FemmeResource;
 @ApplicationPath("restAPI")
 public class FemmeApplication extends ResourceConfig {
 
-	public FemmeApplication(){
+	public FemmeApplication() {
 		register(JacksonFeature.class);
 		/*register(MultiPartFeature.class);*/
 		register(FemmeAdminResource.class);

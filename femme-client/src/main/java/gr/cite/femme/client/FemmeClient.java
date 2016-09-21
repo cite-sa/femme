@@ -31,7 +31,8 @@ public class FemmeClient implements FemmeClientAPI {
 	
 	private static final Logger logger = LoggerFactory.getLogger(FemmeClient.class);
 	
-	private static final String FEMME_URL = "http://localhost:8081/femme-application";
+//	private static final String FEMME_URL = "http://localhost:8081/femme-application";
+	private static final String FEMME_URL = "http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT";
 	
 	private Client client;
 	

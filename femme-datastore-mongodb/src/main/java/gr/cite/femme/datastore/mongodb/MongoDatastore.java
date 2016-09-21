@@ -47,10 +47,14 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MongoDatastore.class);
 
-	MongoDatastoreClient mongoClient;
-	MongoCollection<Collection> collections;
-	MongoCollection<DataElement> dataElements;
-	MetadataStore metadataStore;
+	private MongoDatastoreClient mongoClient;
+	
+	private MongoCollection<Collection> collections;
+	
+	private MongoCollection<DataElement> dataElements;
+	
+	private MetadataStore metadataStore;
+	
 
 	public MongoDatastore() {
 		mongoClient = new MongoDatastoreClient();
@@ -74,7 +78,9 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		return dataElements;
 	}
 
+	@Override
 	public void close() {
+		System.out.println("CLOSING");
 		mongoClient.close();
 	}
 

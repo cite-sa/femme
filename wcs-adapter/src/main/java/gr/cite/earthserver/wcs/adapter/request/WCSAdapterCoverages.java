@@ -3,7 +3,6 @@ package gr.cite.earthserver.wcs.adapter.request;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.utils.Pair;
 
 public class WCSAdapterCoverages {

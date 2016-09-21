@@ -11,21 +11,24 @@ import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
 
 public interface Datastore<R extends Criterion, S extends Query<R>>  {
-	<T extends Element> String insert(T element) throws DatastoreException;
 	
-	<T extends Element> List<String> insert(List<T> elements) throws DatastoreException;
+	public void close();
 	
-	DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException;
+	public <T extends Element> String insert(T element) throws DatastoreException;
 	
-	DataElement addToCollection(DataElement dataElement, S query) throws DatastoreException;
+	public <T extends Element> List<String> insert(List<T> elements) throws DatastoreException;
 	
-	Collection addToCollection(List<DataElement> dataElement, S query) throws DatastoreException;
+	public DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException;
 	
-	<T extends Element> String update(T element) throws DatastoreException;
+	public DataElement addToCollection(DataElement dataElement, S query) throws DatastoreException;
+	
+	public Collection addToCollection(List<DataElement> dataElement, S query) throws DatastoreException;
+	
+	public <T extends Element> String update(T element) throws DatastoreException;
 
-	void remove(DataElement dataElement, Collection collection) throws DatastoreException;
+	public void remove(DataElement dataElement, Collection collection) throws DatastoreException;
 	
-	<T extends Element> void delete(S query, Class<T> elementSubtype) throws DatastoreException;
+	public <T extends Element> void delete(S query, Class<T> elementSubtype) throws DatastoreException;
 	
 	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
@@ -36,4 +39,5 @@ public interface Datastore<R extends Criterion, S extends Query<R>>  {
 	public DataElement getDataElement(String id) throws DatastoreException;
 	
 	public DataElement getDataElementByName(String id) throws DatastoreException;
+	
 }

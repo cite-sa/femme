@@ -70,7 +70,11 @@ public class FemmeResource {
 		try {
 			List<Collection> collections = queryOptions.list();
 			response.setStatus(true).setMessage("ok").setEntity(new CollectionList(collections));
-			logger.info("Query on Collections: " + query.build());
+			if (query == null) {
+				logger.info("Query all Collections");
+			} else {				
+				logger.info("Query on Collections: " + query.build());
+			}
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			response.setStatus(false).setMessage(e.getMessage());
@@ -136,7 +140,11 @@ public class FemmeResource {
 			}
 			 
 			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
-			logger.info("Query on DataElements: " + query.build());
+			if (query == null) {
+				logger.info("Query all DataElements");
+			} else {
+				logger.info("Query on DataElements: " + query.build());
+			}
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			response.setStatus(false).setMessage(e.getMessage());
@@ -192,7 +200,7 @@ public class FemmeResource {
 			DataElement dataElement = query.limit(1).first();
 			response.setStatus(true).setMessage("ok").setEntity(dataElement);
 			
-			logger.info("DataElement " + id + " found");
+			logger.info("Find DataElement " + id);
 		} catch (DatastoreException e) {
 			response.setStatus(false).setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);

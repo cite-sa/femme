@@ -69,7 +69,7 @@ public class DatastoreMongoTest {
 
 	}*/
 	
-	@Test
+//	@Test
 	public void testFind() throws DatastoreException, InvalidQueryOperation, IOException {
 		CriterionMongo finalCriterion = null;
 		CriterionMongo dataElementCriterion = null;

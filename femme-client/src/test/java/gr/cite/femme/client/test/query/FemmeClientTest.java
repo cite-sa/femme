@@ -16,18 +16,17 @@ import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
-import gr.cite.femme.query.mongodb.CriterionMongo;
 
 public class FemmeClientTest {
 	
 	private FemmeClient client;
 	
-	@Before
+//	@Before
 	public void initClient() {
 		client = new FemmeClient();
 	}
 	
-	@Test
+//	@Test
 	public void testCriteriaSerialization() throws IOException {
 		CriterionClient criteria = CriterionBuilderClient.root()
 				.or(Arrays.asList(
@@ -42,9 +41,6 @@ public class FemmeClientTest {
 		String json = mapper.writeValueAsString(criteria);
 		System.out.println(json);
 		
-		CriterionMongo criterion = mapper.readValue(json, CriterionMongo.class);
-		
-		System.out.println(criterion);
 	}
 	
 //	@Test

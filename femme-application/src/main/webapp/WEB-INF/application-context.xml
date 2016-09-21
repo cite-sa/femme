@@ -9,12 +9,12 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-   <context:property-placeholder location="classpath:datastore.properties" />
+   <context:property-placeholder location="classpath:WEB-INF/datastore.properties" />
    
-	<bean id="mongoDatastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore">
-		<constructor-arg value="${datastore.db.host}"/>
-		<constructor-arg value="${datastore.db.name}"/>
-		<constructor-arg value="${datastore.index.host}"/>
+	<bean id="mongoDatastore" name="mongoDatastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore" destroy-method="close">
+		<constructor-arg value="${gr.cite.femme.datastore.mongodb.host}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.mongodb.name}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.mongodb.index.host}"/>
 	</bean>
    
    <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">

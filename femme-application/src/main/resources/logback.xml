@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<!-- <property name="WEBAPP_LOGS" value="/home/kapostolopoulos/apache-tomcat-8.5.4/logs" /> -->
+
+	<!-- <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${CATALINA_HOME}/logs/femme.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			rollover daily
+			<fileNamePattern>${CATALINA_HOME}/logs/archived/femme.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+	</appender> -->
+	
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+		</encoder>
+    </appender>
+
+	<logger name="gr.cite.femme.application" level="INFO" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<!-- <appender-ref ref="FILE-AUDIT" /> -->
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+		<!-- <appender-ref ref="FILE-AUDIT" /> -->
+	</root>
+
+</configuration>
