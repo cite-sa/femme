@@ -69,7 +69,7 @@ public class WCSRequestBuilder {
 		}
 
 		public WCSRequest build() {
-			return new WCSRequest(this.webTarget.queryParam("wcpsVersion", wcpsVersion).queryParam("query",
+			return new WCSRequest(this.webTarget/*.queryParam("wcpsVersion", wcpsVersion)*/.queryParam("query",
 					UriComponent.encode(query, Type.QUERY_PARAM_SPACE_ENCODED)));
 		}
 

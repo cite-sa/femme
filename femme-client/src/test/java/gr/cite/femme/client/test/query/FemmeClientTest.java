@@ -21,9 +21,9 @@ public class FemmeClientTest {
 	
 	private FemmeClient client;
 	
-//	@Before
+	@Before
 	public void initClient() {
-		client = new FemmeClient();
+		client = new FemmeClient("http://localhost:8081/femme-application");
 	}
 	
 //	@Test
@@ -62,9 +62,11 @@ public class FemmeClientTest {
 //		client.findDataElements(query, null, null);
 	}
 	
-	//@Test
+	@Test
 	public void queryDatastore() throws FemmeDatastoreException {
-		Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
+		List<DataElement> dataElements = client.getDataElements();
+		System.out.println(dataElements);
+		/*Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
 		System.out.println(collection.getEndpoint());
 		
 		QueryClient queryForCollection = new QueryClient();
@@ -77,7 +79,7 @@ public class FemmeClientTest {
 		List<DataElement> dataElements = client.getDataElements(10, null);
 		for (DataElement dataElement: dataElements) {
 			System.out.println("DataElement from list: " + dataElement.getEndpoint());
-		}
+		}*/
 		
 	}
 	
