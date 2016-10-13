@@ -9,7 +9,7 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-   <context:property-placeholder location="classpath:WEB-INF/datastore.properties" />
+	<context:property-placeholder location="classpath:WEB-INF/datastore.properties" />
    
 	<bean id="mongoDatastore" name="mongoDatastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore" destroy-method="close">
 		<constructor-arg value="${gr.cite.femme.datastore.mongodb.host}"/>

@@ -3,7 +3,7 @@ package gr.cite.earthserver.wcs.adapter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import gr.cite.earthserver.wcs.adaper.api.WCSAdapterAPI;
+import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
@@ -19,9 +19,9 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	private FemmeClientAPI femmeClient;
 	
-	public WCSAdapter() {
+	/*public WCSAdapter() {
 		this.femmeClient = new FemmeClient();
-	}
+	}*/
 	
 	public WCSAdapter(String femmeUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);

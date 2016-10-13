@@ -32,7 +32,7 @@ import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
-import gr.cite.femme.datastore.mongodb.core.InsertStatus;
+import gr.cite.femme.datastore.mongodb.core.Status;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Element;
@@ -88,7 +88,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
 					.append(METADATUM_NAME_KEY, metadatum.getName())
 					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
-					.append(METADATUM_STATUS_KEY, InsertStatus.PENDING.getStatus())
+					.append(METADATUM_STATUS_KEY, Status.PENDING.getStatus())
 				);
 		
 		ObjectId fileId;

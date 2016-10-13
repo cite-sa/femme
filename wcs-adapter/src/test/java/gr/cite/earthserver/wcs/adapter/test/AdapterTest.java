@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import gr.cite.earthserver.wcs.adaper.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.adapter.WCSAdapter;
+import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterCoverages;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterRequest;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterServers;

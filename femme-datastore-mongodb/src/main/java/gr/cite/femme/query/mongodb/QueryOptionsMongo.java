@@ -176,12 +176,15 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	@Override
 	public T first() throws DatastoreException {
 		T element = results.first();
-		try {
-			element.setMetadata(metadataStore.find(element.getId()));
-		} catch (MetadataStoreException e) {
-			logger.error(e.getMessage(), e);
-			throw new DatastoreException(e.getMessage(), e);
+		if (element != null) {
+			try {
+				element.setMetadata(metadataStore.find(element.getId()));
+			} catch (MetadataStoreException e) {
+				logger.error(e.getMessage(), e);
+				throw new DatastoreException(e.getMessage(), e);
+			}
 		}
+		
 		return element;
 	}
 

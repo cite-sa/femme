@@ -1,13 +1,13 @@
 package gr.cite.femme.datastore.mongodb.core;
 
-public enum InsertStatus {
+public enum Status {
 	INACTIVE(0),
 	ACTIVE(1),
 	PENDING(2);
 	
 	private int status;
 	
-	private InsertStatus(int status) {
+	private Status(int status) {
 		
 	}
 	

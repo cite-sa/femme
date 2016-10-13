@@ -1,4 +1,4 @@
-package gr.cite.earthserver.wcs.adaper.api;
+package gr.cite.earthserver.wcs.adapter.api;
 
 import java.util.List;
 
