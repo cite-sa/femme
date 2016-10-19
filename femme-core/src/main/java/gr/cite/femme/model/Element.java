@@ -35,7 +35,7 @@ public class Element {
 		this.name = name;
 		this.endpoint = endpoint;
 		this.metadata = new ArrayList<>();
-		systemicMetadata = new SystemicMetadata();
+		//systemicMetadata = new SystemicMetadata();
 	}
 	
 	public Element(String id, String name, String endpoint, List<Metadatum> metadata) {
@@ -43,7 +43,7 @@ public class Element {
 		this.name = name;
 		this.endpoint = endpoint;
 		this.metadata = metadata;
-		systemicMetadata = new SystemicMetadata();
+		//systemicMetadata = new SystemicMetadata();
 	}
 	
 	public Element(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata) {
@@ -55,11 +55,11 @@ public class Element {
 		} else {
 			this.metadata = new ArrayList<>();
 		}
-		if (systemicMetadata != null) {
-			this.systemicMetadata = systemicMetadata;			
-		} else {
+		/*if (systemicMetadata != null) {*/
+		this.systemicMetadata = systemicMetadata;			
+		/*} else {
 			this.systemicMetadata = new SystemicMetadata();
-		}
+		}*/
 	}
 	
 	public String getId() {

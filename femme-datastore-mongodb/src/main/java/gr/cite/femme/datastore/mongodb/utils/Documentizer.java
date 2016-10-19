@@ -52,6 +52,19 @@ public class Documentizer {
 		return document;
 	}
 	
+	public static Document toIdNameDocument(Element element) {
+		Document document = new Document();
+		if (element.getId() != null) {
+			document.append(ELEMENT_ID_KEY, new ObjectId(element.getId()));
+		} else {
+			document.append(ELEMENT_ID_KEY, new ObjectId());
+		}
+		if (element.getName() != null) {
+			document.append(ELEMENT_NAME_KEY, element.getName());
+		}
+		return document;
+	}
+	
 	public static Document toDocument(Metadatum metadatum) {
 		Document document = new Document();
 		if (metadatum.getId() != null) {

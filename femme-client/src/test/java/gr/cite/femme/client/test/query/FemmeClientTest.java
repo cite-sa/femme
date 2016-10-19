@@ -21,7 +21,7 @@ public class FemmeClientTest {
 	
 	private FemmeClient client;
 	
-	@Before
+	/*@Before*/
 	public void initClient() {
 		client = new FemmeClient("http://localhost:8081/femme-application");
 	}
@@ -62,7 +62,7 @@ public class FemmeClientTest {
 //		client.findDataElements(query, null, null);
 	}
 	
-	@Test
+	/*@Test*/
 	public void queryDatastore() throws FemmeDatastoreException {
 		List<DataElement> dataElements = client.getDataElements();
 		System.out.println(dataElements);

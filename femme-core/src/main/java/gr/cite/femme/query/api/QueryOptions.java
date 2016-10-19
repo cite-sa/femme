@@ -14,6 +14,8 @@ public interface QueryOptions<T extends Element> {
 	
 	public QueryOptions<T> sort(String field, String order) throws InvalidQueryOperation;
 	
+	public QueryOptions<T> exclude(String ...fields);
+	
 	public List<T> list() throws DatastoreException;
 	
 	public T first() throws DatastoreException;

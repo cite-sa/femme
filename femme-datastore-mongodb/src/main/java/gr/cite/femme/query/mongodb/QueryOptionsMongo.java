@@ -1,6 +1,7 @@
 package gr.cite.femme.query.mongodb;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.MongoQueryException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -44,6 +46,8 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	private MetadataStore metadataStore;
 	
 	private FindIterable<T> results;
+	
+	private Boolean lazyMetadata = false;
 	
 	public QueryOptionsMongo() {
 		// TODO Auto-generated constructor stub
@@ -133,42 +137,60 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 		
 		return this;
 	}
+	
+	@Override
+	public QueryOptions<T> exclude(String ...fields) {
+		lazyMetadata = Arrays.asList(fields).contains("metadata") ? true : false;
+		results.projection(Projections.exclude(fields));
+		
+		return this;
+	}
 
 	@Override
 	public List<T> list() throws DatastoreException {
 		List<T> elements = new ArrayList<>();
-		MongoCursor<T> cursor = (MongoCursor<T>) results.iterator();
 		
-		List<Future<T>> futures = new ArrayList<Future<T>>();
-		ExecutorService executor = Executors.newFixedThreadPool(10);
-		
-		try {
-			while (cursor.hasNext()) {
-				T element = cursor.next();
-				futures.add(executor.submit(new Callable<T>() {
-					@Override
-					public T call() throws Exception {
-						element.setMetadata(metadataStore.find(element.getId()));
-						logger.debug("Element " + element.getName() +" found");
-						return element;
-					}
-				}));
+		if (!lazyMetadata) {
+			MongoCursor<T> cursor = null;
+			try {				
+				cursor = (MongoCursor<T>) results.iterator();
+			} catch (MongoQueryException e) {
+				logger.error(e.getMessage(), e);
+				throw new DatastoreException(e.getMessage(), e);
 			}
-		} finally {
-			for(Future<T> future : futures) {
-				try {
-					elements.add(future.get());
-				} catch (InterruptedException e) {
-					cursor.close();
-					logger.error(e.getMessage(), e);
-					throw new DatastoreException(e.getMessage(), e);
-				} catch (ExecutionException e) {
-					cursor.close();
-					logger.error(e.getMessage(), e);
-					throw new DatastoreException(e.getMessage(), e);
+			List<Future<T>> futures = new ArrayList<Future<T>>();
+			ExecutorService executor = Executors.newFixedThreadPool(10);
+		
+			try {
+				while (cursor.hasNext()) {
+					T element = cursor.next();
+					futures.add(executor.submit(new Callable<T>() {
+						@Override
+						public T call() throws Exception {
+							element.setMetadata(metadataStore.find(element.getId()));
+							logger.debug("Element " + element.getName() +" found");
+							return element;
+						}
+					}));
 				}
+			} finally {
+				for(Future<T> future : futures) {
+					try {
+						elements.add(future.get());
+					} catch (InterruptedException e) {
+						cursor.close();
+						logger.error(e.getMessage(), e);
+						throw new DatastoreException(e.getMessage(), e);
+					} catch (ExecutionException e) {
+						cursor.close();
+						logger.error(e.getMessage(), e);
+						throw new DatastoreException(e.getMessage(), e);
+					}
+				}
+				cursor.close();
 			}
-			cursor.close();
+		} else {
+			results.into(elements);
 		}
 		return elements;
 	}

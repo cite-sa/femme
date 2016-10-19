@@ -1,8 +1,10 @@
 package gr.cite.femme.application.resources;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -70,7 +72,8 @@ public class FemmeResource {
 			@QueryParam("query") String queryJson,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xpath) {
+			@QueryParam("xpath") String xpath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
 		
 		QueryMongo query = null;
 		if (queryJson != null) {
@@ -85,6 +88,9 @@ public class FemmeResource {
 		FemmeResponse<CollectionList> response = new FemmeResponse<>();
 		
 		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class).limit(limit).skip(offset);
+		if (lazy) {
+			queryOptions = queryOptions.exclude("metadata");
+		}
 		
 		try {
 			List<Collection> collections = queryOptions.list();
@@ -111,9 +117,10 @@ public class FemmeResource {
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("xpath") String xpath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
 			@DefaultValue("callback") @QueryParam("callback") String callback) {
 
-		return new JSONPObject(callback, findCollections(queryJson, limit, offset, xpath));
+		return new JSONPObject(callback, findCollections(queryJson, limit, offset, xpath, lazy));
 
 	}
 	
@@ -176,7 +183,8 @@ public class FemmeResource {
 			@QueryParam("query") String queryJson,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath) {
+			@QueryParam("xpath") String xPath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
 
 		QueryMongo query = null;
 		if (queryJson != null) {
@@ -191,6 +199,10 @@ public class FemmeResource {
 		FemmeResponse<DataElementList> response = new FemmeResponse<>();
 		
 		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
+		
+		if (lazy) {
+			queryOptions = queryOptions.exclude("metadata");
+		}
 		
 		try {
 			List<DataElement> dataElements = null;
@@ -223,17 +235,73 @@ public class FemmeResource {
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("xpath") String xPath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
 			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, findDataElements(queryJson, limit, offset, xPath));
+		return new JSONPObject(callback, findDataElements(queryJson, limit, offset, xPath, lazy));
+	}
+	
+	@GET
+	@Path("dataElements/list")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public FemmeResponse<DataElementList> findDataElementsByIds(
+			@QueryParam("id") List<String> ids,
+			@QueryParam("limit") Integer limit,
+			@QueryParam("offset") Integer offset,
+			@QueryParam("xpath") String xPath) {
+		
+		FemmeResponse<DataElementList> response = new FemmeResponse<>();
+		
+		QueryMongo query = null;
+		if (ids.size() > 0) {
+			List<CriterionMongo> idsCriteria = ids.stream().map(id -> CriterionBuilderMongo.root().eq("_id", new ObjectId(id)).end()).collect(Collectors.toList());
+			query = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().or(idsCriteria).end());
+		}
+		
+		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
+		
+		try {
+			List<DataElement> dataElements = null;
+			if (xPath != null && !xPath.equals("")) {
+				dataElements = queryOptions.xPath(xPath);				
+			} else {
+				dataElements = queryOptions.list();
+			}
+			 
+			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
+			if (query == null) {
+				logger.info("Query all DataElements");
+			} else {
+				logger.info("Query on DataElements: " + query.build());
+			}
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			response.setStatus(false).setMessage(e.getMessage());
+		}
+		
+		return response;
+
+	}
+	
+	@GET
+	@Path("dataElementsJSONP/list")
+	@Produces("application/javascript")
+	public JSONPObject findDataElementsByIdsJSONP(
+			@QueryParam("id") List<String> ids,
+			@QueryParam("limit") Integer limit,
+			@QueryParam("offset") Integer offset,
+			@QueryParam("xpath") String xPath,
+			@DefaultValue("callback") @QueryParam("callback") String callback) {
+		return new JSONPObject(callback, findDataElementsByIds(ids, limit, offset, xPath));
 	}
 	
 	@GET
 	@Path("collections/{collectionId}/dataElements")
 	public FemmeResponse<DataElementList> getDataElementsInCollection(
-			@PathParam("endpoint") String collectionEndpoint,
+			@PathParam("collectionId") String collectionId,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath) {
+			@QueryParam("xpath") String xPath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
 		
 		List<DataElement> dataElements = null;
 		FemmeResponse<DataElementList> response = new FemmeResponse<>();
@@ -241,9 +309,13 @@ public class FemmeResource {
 		try {
 			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
 					CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
-							CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, collectionEndpoint).end()))
+							CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end()))
 					.end());
 			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
+			
+			if (lazy) {
+				queryOptions = queryOptions.exclude("metadata");
+			}
 			
 			if (xPath != null && !xPath.equals("")) {
 				dataElements = queryOptions.xPath(xPath);
@@ -264,12 +336,13 @@ public class FemmeResource {
 	@Path("collections/{collectionId}/dataElementsJSONP")
 	@Produces("application/javascript")
 	public JSONPObject getDataElementsInCollectionJSONP(
-			@PathParam("endpoint") String collectionEndpoint,
+			@PathParam("collectionId") String collectionEndpoint,
 			@QueryParam("limit") Integer limit,
 			@QueryParam("offset") Integer offset,
 			@QueryParam("xpath") String xPath,
+			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
 			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, getDataElementsInCollection(collectionEndpoint, limit, offset, xPath));
+		return new JSONPObject(callback, getDataElementsInCollection(collectionEndpoint, limit, offset, xPath, lazy));
 	}
 	
 	@GET

@@ -288,11 +288,12 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		}
 
 		FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
+		
 		updatedCollection = collections
 				.findOneAndUpdate(
 						query.build(),
 						new Document().append("$addToSet",
-								new Document().append("dataElements", Documentizer.toOnlyIdDocument(dataElement))),
+								new Document().append("dataElements", Documentizer.toIdNameDocument(dataElement))),
 						options);
 
 		if (updatedCollection != null) {
