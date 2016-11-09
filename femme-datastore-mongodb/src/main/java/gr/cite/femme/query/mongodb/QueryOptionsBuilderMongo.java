@@ -1,7 +1,5 @@
 package gr.cite.femme.query.mongodb;
 
-import org.bson.Document;
-
 import com.mongodb.client.MongoCollection;
 
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
@@ -18,11 +16,11 @@ public class QueryOptionsBuilderMongo<T extends Element> {
 	}
 	
 	public long count(QueryMongo query, MongoDatastore datastore, Class<T> elementSubtype) {
-		MongoCollection<T> collection = null;
+		MongoCollection<?> collection = null;
 		if (elementSubtype == DataElement.class) {
-			collection = (MongoCollection<T>) datastore.getDataElements();
+			collection = datastore.getDataElements();
 		} else if (elementSubtype == Collection.class) {
-			collection = (MongoCollection<T>) datastore.getCollections();
+			collection = datastore.getCollections();
 		}
 		
 		return query == null ? collection.count() : collection.count(query.build());

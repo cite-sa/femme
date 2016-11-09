@@ -1,22 +1,23 @@
 package gr.cite.femme.application.resources;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -26,11 +27,13 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
+import gr.cite.femme.application.exception.FemmeApplicationException;
 import gr.cite.femme.datastore.api.Datastore;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.dto.CollectionList;
 import gr.cite.femme.dto.DataElementList;
 import gr.cite.femme.dto.FemmeResponse;
+import gr.cite.femme.dto.FemmeResponseEntity;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
@@ -39,8 +42,9 @@ import gr.cite.femme.query.mongodb.CriterionMongo;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
 import gr.cite.femme.query.api.QueryOptions;
+import gr.cite.femme.query.api.QueryOptionsFields;
 import gr.cite.femme.query.mongodb.QueryMongo;
-import gr.cite.femme.query.mongodb.QueryOptionsMongo;
+import gr.cite.femme.utils.Pair;
 
 @Component
 @Path("")
@@ -51,6 +55,8 @@ public class FemmeResource {
 	
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	
+	@Context
+	private UriInfo uriInfo;
 	
 	private Datastore<Criterion, Query<Criterion>> datastore;
 
@@ -65,343 +71,373 @@ public class FemmeResource {
 		return Response.ok("pong").build();
 	}
 	
+	/*@QueryParam("limit") Integer limit, @QueryParam("offset") Integer offset,
+	@QueryParam("asc") String asc, @QueryParam("desc") String desc,
+	@QueryParam("include") List<String> include, @QueryParam("exclude") List<String> exclude,*/
+	
 	@GET
 	@Path("collections")
-	/*@Consumes(MediaType.APPLICATION_JSON)*/
-	public FemmeResponse<CollectionList> findCollections(
-			@QueryParam("query") String queryJson,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xpath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response findCollections(
+			@QueryParam("query") QueryMongo query,
+			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		QueryMongo query = null;
+		/*QueryMongo query = null;
+		QueryOptionsFields options = null;
 		if (queryJson != null) {
 			try {
 				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
 			}
-		}
-
-		FemmeResponse<CollectionList> response = new FemmeResponse<>();
+		}*/
 		
-		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class).limit(limit).skip(offset);
-		if (lazy) {
-			queryOptions = queryOptions.exclude("metadata");
+		if (query == null) {
+			logger.info("Query all Collections");
+		} else {				
+			logger.info("Query on Collections: " + query.build());
 		}
+		
+		FemmeResponse<CollectionList> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<CollectionList> entity = new FemmeResponseEntity<>();
+		
+		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class).options(options);
 		
 		try {
-			List<Collection> collections = queryOptions.list();
-			response.setStatus(true).setMessage("ok").setEntity(new CollectionList(collections));
-			if (query == null) {
-				logger.info("Query all Collections");
-			} else {				
-				logger.info("Query on Collections: " + query.build());
+			CollectionList collectionList = new CollectionList(queryOptions.list());
+			
+			if (collectionList.getSize() == 0) {
+				logger.error("No collections found");
+				throw new FemmeApplicationException("No collections found for this query", Response.Status.NOT_FOUND.getStatusCode());
 			}
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(collectionList.getSize() + " collections found").setEntity(entity.setBody(collectionList));
+
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
-			response.setStatus(false).setMessage(e.getMessage());
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 		
-		return response;
-
-	}
-	
-	@GET
-	@Path("collectionsJSONP")
-	@Produces("application/javascript")
-	public JSONPObject findCollectionsJSONP(
-			@QueryParam("query") String queryJson,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xpath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
-			@DefaultValue("callback") @QueryParam("callback") String callback) {
-
-		return new JSONPObject(callback, findCollections(queryJson, limit, offset, xpath, lazy));
+		return Response.ok().entity(femmeResponse).build();
 
 	}
 	
 	@GET
 	@Path("collections/{id}")
-	public FemmeResponse<Collection> getCollectionById(@PathParam("id") String id) {
+	public Response getCollectionById(@PathParam("id") String id) throws FemmeApplicationException {
 		Collection collection = null;
-		FemmeResponse<Collection> response = new FemmeResponse<>();
+		FemmeResponse<Collection> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
+		
 		try {
+			
 			collection = datastore.getCollection(id);
-			response.setStatus(true).setMessage("ok").setEntity(collection);
+			
+			if (collection == null) {
+				throw new FemmeApplicationException("No collection with id " + id + " found", Response.Status.NOT_FOUND.getStatusCode());	
+			}
+			entity.setHref(uriInfo.getRequestUri().toString()).setBody(collection);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("Collection " + id + " found").setEntity(entity);
+			
 		} catch (DatastoreException e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
-		return response;
-
-	}
-	
-	@GET
-	@Path("collectionsJSONP/{id}")
-	@Produces("application/javascript")
-	public JSONPObject getCollectionByIdJSONP(@PathParam("id") String id, @DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, getCollectionById(id));
+		return Response.ok().entity(femmeResponse).build();
 
 	}
 	
 	@GET
 	@Path("collections/count")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<Long> countCollections(
-			@QueryParam("query") String queryJson,
-			@QueryParam("xpath") String xpath) {
+	public Response countCollections(
+			@QueryParam("query") QueryMongo query,
+			@QueryParam("xpath") String xpath) throws FemmeApplicationException {
 		
-		QueryMongo query = null;
+		/*QueryMongo query = null;
 		if (queryJson != null) {
 			try {
 				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
 			}
-		}
-
-		FemmeResponse<Long> response = new FemmeResponse<>();
+		}*/
 		
+		FemmeResponse<Long> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<Long> entity = new FemmeResponseEntity<>();
+
 		// TODO Add XPath
 		long count = datastore.count(query, Collection.class);
-		response.setStatus(true).setMessage("ok").setEntity(count);
+		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(count + " collections found").setEntity(entity.setBody(count));
 		
-		return response;
+		return Response.status(femmeResponse.getStatus()).entity(femmeResponse).build();
 
 	}
 	
 	@GET
 	@Path("dataElements")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<DataElementList> findDataElements(
-			@QueryParam("query") String queryJson,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
+	public Response findDataElements(
+			@QueryParam("query") QueryMongo query,
+			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 
-		QueryMongo query = null;
+		/*QueryMongo query = null;
+		QueryOptionsFields options = null;
 		if (queryJson != null) {
 			try {
 				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
 			}
+		}*/
+		if (query == null) {
+			logger.info("Query all DataElements");
+		} else {
+			logger.info("Query on DataElements: " + query.build());
 		}
 		
-		FemmeResponse<DataElementList> response = new FemmeResponse<>();
-		
-		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
-		
-		if (lazy) {
-			queryOptions = queryOptions.exclude("metadata");
-		}
-		
+		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			List<DataElement> dataElements = null;
-			if (xPath != null && !xPath.equals("")) {
-				dataElements = queryOptions.xPath(xPath);				
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			
+			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			DataElementList dataElementList = new DataElementList(dataElements);
+			
+			if (dataElementList.getSize() == 0) {
+				logger.info("No data elements found");
+				throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
 			} else {
-				dataElements = queryOptions.list();
+				femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+					.setMessage(dataElementList.getSize() + " data elements found")
+					.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
 			}
-			 
-			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
-			if (query == null) {
-				logger.info("Query all DataElements");
-			} else {
-				logger.info("Query on DataElements: " + query.build());
-			}
+			
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
-			response.setStatus(false).setMessage(e.getMessage());
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		}
 		
-		return response;
+		return Response.ok().entity(femmeResponse).build();
 
-	}
-	
-	@GET
-	@Path("dataElementsJSONP")
-	@Produces("application/javascript")
-	public JSONPObject findDataElementsJSONP(
-			@QueryParam("query") String queryJson,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
-			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, findDataElements(queryJson, limit, offset, xPath, lazy));
 	}
 	
 	@GET
 	@Path("dataElements/list")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<DataElementList> findDataElementsByIds(
+	public Response findDataElementsByIds(
 			@QueryParam("id") List<String> ids,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath) {
+			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		FemmeResponse<DataElementList> response = new FemmeResponse<>();
-		
+		/*QueryOptionsFields options = null;
+		try {
+			if (optionsJson != null) {
+				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
+		}*/
+			
 		QueryMongo query = null;
 		if (ids.size() > 0) {
 			List<CriterionMongo> idsCriteria = ids.stream().map(id -> CriterionBuilderMongo.root().eq("_id", new ObjectId(id)).end()).collect(Collectors.toList());
 			query = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().or(idsCriteria).end());
 		}
-		
-		QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
-		
-		try {
-			List<DataElement> dataElements = null;
-			if (xPath != null && !xPath.equals("")) {
-				dataElements = queryOptions.xPath(xPath);				
-			} else {
-				dataElements = queryOptions.list();
-			}
-			 
-			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
-			if (query == null) {
-				logger.info("Query all DataElements");
-			} else {
-				logger.info("Query on DataElements: " + query.build());
-			}
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-			response.setStatus(false).setMessage(e.getMessage());
+		if (query == null) {
+			logger.info("Query all DataElements");
+		} else {
+			logger.info("Query on DataElements: " + query.build());
 		}
 		
-		return response;
+		
+		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
+		try {
+			
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			DataElementList dataElementList = new DataElementList(dataElements);
+			
+			if (dataElementList.getSize() == 0) {
+				logger.info("No data elements found");
+				throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
+			} else {
+				femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+					.setMessage(dataElementList.getSize() + " data elements found")
+					.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
+			}
+			 
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		}
+		
+		return Response.ok().entity(femmeResponse).build();
 
 	}
 	
 	@GET
-	@Path("dataElementsJSONP/list")
-	@Produces("application/javascript")
-	public JSONPObject findDataElementsByIdsJSONP(
-			@QueryParam("id") List<String> ids,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath,
-			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, findDataElementsByIds(ids, limit, offset, xPath));
-	}
-	
-	@GET
 	@Path("collections/{collectionId}/dataElements")
-	public FemmeResponse<DataElementList> getDataElementsInCollection(
+	public Response getDataElementsInCollection(
 			@PathParam("collectionId") String collectionId,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy) {
+			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		List<DataElement> dataElements = null;
-		FemmeResponse<DataElementList> response = new FemmeResponse<>();
+		/*QueryOptionsFields options = null;
+		try {
+			if (optionsJson != null) {
+				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
+		}*/
+		
+		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		
 		try {
 			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
 					CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
 							CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end()))
 					.end());
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).limit(limit).skip(offset);
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
 			
-			if (lazy) {
-				queryOptions = queryOptions.exclude("metadata");
+			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			DataElementList dataElementList = new DataElementList(dataElements);
+			
+			if (dataElementList.getSize() == 0) {
+				logger.info("No data elements found");
+				throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
 			}
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+				.setMessage(dataElementList.getSize() + " data elements found")
+				.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
 			
-			if (xPath != null && !xPath.equals("")) {
-				dataElements = queryOptions.xPath(xPath);
-			} else {
-				dataElements = queryOptions.list();
-			}
-			
-			response.setStatus(true).setMessage("ok").setEntity(new DataElementList(dataElements));
 		} catch (DatastoreException e) {
-			response.setStatus(false).setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		}
 
-		return response;
+		return Response.ok().entity(femmeResponse).build();
 	}
 	
 	@GET
-	@Path("collections/{collectionId}/dataElementsJSONP")
-	@Produces("application/javascript")
-	public JSONPObject getDataElementsInCollectionJSONP(
-			@PathParam("collectionId") String collectionEndpoint,
-			@QueryParam("limit") Integer limit,
-			@QueryParam("offset") Integer offset,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("lazy") @DefaultValue("false") boolean lazy,
-			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, getDataElementsInCollection(collectionEndpoint, limit, offset, xPath, lazy));
+	@Path("collections/{collectionId}/dataElements/dataElementId")
+	public Response getDataElementsInCollection(
+			@PathParam("collectionId") String collectionId,
+			@PathParam("dataElementId") String dataElementId,
+			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
+		
+		/*QueryOptionsFields options = null;
+		try {
+			if (optionsJson != null) {
+				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
+		}*/
+		
+		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
+		
+		try {
+			
+			CriterionMongo collectionCriterion = CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
+					CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end())).end();
+			CriterionMongo dataElementCriterion = CriterionBuilderMongo.root().eq(FieldNames.ID, dataElementId).end();
+			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
+					CriterionBuilderMongo.root().and(Arrays.asList(collectionCriterion, dataElementCriterion)).end());
+			
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			
+			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			DataElementList dataElementList = new DataElementList(dataElements);
+			
+			if (dataElementList.getSize() == 0) {
+				logger.info("No data elements found");
+				throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
+			}
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+				.setMessage(dataElementList.getSize() + " data elements found")
+				.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
+			
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		}
+
+		return Response.ok().entity(femmeResponse).build();
 	}
 	
 	@GET
 	@Path("dataElements/{id}")
-	public FemmeResponse<DataElement> getDataElementById(@PathParam("id") String id) {
+	public Response getDataElementById(@PathParam("id") String id) throws FemmeApplicationException {
 
-		QueryOptions<DataElement> query = null;
-		FemmeResponse<DataElement> response = new FemmeResponse<>();
+		FemmeResponse<DataElement> femmeResponse = new FemmeResponse<>();
 		
 		try {
-			query = datastore.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()),
-					DataElement.class);
+			QueryOptions<DataElement> query = datastore.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), DataElement.class);
+			QueryOptionsFields options = new QueryOptionsFields();
+			options.setLimit(1);
+			DataElement dataElement = query.options(options).first();
 			
-			DataElement dataElement = query.limit(1).first();
-			response.setStatus(true).setMessage("ok").setEntity(dataElement);
+			if (dataElement == null) {
+				logger.info("No DataElement with id " + id + " found");
+				throw new FemmeApplicationException("No data element with id " + id + " found", Response.Status.NOT_FOUND.getStatusCode());
+			}
 			
-			logger.info("Find DataElement " + id);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+				.setMessage("Data element " + dataElement.getId() + " found")
+				.setEntity(new FemmeResponseEntity<DataElement>(uriInfo.getRequestUri().toString(), dataElement));
+			logger.info("DataElement " + id + " found");
+			
 		} catch (DatastoreException e) {
-			response.setStatus(false).setMessage(e.getMessage());
 			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		}
 
-		return response;
+		return Response.ok().entity(femmeResponse).build();
 
-	}
-	
-	@GET
-	@Path("dataElementsJSONP/{id}")
-	@Produces("application/javascript")
-	public JSONPObject getDataElementByIdJSONP(
-			@PathParam("id") String id,
-			@DefaultValue("callback") @QueryParam("callback") String callback) {
-		return new JSONPObject(callback, getDataElementById(id));
 	}
 
 	@GET
 	@Path("dataElements/count")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public FemmeResponse<Long> countDataElements(
-			@QueryParam("query") String queryJson,
-			@QueryParam("xpath") String xpath) {
+	public Response countDataElements(
+			@QueryParam("query") QueryMongo query,
+			@QueryParam("xpath") String xpath) throws FemmeApplicationException {
 		
-		QueryMongo query = null;
+		/*QueryMongo query = null;
 		if (queryJson != null) {
 			try {
 				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
 			}
+		}*/
+		if (query == null) {
+			logger.info("Count all DataElements");
+		} else {
+			logger.info("Count on DataElements: " + query.build());
 		}
-
-		FemmeResponse<Long> response = new FemmeResponse<>();
+		
+		FemmeResponse<Long> femmeResponse = new FemmeResponse<>();
 		
 		// TODO Add XPath
 		long count = datastore.count(query, DataElement.class);
-		response.setStatus(true).setMessage("ok").setEntity(count);
+		femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+			.setMessage(count +" data elements found")
+			.setEntity(new FemmeResponseEntity<Long>(uriInfo.getRequestUri().toString(), count));
 		
-		return response;
+		return Response.ok().entity(femmeResponse).build();
 
 	}
 	

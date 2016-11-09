@@ -6,8 +6,6 @@ public class MetadatumMongo extends Metadatum {
 	
 	private String importId;
 	
-	private int status;
-	
 	public MetadatumMongo() {
 		
 	}
@@ -20,7 +18,6 @@ public class MetadatumMongo extends Metadatum {
 		setValue(metadatum.getValue());
 		
 		this.importId = importId;
-		this.status = status;
 	}
 
 	public String getImportId() {
@@ -29,14 +26,6 @@ public class MetadatumMongo extends Metadatum {
 
 	public void setImportId(String importId) {
 		this.importId = importId;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
-		this.status = status;
 	}
 	
 }

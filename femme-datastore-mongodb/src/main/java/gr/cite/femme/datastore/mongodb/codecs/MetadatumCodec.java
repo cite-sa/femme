@@ -31,6 +31,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
@@ -39,13 +40,12 @@ import gr.cite.femme.model.MetadatumXPathCache;
 public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private static final Logger logger = LoggerFactory.getLogger(MetadatumCodec.class);
 
-	private static final String METADATUM_ID_KEY = "_id";
+	/*private static final String METADATUM_ID_KEY = "_id";
 	private static final String METADATUM_FILENAME_KEY = "fileName";
 	private static final String METADATUM_FILE_ID_KEY = "fileId";
 	private static final String METADATUM_ELEMENT_ID_KEY = "elementId";
 	private static final String METADATUM_NAME_KEY = "name";
-	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
-	private static final String METADATUM_XPATH_CACHE_KEY = "xPathCache";
+	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";*/
 	
 	private CodecRegistry codecRegistry;
 	
@@ -61,18 +61,18 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 			generateIdIfAbsentFromDocument(value);
 		}
 		if (value.getId() != null) {
-			writer.writeObjectId(METADATUM_ID_KEY, new ObjectId(value.getId()));
+			writer.writeObjectId(FieldNames.ID, new ObjectId(value.getId()));
 			/*writer.writeObjectId(METADATUM_FILE_ID_KEY, new ObjectId(value.getId()));*/			
 		}
 		
 		
 		/* writer.writeString(METADATUM_FILENAME_KEY, file.getSecond()); */
 		if (value.getName() != null) {
-			writer.writeString(METADATUM_NAME_KEY, value.getName());
+			writer.writeString(FieldNames.NAME, value.getName());
 		}
 		
 		if (value.getContentType() != null) {
-			writer.writeString(METADATUM_CONTENT_TYPE_KEY, value.getContentType());
+			writer.writeString(FieldNames.METADATA_CONTENT_TYPE, value.getContentType());
 		}
 
 		/*if (value.getXPathCache() != null) {
@@ -103,11 +103,11 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
             
-            if (fieldName.equals(METADATUM_ID_KEY)) {
+            if (fieldName.equals(FieldNames.ID)) {
             	id = reader.readObjectId().toString();
-            } else if (fieldName.equals(METADATUM_NAME_KEY)) {
+            } else if (fieldName.equals(FieldNames.NAME)) {
             	name = reader.readString();
-            } else if (fieldName.equals(METADATUM_CONTENT_TYPE_KEY)) {
+            } else if (fieldName.equals(FieldNames.METADATA_CONTENT_TYPE)) {
             	contentType = reader.readString();
             }/* else if (fieldName.equals(METADATUM_XPATH_CACHE_KEY)) {
             	metadatumIndexes = new ArrayList<>();

@@ -181,11 +181,11 @@ public class OperatorClient implements Operator<CriterionClient> {
 	}
 
 	public CriterionClient end() {
-		return criterion;
+		return this.criterion;
 	}
 
 	@Override
-	public Operator<CriterionClient> inCollections(List<CriterionClient> criteria) {
+	public OperatorClient inCollections(List<CriterionClient> criteria) {
 		
 		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
 		inclusionOperator.inCollections(criteria);
@@ -197,7 +197,7 @@ public class OperatorClient implements Operator<CriterionClient> {
 	}
 
 	@Override
-	public Operator<CriterionClient> inAnyCollection(List<CriterionClient> criteria) {
+	public OperatorClient inAnyCollection(List<CriterionClient> criteria) {
 		
 		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
 		inclusionOperator.inAnyCollection(criteria);
@@ -209,7 +209,7 @@ public class OperatorClient implements Operator<CriterionClient> {
 	}
 
 	@Override
-	public Operator<CriterionClient> hasDataElements(List<CriterionClient> criteria) {
+	public OperatorClient hasDataElements(List<CriterionClient> criteria) {
 		
 		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
 		inclusionOperator.hasDataElements(criteria);
@@ -221,7 +221,7 @@ public class OperatorClient implements Operator<CriterionClient> {
 	}
 
 	@Override
-	public Operator<CriterionClient> hasAnyDataElement(List<CriterionClient> criteria) {
+	public OperatorClient hasAnyDataElement(List<CriterionClient> criteria) {
 		
 		InclusionOperatorClient inclusionOperator = new InclusionOperatorClient();
 		inclusionOperator.hasAnyDataElement(criteria);

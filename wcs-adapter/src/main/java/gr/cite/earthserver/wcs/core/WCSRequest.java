@@ -39,26 +39,21 @@ public class WCSRequest {
 		MediaType mediaType = response.getMediaType();
 		
 		String responseString = "";
-		if (mediaType.toString().equals("image/png")) {
+		if ("image/png".equals(mediaType.toString())) {
 			BufferedImage image = null;
 			try {
-				
-//				image = ImageIO.read(new URL("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=ProcessCoverages&query=for%20data%20in%20(frt0000cc22_07_if165l_trr3)%20return%20encode(%20%7B%20red:%20(int)(255%20/%20(max((data.band_233%20!=%2065535)%20*%20data.band_233)%20-%20min(data.band_233)))%20*%20(data.band_233%20-%20min(data.band_233));%20green:%20(int)(255%20/%20(max((data.band_13%20!=%2065535)%20*%20data.band_13)%20-%20min(data.band_13)))%20*%20(data.band_13%20-%20min(data.band_13));%20blue:%20(int)(255%20/%20(max((data.band_78%20!=%2065535)%20*%20data.band_78)%20-%20min(data.band_78)))%20*%20(data.band_78%20-%20min(data.band_78))%20;%20alpha:%20(data.band_100%20!=%2065535)%20*%20255%7D,%20%22png%22,%20%22nodata=null%22)"));
 				image = ImageIO.read(webTarget.getUri().toURL());
-			} catch (MalformedURLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (MalformedURLException e) {
+				logger.error(e.getMessage(), e);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
 			}
 
 		    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		    try {
 				ImageIO.write(image, "png", baos);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 		    responseString = Base64.getEncoder().encodeToString(baos.toByteArray());
 		} else {

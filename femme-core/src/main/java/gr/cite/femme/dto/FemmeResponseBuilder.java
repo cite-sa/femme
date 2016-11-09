@@ -1,4 +1,4 @@
-package gr.cite.femme.dto;
+/*package gr.cite.femme.dto;
 
 public class FemmeResponseBuilder<T> {
 	
@@ -45,3 +45,4 @@ public class FemmeResponseBuilder<T> {
 		
 	}
 }
+*/

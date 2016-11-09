@@ -16,6 +16,8 @@ public class Metadatum {
 	
 	private String contentType;
 	
+	private Status status;
+	
 	/*private List<MetadatumXPathCache> xPathCache;*/
 	
 	public Metadatum() {
@@ -82,6 +84,14 @@ public class Metadatum {
 
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+	}
+	
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
 	}
 	
 	/*public List<MetadatumXPathCache> getXPathCache() {

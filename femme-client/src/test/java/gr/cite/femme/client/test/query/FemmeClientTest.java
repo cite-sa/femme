@@ -1,4 +1,4 @@
-package gr.cite.femme.client.test.query;
+/*package gr.cite.femme.client.test.query;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -21,7 +21,7 @@ public class FemmeClientTest {
 	
 	private FemmeClient client;
 	
-	/*@Before*/
+	@Before
 	public void initClient() {
 		client = new FemmeClient("http://localhost:8081/femme-application");
 	}
@@ -45,7 +45,7 @@ public class FemmeClientTest {
 	
 //	@Test
 	public void testDatastore() throws FemmeDatastoreException {
-		/*DataElement dataElement = new DataElement();
+		DataElement dataElement = new DataElement();
 		dataElement.setName("testName");
 		dataElement.setEndpoint("testEndpoint");
 		
@@ -54,7 +54,7 @@ public class FemmeClientTest {
 		List<DataElement> stored = client.getDataElementByEndpoint(dataElement.getEndpoint());
 		for (DataElement element: stored) {
 			System.out.println(element.toString());
-		}*/
+		}
 		
 		QueryClient query = new QueryClient();
 		query.addCriterion(CriterionBuilderClient.root().eq("endpoint", "test").end());
@@ -62,11 +62,11 @@ public class FemmeClientTest {
 //		client.findDataElements(query, null, null);
 	}
 	
-	/*@Test*/
+	@Test
 	public void queryDatastore() throws FemmeDatastoreException {
 		List<DataElement> dataElements = client.getDataElements();
 		System.out.println(dataElements);
-		/*Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
+		Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
 		System.out.println(collection.getEndpoint());
 		
 		QueryClient queryForCollection = new QueryClient();
@@ -79,10 +79,11 @@ public class FemmeClientTest {
 		List<DataElement> dataElements = client.getDataElements(10, null);
 		for (DataElement dataElement: dataElements) {
 			System.out.println("DataElement from list: " + dataElement.getEndpoint());
-		}*/
+		}
 		
 	}
 	
 	
 	
 }
+*/

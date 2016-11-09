@@ -19,6 +19,10 @@ public class QueryClient implements Query<CriterionClient> {
 		criteria = new ArrayList<>();
 	}
 	
+	public static QueryClient query() {
+		return new QueryClient();
+	}
+	
 	@Override
 	public QueryClient addCriterion(CriterionClient criterion) {
 		criteria.add(criterion);

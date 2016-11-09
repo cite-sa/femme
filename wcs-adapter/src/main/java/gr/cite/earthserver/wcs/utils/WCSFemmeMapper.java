@@ -1,5 +1,6 @@
 package gr.cite.earthserver.wcs.utils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,15 +20,22 @@ public final class WCSFemmeMapper {
 	private WCSFemmeMapper() {
 		
 	}
-
-	public static Collection fromServer(String endpoint, WCSResponse response) throws ParseException {
+	
+	public static Collection fromServer(String endpoint, String name, WCSResponse response) throws ParseException {
+		/*Collection.Builder collectionBuilder = Collection.builder();*/
 		Collection collection = new Collection();
 
+		/*collectionBuilder.endpoint(endpoint);*/
 		collection.setEndpoint(endpoint);
-		collection.setName(WCSParseUtils.getServerName(response.getResponse()));
+		
+		/*collectionBuilder.name(WCSParseUtils.getServerName(response.getResponse()));*/
+		collection.setName(name);
+		
 
-		collection.getMetadata().add(fromWCSMetadata(response, GET_CAPABILITIES));
+		/*collectionBuilder.metadatum(fromWCSMetadata(response, GET_CAPABILITIES));*/
+		collection.setMetadata(Arrays.asList(fromWCSMetadata(response, GET_CAPABILITIES)));
 
+		/*return collectionBuilder.build();*/
 		return collection;
 	}
 

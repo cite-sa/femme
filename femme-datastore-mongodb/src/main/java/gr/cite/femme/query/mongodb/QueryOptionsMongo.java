@@ -18,6 +18,9 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.MongoQueryException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -34,10 +37,12 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.query.api.QueryOptions;
+import gr.cite.femme.query.api.QueryOptionsFields;
 
+@JsonInclude(Include.NON_EMPTY)
 public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 
-private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.class);
+	private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.class);
 	
 	private MongoDatastore datastore;
 	
@@ -50,7 +55,7 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	private Boolean lazyMetadata = false;
 	
 	public QueryOptionsMongo() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	public QueryOptionsMongo(MongoCollection<T> collection) {
@@ -104,8 +109,37 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 				logger.debug("Query: " + queryDocument.toJson());
 			}
 	}
+
+	public QueryOptions<T> options(QueryOptionsFields options) {
+		if (options.getLimit() != null) {
+			results.limit(options.getLimit());
+		}
+		if (options.getOffset() != null) {
+			results.skip(options.getOffset());
+		}
+		if (options.getAsc() != null) {
+			results.sort(new Document(options.getAsc(), 1));
+		}
+		if (options.getDesc() != null) {
+			results.sort(new Document(options.getDesc(), -1));
+		}
+		if (options.getInclude() != null) {
+			results.projection(Projections.include(new ArrayList<>(options.getInclude())));
+			if (!options.getInclude().contains("metadata")) {
+				lazyMetadata = true;
+			}
+		}
+		if (options.getExclude() != null) {
+			results.projection(Projections.exclude(new ArrayList<>(options.getExclude())));
+			if (options.getExclude().contains("metadata")) {
+				lazyMetadata = true;
+			}
+		}
+		
+		return this;
+	}
 	
-	@Override
+	/*@Override
 	public QueryOptions<T> limit(Integer limit) {
 		if (limit != null) {
 			results.limit(limit);
@@ -122,19 +156,24 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	}
 
 	@Override
-	public QueryOptions<T> sort(String field, String order) throws InvalidQueryOperation {
-		int orderNum = 0;
-		if (!(order.equals("asc") || order.equals("desc"))) {
-			throw new InvalidQueryOperation("Sort accepts only asc or desc order.");
+	public QueryOptions<T> asc(String field) {
+		if (field != null) {
+			results.sort(new Document(field, 1));
 		}
-		if (order.equals("asc")) {
-			orderNum = 1;
-		} else if (order.equals("desc")) {
-			orderNum = -1;
+		return this;
+	}
+	
+	@Override
+	public QueryOptions<T> desc(String field) {
+		if (field != null) {
+			results.sort(new Document(field, -1));
 		}
-		Document sortDocument = new Document().append(field, orderNum); 
-		results.sort(sortDocument);
-		
+		return this;
+	}
+	
+	@Override
+	public QueryOptions<T> include(String ...fields) {
+		results.projection(Projections.include(fields));
 		return this;
 	}
 	
@@ -142,9 +181,8 @@ private static final Logger logger = LoggerFactory.getLogger(QueryOptionsMongo.c
 	public QueryOptions<T> exclude(String ...fields) {
 		lazyMetadata = Arrays.asList(fields).contains("metadata") ? true : false;
 		results.projection(Projections.exclude(fields));
-		
 		return this;
-	}
+	}*/
 
 	@Override
 	public List<T> list() throws DatastoreException {

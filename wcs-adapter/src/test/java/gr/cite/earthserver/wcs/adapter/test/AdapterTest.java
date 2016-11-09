@@ -76,8 +76,8 @@ public class AdapterTest {
 		
 		System.out.println(dataElements);*/
 		
-		List<Coverage> coverages = this.wcsAdapter.getCoveragesByCoverageId("frt0000cc22_07_if165l_trr3");
-		System.out.println(coverages);
+		/*List<Coverage> coverages = this.wcsAdapter.getCoveragesByCoverageId("frt0000cc22_07_if165l_trr3");*/
+		/*System.out.println(coverages);*/
 		
 	}
 }

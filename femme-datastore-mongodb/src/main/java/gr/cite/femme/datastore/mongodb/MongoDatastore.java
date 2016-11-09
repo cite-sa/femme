@@ -1,6 +1,9 @@
 package gr.cite.femme.datastore.mongodb;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -137,7 +140,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	}
 	
 	private void insertCollection(Collection collection) throws DatastoreException {
-		ZonedDateTime now = ZonedDateTime.now();
+		Instant now = Instant.now();
 		
 		for (DataElement dataElement : collection.getDataElements()) {
 			dataElement.addCollection(collection);
@@ -147,11 +150,18 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		}
 
 		try {
-			collection.getSystemicMetadata().setCreated(new DateTime(now));
-			collection.getSystemicMetadata().setModified(new DateTime(now));
+			collection.getSystemicMetadata().setCreated(now);
+			collection.getSystemicMetadata().setModified(now);
 			collections.insertOne(collection);
 		} catch (MongoException e) {
-			throw new DatastoreException("Collection " + collection.getName() + " insertion failed.", e);
+			// Duplicate key error. Collection already exists
+			if (11000 == e.getCode()) {
+				logger.info("Collection " + collection.getName() + " insertion failed. " + e.getMessage());
+			} else {
+				logger.info("Collection " + collection.getName() + " insertion failed. ", e);
+				throw new DatastoreException("Collection " + collection.getName() + " insertion failed. " + e.getMessage(), e);				
+			}
+			
 		}
 
 		for (DataElement dataElement : collection.getDataElements()) {
@@ -163,8 +173,8 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		}
 		if (collection.getDataElements().size() > 0) {
 			for (DataElement dataElement: collection.getDataElements()) {
-				dataElement.getSystemicMetadata().setCreated(new DateTime(now));
-				dataElement.getSystemicMetadata().setModified(new DateTime(now));
+				dataElement.getSystemicMetadata().setCreated(now);
+				dataElement.getSystemicMetadata().setModified(now);
 			}
 			dataElements.insertMany(collection.getDataElements());
 
@@ -173,10 +183,10 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	
 	private void insertDataElement(DataElement dataElement) throws DatastoreException {
 		
-		ZonedDateTime now = ZonedDateTime.now();
+		Instant now = Instant.now();
 		
-		dataElement.getSystemicMetadata().setCreated(new DateTime(now));
-		dataElement.getSystemicMetadata().setModified(new DateTime(now));
+		dataElement.getSystemicMetadata().setCreated(now);
+		dataElement.getSystemicMetadata().setModified(now);
 		
 		try {
 			dataElements.insertOne(dataElement);
@@ -283,21 +293,29 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		
 		logger.debug("addToCollection criteria query: " + query.build());
 
-		if (dataElement.getId() == null) {
+		/*if (dataElement.getId() == null) {
 			dataElement.setId(new ObjectId().toString());
-		}
+		}*/
 
-		FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
+		/*FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
 		
 		updatedCollection = collections
 				.findOneAndUpdate(
 						query.build(),
 						new Document().append("$addToSet",
 								new Document().append("dataElements", Documentizer.toIdNameDocument(dataElement))),
-						options);
+						options);*/
+		Collection collection = collections.find(query.build()).limit(1).first();
 
-		if (updatedCollection != null) {
-			dataElement.addCollection(updatedCollection);
+		/*if (updatedCollection != null) {*/
+		if (collection != null) {
+			/*dataElement.addCollection(updatedCollection);*/
+			Collection dataElementCollection = new Collection();
+			dataElementCollection.setId(collection.getId());
+			dataElementCollection.setName(collection.getName());
+			dataElementCollection.setEndpoint(collection.getEndpoint());
+			dataElement.setCollections(Arrays.asList(collection));
+			
 			insert(dataElement);
 		} else {
 			logger.info("No collection updated");
@@ -441,15 +459,19 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	public Collection getCollection(String id) throws DatastoreException {
 		Collection collection;
 		collection = collections.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
-		collection.setMetadata(getMetadata(collection));
-		return collections.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
+		if (collection != null) {			
+			collection.setMetadata(collection != null ? getMetadata(collection): new ArrayList<Metadatum>());
+		}
+		return collection;
 	}
 	
 	@Override
 	public DataElement getDataElement(String id) throws DatastoreException {
 		DataElement dataElement;
 		dataElement = dataElements.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
-		dataElement.setMetadata(getMetadata(dataElement));
+		if (dataElement != null) {
+			dataElement.setMetadata(getMetadata(dataElement));
+		}
 		return dataElement;
 	}
 	
@@ -457,7 +479,9 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	public DataElement getDataElementByName(String name) throws DatastoreException {
 		DataElement dataElement;
 		dataElement = dataElements.find(Filters.eq(FieldNames.NAME, name)).limit(1).first();
-		dataElement.setMetadata(getMetadata(dataElement));
+		if (dataElement != null) { 
+			dataElement.setMetadata(getMetadata(dataElement));
+		}
 		return dataElement;
 	}
 

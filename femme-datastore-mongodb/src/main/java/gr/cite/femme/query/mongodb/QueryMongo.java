@@ -1,5 +1,6 @@
 package gr.cite.femme.query.mongodb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,9 +8,13 @@ import org.bson.Document;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import gr.cite.femme.query.api.Query;
+import gr.cite.femme.query.api.QueryOptionsFields;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryMongo implements Query<CriterionMongo> {
@@ -51,5 +56,13 @@ public class QueryMongo implements Query<CriterionMongo> {
 		}
 		query += "}";
 		return query;*/
+	}
+	
+	public static QueryMongo fromString(String queryJson) throws JsonParseException, JsonMappingException, IOException {
+		if (queryJson != null) {
+			final ObjectMapper mapper = new ObjectMapper();
+			return mapper.readValue(queryJson, QueryMongo.class);
+		}
+		return null;
 	}
 }

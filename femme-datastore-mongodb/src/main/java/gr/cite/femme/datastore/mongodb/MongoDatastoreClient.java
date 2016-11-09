@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 
 import gr.cite.femme.datastore.mongodb.codecs.ElementCodecProvider;
@@ -17,6 +18,7 @@ import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
 import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 
@@ -88,6 +90,21 @@ public class MongoDatastoreClient {
 	}
 	
 	private void createIndexes() {
+		IndexOptions uniqueIndexOptions = new IndexOptions();
+		uniqueIndexOptions.unique(true);
+		
+		// Collections indexes
+		database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
+		database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.NAME), uniqueIndexOptions);
+		
+		// DataElements indexes
+		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
+		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
+				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT)), uniqueIndexOptions);
+		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
+				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_NAME)), uniqueIndexOptions);
+		
 		database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending("metadata.elementId"));
 	}
+	
 }

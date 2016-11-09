@@ -16,7 +16,7 @@ public class CollectionList {
 	
 	public CollectionList(List<Collection> collections) {
 		this.collections = collections;
-		this.size = collections.size();
+		this.size = collections == null ? 0 : collections.size();
 	}
 
 	public List<Collection> getCollections() {

@@ -14,6 +14,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
@@ -21,11 +22,12 @@ import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.model.SystemicMetadata;
 
 public class ElementCodec implements CollectibleCodec<Element> {
-	private static final String ELEMENT_ID_KEY = "_id";
+	/*private static final String ELEMENT_ID_KEY = "_id";
 	private static final String ELEMENT_NAME_KEY = "name";
 	private static final String ELEMENT_ENDPOINT_KEY = "endpoint";
 	private static final String ELEMENT_METADATA_KEY = "metadata";
 	private static final String ELEMENT_SYSTEMIC_METADATA_KEY = "systemicMetadata";
+	private static final String ELEMENT_STATUS_KEY = "systemicMetadata";
 	
 	private static final String DATA_ELEMENT_DATA_ELEMENTS_KEY = "subDataElements";
 	private static final String DATA_ELEMENT_COLLECTIONS_KEY = "collections";
@@ -37,7 +39,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	private static final String METADATUM_FILE_ID_KEY = "fileId";
 	private static final String METADATUM_ELEMENT_ID_KEY = "elementId";
 	private static final String METADATUM_NAME_KEY = "name";
-	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";
+	private static final String METADATUM_CONTENT_TYPE_KEY = "contentType";*/
 	
 	private CodecRegistry codecRegistry;
 	
@@ -56,13 +58,13 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		/*}*/
 		
 		if (value.getId() != null) {			
-			writer.writeObjectId(ElementCodec.ELEMENT_ID_KEY, new ObjectId(value.getId()));
+			writer.writeObjectId(FieldNames.ID, new ObjectId(value.getId()));
 		}
 		if (value.getName() != null) {
-			writer.writeString(ElementCodec.ELEMENT_NAME_KEY, value.getName());
+			writer.writeString(FieldNames.NAME, value.getName());
 		}
 		if (value.getEndpoint() != null) {
-			writer.writeString(ElementCodec.ELEMENT_ENDPOINT_KEY, value.getEndpoint());
+			writer.writeString(FieldNames.ENDPOINT, value.getEndpoint());
 		}
 		
 		if (value instanceof DataElement) {
@@ -71,23 +73,27 @@ public class ElementCodec implements CollectibleCodec<Element> {
 				
 			if (dataElement.getCollections() != null && dataElement.getCollections().size() > 0) {
 				/*writeEmbeddedCollections(writer, encoderContext, (DataElement) value);*/
-				
-				writer.writeName(ElementCodec.DATA_ELEMENT_COLLECTIONS_KEY);
+				writer.writeName(FieldNames.COLLECTIONS);
 				writer.writeStartArray();
 				for (Collection collection: dataElement.getCollections()) {
 					writer.writeStartDocument();
 					if (!documentHasId(collection)) {
 						generateIdIfAbsentFromDocument(collection);
 					}
-					writer.writeObjectId(ElementCodec.ELEMENT_ID_KEY, new ObjectId(collection.getId()));
-					writer.writeString(ElementCodec.ELEMENT_NAME_KEY, collection.getName());
-					writer.writeString(ElementCodec.ELEMENT_ENDPOINT_KEY, collection.getEndpoint());
+					if (collection.getId() != null) {						
+						writer.writeObjectId(FieldNames.ID, new ObjectId(collection.getId()));
+					}
+					if (collection.getName() != null) {
+						writer.writeString(FieldNames.NAME, collection.getName());
+					}
+					if (collection.getEndpoint() != null) {
+						writer.writeString(FieldNames.ENDPOINT, collection.getEndpoint());
+					}
 					writer.writeEndDocument();
 				}
 				writer.writeEndArray();
 			}
-		} else if (value instanceof Collection) {
-			/*writeEmdeddedDataElements(writer, encoderContext, (Collection) value);*/
+		}/* else if (value instanceof Collection) {
 			
 			Collection collection = (Collection) value;
 			if (collection.getDataElements() != null && collection.getDataElements().size() > 0) {
@@ -100,12 +106,12 @@ public class ElementCodec implements CollectibleCodec<Element> {
 					}
 					writer.writeObjectId(ElementCodec.ELEMENT_ID_KEY, new ObjectId(dataElement.getId()));
 					writer.writeString(ElementCodec.ELEMENT_NAME_KEY, dataElement.getName());
-					/*writer.writeString(ELEMENT_NAME_KEY, dataElement.getName());*/
+					writer.writeString(ELEMENT_NAME_KEY, dataElement.getName());
 					writer.writeEndDocument();
 				}
 				writer.writeEndArray();
 			}
-		}
+		}*/
 		
 		/*if (value.getMetadata() != null && value.getMetadata().size() > 0) {
 			if (!encoderContext.isEncodingCollectibleDocument()) {
@@ -114,7 +120,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 				writer.writeName("$elemMatch");
 			}*/
 		if (value.getMetadata() != null && value.getMetadata().size() > 0) {
-			writer.writeStartArray(ElementCodec.ELEMENT_METADATA_KEY);
+			writer.writeStartArray(FieldNames.METADATA);
 		
 			for (Metadatum metadatum : value.getMetadata()) {
 				if (value.getId() != null) {
@@ -134,8 +140,12 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		
 		// TODO : Systemic metadata
 		if (value.getSystemicMetadata() != null) {
-			writer.writeName(ElementCodec.ELEMENT_SYSTEMIC_METADATA_KEY);
+			writer.writeName(FieldNames.SYSTEMIC_METADATA);
 			encoderContext.encodeWithChildContext(codecRegistry.get(SystemicMetadata.class), writer, value.getSystemicMetadata());
+		}
+		
+		if (value.getStatus() != null) {
+			writer.writeInt32(FieldNames.STATUS, value.getStatus().getStatusCode());
 		}
 		writer.writeEndDocument();
 	}
@@ -150,18 +160,18 @@ public class ElementCodec implements CollectibleCodec<Element> {
 			
 		/*}*/
 		if (metadatum.getId() != null) {
-			writer.writeObjectId(ElementCodec.METADATUM_FILE_ID_KEY, new ObjectId(metadatum.getId()));			
+			writer.writeObjectId(FieldNames.METADATA_FILE_ID, new ObjectId(metadatum.getId()));			
 		} else {
-			writer.writeObjectId(ElementCodec.METADATUM_ID_KEY, new ObjectId());
+			writer.writeObjectId(FieldNames.ID, new ObjectId());
 		}
 		
 		
 		/* writer.writeString(METADATUM_FILENAME_KEY, file.getSecond()); */
 		if (metadatum.getName() != null) {
-			writer.writeString(ElementCodec.METADATUM_NAME_KEY, metadatum.getName());
+			writer.writeString(FieldNames.NAME, metadatum.getName());
 		}
 		if (metadatum.getContentType() != null) {
-			writer.writeString(ElementCodec.METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType());
+			writer.writeString(FieldNames.METADATA_CONTENT_TYPE, metadatum.getContentType());
 		}
 
 		writer.writeEndDocument();
@@ -197,7 +207,7 @@ public class ElementCodec implements CollectibleCodec<Element> {
 	
 	private void writeEmdeddedDataElements(BsonWriter writer, EncoderContext encoderContext, List<DataElement> dataElements) {
 		if (dataElements != null && dataElements.size() > 0) {
-			writer.writeStartArray(ElementCodec.DATA_ELEMENT_DATA_ELEMENTS_KEY);
+			writer.writeStartArray(FieldNames.DATA_ELEMENTS);
 			for (DataElement dataElement: dataElements) {
 				encoderContext.encodeWithChildContext(codecRegistry.get(Element.class), writer, dataElement);
 			}
@@ -217,21 +227,21 @@ public class ElementCodec implements CollectibleCodec<Element> {
 		SystemicMetadata systemicMetadata =  null;
 		List<DataElement> embeddedDataElements = null;
 		List<Collection> dataElementCollections = null;
-		List<DataElement> collectionDataElements = null;
-		boolean isCollection = false;
+		/*List<DataElement> collectionDataElements = null;*/
+		boolean isDataElement = false;
 		
 		reader.readStartDocument();
 		
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
             
-            if (fieldName.equals(ElementCodec.ELEMENT_ID_KEY)) {
+            if (fieldName.equals(FieldNames.ID)) {
             	id = reader.readObjectId().toString();
-            } else if (fieldName.equals(ElementCodec.ELEMENT_NAME_KEY)) {
+            } else if (fieldName.equals(FieldNames.NAME)) {
             	name = reader.readString();
-            } else if (fieldName.equals(ElementCodec.ELEMENT_ENDPOINT_KEY)) {
+            } else if (fieldName.equals(FieldNames.ENDPOINT)) {
             	endpoint = reader.readString();
-            } else if (fieldName.equals(ElementCodec.ELEMENT_METADATA_KEY)) {
+            } else if (fieldName.equals(FieldNames.METADATA)) {
             	metadata = new ArrayList<>();
         		reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -240,11 +250,11 @@ public class ElementCodec implements CollectibleCodec<Element> {
         			metadata.add(metadatum);
         		}
         		reader.readEndArray();
-            } else if (fieldName.equals(ElementCodec.ELEMENT_SYSTEMIC_METADATA_KEY)) {
+            } else if (fieldName.equals(FieldNames.SYSTEMIC_METADATA)) {
             	if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		systemicMetadata = codecRegistry.get(SystemicMetadata.class).decode(reader, decoderContext);            		
             	}
-            } else if (fieldName.equals(ElementCodec.DATA_ELEMENT_DATA_ELEMENTS_KEY)) {
+            } else if (fieldName.equals(FieldNames.DATA_ELEMENTS)) {
             	/*if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
             		embeddedDataElement = (DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext);            		
             	}*/
@@ -256,7 +266,8 @@ public class ElementCodec implements CollectibleCodec<Element> {
         			embeddedDataElements.add((DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext));
         		}
         		reader.readEndArray();
-            } else if (fieldName.equals(ElementCodec.DATA_ELEMENT_COLLECTIONS_KEY)) {
+            } else if (fieldName.equals(FieldNames.COLLECTIONS)) {
+            	isDataElement = true;
             	dataElementCollections = new ArrayList<>();
             	
             	/*reader.readStartArray();
@@ -270,51 +281,60 @@ public class ElementCodec implements CollectibleCodec<Element> {
                 	reader.readStartDocument();
                 	
                 	Collection collection = new Collection();
+                	/*Collection.Builder collectionBuilder = Collection.builder();*/
                 	while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
                 		
 	                    String collectionFieldName = reader.readName();
 	                    
-	                	if (collectionFieldName.equals(ElementCodec.ELEMENT_ID_KEY)) {
+	                	if (collectionFieldName.equals(FieldNames.ID)) {
+	                		/*collectionBuilder.id(reader.readObjectId().toString());*/
 	        				collection.setId(reader.readObjectId().toString());
-	        			} else if (collectionFieldName.equals(ElementCodec.ELEMENT_NAME_KEY)) {
+	        			} else if (collectionFieldName.equals(FieldNames.NAME)) {
+	        				/*collectionBuilder.name(reader.readString());*/
 	        				collection.setName(reader.readString());
-	        			} else if (collectionFieldName.equals(ElementCodec.ELEMENT_ENDPOINT_KEY)) {
+	        			} else if (collectionFieldName.equals(FieldNames.ENDPOINT)) {
+	        				/*collectionBuilder.endpoint(reader.readString());*/
 	        				collection.setEndpoint(reader.readString());
 	        			}
                 
                 	}
                 	reader.readEndDocument();
+                	/*dataElementCollections.add(collectionBuilder.build());*/
                 	dataElementCollections.add(collection);
                 }
                 
         		reader.readEndArray();
         		
         		
-            } else if (fieldName.equals(ElementCodec.COLLECTION_DATA_ELEMENTS_KEY)) {
+            }/* else if (fieldName.equals(ElementCodec.COLLECTION_DATA_ELEMENTS_KEY)) {
             	isCollection = true;
             	collectionDataElements = new ArrayList<>();
             	reader.readStartArray();
         		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
         			collectionDataElements.add((DataElement) codecRegistry.get(Element.class).decode(reader, decoderContext));
-        			/*String embeddedDataElementFieldName = reader.readName();
+        			String embeddedDataElementFieldName = reader.readName();
         			if (embeddedDataElementFieldName.equals(ELEMENT_ID_KEY)) {
         				dataElement.setId(reader.readObjectId().toString()); 				
         			} else if (embeddedDataElementFieldName.equals(ELEMENT_NAME_KEY)) {
         				dataElement.setName(reader.readString());
         			}
-        			collectionDataElements.add(dataElement);*/
+        			collectionDataElements.add(dataElement);
         		}
         		reader.readEndArray();
-            }
+            }*/
         }
 
         reader.readEndDocument();
         
-        // Element is a Collection
-        if (isCollection) {
-        	return new Collection(id, name, endpoint, metadata, systemicMetadata, collectionDataElements);
-        } else { // Element is a DataElement
-        	return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElements, dataElementCollections);
+        if (isDataElement) {
+        	return DataElement.builder()
+        			.id(id).name(name).endpoint(endpoint)
+        			.metadata(metadata).systemicMetadata(systemicMetadata)
+        			.dataElements(embeddedDataElements).collections(dataElementCollections).build();
+        	/*return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElements, dataElementCollections);*/
+        } else {
+        	return Collection.builder().id(id).name(name).endpoint(endpoint).metadata(metadata).systemicMetadata(systemicMetadata).build();
+        	/*return new Collection(id, name, endpoint, metadata, systemicMetadata, collectionDataElements);*/
         }
 	}
 

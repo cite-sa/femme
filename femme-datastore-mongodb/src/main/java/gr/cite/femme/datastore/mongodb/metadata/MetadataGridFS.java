@@ -32,11 +32,12 @@ import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
-import gr.cite.femme.datastore.mongodb.core.Status;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.model.Status;
 import gr.cite.femme.utils.Pair;
 import gr.cite.scarabaeus.utils.xml.XMLConverter;
 import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
@@ -85,17 +86,17 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
 					new Document()
-					.append(METADATUM_ELEMENT_ID_KEY, new ObjectId(metadatum.getElementId()))
-					.append(METADATUM_NAME_KEY, metadatum.getName())
-					.append(METADATUM_CONTENT_TYPE_KEY, metadatum.getContentType())
-					.append(METADATUM_STATUS_KEY, Status.PENDING.getStatus())
+					.append(FieldNames.ID, new ObjectId(metadatum.getElementId()))
+					.append(FieldNames.NAME, metadatum.getName())
+					.append(FieldNames.METADATA_CONTENT_TYPE, metadatum.getContentType())
+					.append(FieldNames.STATUS, Status.PENDING.getStatusCode())
 				);
 		
 		ObjectId fileId;
 		try {
 			fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("GridsFSException when uploading metadatum of element with id: " + metadatum.getElementId().toString(), e);
+			throw new MetadataStoreException("Error while uploading metadatum of element with id: " + metadatum.getElementId().toString(), e);
 		}
 		metadatum.setId(fileId.toString());
 		
@@ -135,8 +136,8 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		MongoCursor<Metadatum> cursor = null;
 		try {
 			cursor = gridFSBucket.find(
-					new Document().append(METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY, new ObjectId(elementId))
-					).map(new Function<GridFSFile, Metadatum>() {
+					new Document().append(METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY, new ObjectId(elementId)))
+					.map(new Function<GridFSFile, Metadatum>() {
 				@Override
 				public Metadatum apply(GridFSFile t) {
 					Metadatum metadatum = new Metadatum();

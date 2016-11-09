@@ -1,10 +1,6 @@
 package gr.cite.femme.datastore.mongodb.codecs;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Date;
 
 import org.bson.BsonReader;
 import org.bson.BsonString;
@@ -16,18 +12,20 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.model.DateTime;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+/*import gr.cite.femme.model.DateTime;*/
 import gr.cite.femme.model.SystemicMetadata;
 
 public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>{
-	private static final String SYSTEMIC_METADATA_ID_KEY = "_id";
+	/*private static final String SYSTEMIC_METADATA_ID_KEY = "_id";
 	private static final String SYSTEMIC_METADATA_CREATED_KEY = "created";
 	private static final String SYSTEMIC_METADATA_MODIFIED_KEY = "modified";
 	private static final String SYSTEMIC_METADATA_TIMESTAMP_KEY = "timestamp";
 	private static final String SYSTEMIC_METADATA_OFFSET_ID_KEY = "offsetId";
-	private static final String SYSTEMIC_METADATA_ZONE_ID_KEY = "zoneId";
+	private static final String SYSTEMIC_METADATA_ZONE_ID_KEY = "zoneId";*/
 	
 	public SystemicMetadataCodec() {
+		
 	}
 	
 	@Override
@@ -38,32 +36,26 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		if (!documentHasId(value)) {
 			generateIdIfAbsentFromDocument(value);
 		}
-		
 		if (value.getId() != null) {
-			writer.writeObjectId(SYSTEMIC_METADATA_ID_KEY, new ObjectId(value.getId()));			
+			writer.writeObjectId(FieldNames.ID, new ObjectId(value.getId()));			
 		}
-		
 		if (value.getCreated() != null) {
-			writer.writeName(SYSTEMIC_METADATA_CREATED_KEY);
-			encodeDateTime(writer, value.getCreated());
+			writer.writeDateTime(FieldNames.CREATED, value.getCreated().toEpochMilli());
 		}
-		
 		if (value.getModified() != null) {
-			writer.writeName(SYSTEMIC_METADATA_MODIFIED_KEY);
-			encodeDateTime(writer, value.getModified());			
+			writer.writeDateTime(FieldNames.MODIFIED, value.getModified().toEpochMilli());
 		}
-		
 		/*}*/
 		writer.writeEndDocument();
 	}
 	
-	private void encodeDateTime(BsonWriter writer, DateTime zonedDateTime) {
+	/*private void encodeDateTime(BsonWriter writer, DateTime zonedDateTime) {
 		writer.writeStartDocument();
 		writer.writeDateTime(SYSTEMIC_METADATA_TIMESTAMP_KEY, zonedDateTime.getZonedDateTime().toInstant().toEpochMilli());
 		writer.writeString(SYSTEMIC_METADATA_OFFSET_ID_KEY, zonedDateTime.getZonedDateTime().getOffset().getId());
 		writer.writeString(SYSTEMIC_METADATA_ZONE_ID_KEY, zonedDateTime.getZonedDateTime().getZone().getId());
 		writer.writeEndDocument();
-	}
+	}*/
 	
 	
 	
@@ -74,19 +66,19 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	@Override
 	public SystemicMetadata decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null;
-		DateTime created = null, modified = null;
+		Instant created = null, modified = null;
 		
 		reader.readStartDocument();
 		
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
 		
-			if (fieldName.equals(SYSTEMIC_METADATA_ID_KEY)) {
+			if (fieldName.equals(FieldNames.ID)) {
 	        	id = reader.readObjectId().toString();
-	        } else if (fieldName.equals(SYSTEMIC_METADATA_CREATED_KEY)) {
-	        	created = decodeZonedDateTime(reader);
-	        } else if (fieldName.equals(SYSTEMIC_METADATA_MODIFIED_KEY)) {
-	        	modified = decodeZonedDateTime(reader);
+	        } else if (fieldName.equals(FieldNames.CREATED)) {
+	        	created = Instant.ofEpochMilli(reader.readDateTime());
+	        } else if (fieldName.equals(FieldNames.MODIFIED)) {
+	        	modified = Instant.ofEpochMilli(reader.readDateTime());
 	        }
         }
 		
@@ -95,7 +87,7 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		return new SystemicMetadata(id, created, modified);
 	}
 	
-	private DateTime decodeZonedDateTime(BsonReader reader) {
+	/*private DateTime decodeZonedDateTime(BsonReader reader) {
 		long timestamp = 0;
 		String offsetId = null, zoneId = null;
 		
@@ -106,7 +98,7 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		reader.readEndDocument();
 		
 		return new DateTime(ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of(zoneId)));
-	}
+	}*/
 	
 	@Override
 	public SystemicMetadata generateIdIfAbsentFromDocument(SystemicMetadata systemicMetadata) {

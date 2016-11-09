@@ -13,10 +13,11 @@ public class CollectionMongo extends Collection implements Bson {
 
 	}
 
-	public CollectionMongo(Collection collection) {
+	/*public CollectionMongo(Collection collection) {
+		
 		super(collection.getId(), collection.getName(), collection.getEndpoint(), collection.getMetadata(),
 				collection.getSystemicMetadata(), collection.getDataElements());
-	}
+	}*/
 
 	@Override
 	public <TDocument> BsonDocument toBsonDocument(Class<TDocument> documentClass, CodecRegistry codecRegistry) {

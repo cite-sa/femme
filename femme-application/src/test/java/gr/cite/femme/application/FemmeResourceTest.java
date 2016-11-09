@@ -1,23 +1,33 @@
 package gr.cite.femme.application;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.uri.UriComponent;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import gr.cite.femme.dto.CollectionList;
+import gr.cite.femme.dto.DataElementList;
+import gr.cite.femme.dto.FemmeResponse;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.query.api.QueryOptionsFields;
 
 public class FemmeResourceTest {
 	private Client client;
@@ -25,22 +35,33 @@ public class FemmeResourceTest {
 	private WebTarget webTarget;
 	
 	
-	//@Before
+	@Before
 	public void init() {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
 		webTarget = client.target("http://localhost:8081/femme-application/");
 	}
 	
-	//@Test
-	public void insert() {
-		Collection collection = createDemoCollection();
+	@Test
+	public void insert() throws JsonProcessingException {
+//		Collection collection = createDemoCollection();
 		
-		String insertedCollectionId = webTarget
+		QueryOptionsFields options = new QueryOptionsFields();
+		options.setLimit(5);
+		HashSet<String> exclude = new HashSet<>();
+		exclude.add("metadata");
+		options.setExclude(exclude);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		String optionsJson = mapper.writeValueAsString(options);
+
+		
+		FemmeResponse<CollectionList> response = webTarget
 			.path("collections")
+			.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 			.request()
-			.post(Entity.entity(collection, MediaType.APPLICATION_JSON), String.class);
+			.get(new GenericType<FemmeResponse<CollectionList>>(){});
 		
-		System.out.println(insertedCollectionId);
+		System.out.println(response);
 	}
 	
 	/*@Test*/
@@ -93,7 +114,7 @@ public class FemmeResourceTest {
 	}
 	
 	private Collection createDemoCollection() {
-		Collection collection = new Collection();
+		Collection collection = Collection.builder().build();
 		collection.setName("testCollection" + RandomUtils.nextInt(0, 10));
 		collection.setEndpoint("http://www.cite-sa/gr/");
 		

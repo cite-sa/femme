@@ -8,17 +8,24 @@ import gr.cite.femme.model.Element;
 
 public interface QueryOptions<T extends Element> {
 	
-	public QueryOptions<T> limit(Integer limit);
+	/*public QueryOptions<T> limit(Integer limit);
 	
 	public QueryOptions<T> skip(Integer skip);
 	
-	public QueryOptions<T> sort(String field, String order) throws InvalidQueryOperation;
+	public QueryOptions<T> asc(String field);
 	
-	public QueryOptions<T> exclude(String ...fields);
+	public QueryOptions<T> desc(String field);
+	
+	public QueryOptions<T> include(String ...fields);
+	
+	public QueryOptions<T> exclude(String ...fields);*/
+	
+	public QueryOptions<T> options(QueryOptionsFields options);
 	
 	public List<T> list() throws DatastoreException;
 	
 	public T first() throws DatastoreException;
 	
 	public List<T> xPath(String xPath) throws DatastoreException;
+	
 }

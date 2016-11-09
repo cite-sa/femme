@@ -25,6 +25,8 @@ public class Element {
 	@JsonProperty
 	private SystemicMetadata systemicMetadata;
 	
+	private Status status;
+	
 	public Element() {
 		this.metadata = new ArrayList<>();
 		this.systemicMetadata = new SystemicMetadata();
@@ -100,6 +102,14 @@ public class Element {
 
 	public void setSystemicMetadata(SystemicMetadata systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
 	}
 
 	@Override

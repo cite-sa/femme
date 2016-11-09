@@ -51,7 +51,7 @@ public class CollectionBsonBuilder {
 		return this;
 	}
 	
-	public CollectionBson build() {
+	/*public CollectionBson build() {
 		Collection collectionObj = new Collection();
 		collectionObj.setId(id);
 		collectionObj.setName(name);
@@ -61,5 +61,5 @@ public class CollectionBsonBuilder {
 		collectionObj.setDataElements(dataElements);
 		
 		return new CollectionBson(collectionObj);
-	}
+	}*/
 }

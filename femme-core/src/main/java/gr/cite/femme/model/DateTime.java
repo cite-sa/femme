@@ -80,6 +80,11 @@ public class DateTime {
 		ZonedDateTime zonedParsed = ZonedDateTime.ofInstant(Instant.ofEpochMilli(zoned.toInstant().toEpochMilli()), ZoneId.of(zoned.getZone().getId()));
 		Instant instant = Instant.now();
 		
+		System.out.println(zoned.getOffset());
+		System.out.println(zoned.getZone());
+		System.out.println(zoned.getZone().getId());
+		System.out.println(ZoneId.getAvailableZoneIds());
+		
 		System.out.println(local);
 		System.out.println(zoned);
 		System.out.println(zonedParsed);
