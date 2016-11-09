@@ -111,28 +111,30 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 	}
 
 	public QueryOptions<T> options(QueryOptionsFields options) {
-		if (options.getLimit() != null) {
-			results.limit(options.getLimit());
-		}
-		if (options.getOffset() != null) {
-			results.skip(options.getOffset());
-		}
-		if (options.getAsc() != null) {
-			results.sort(new Document(options.getAsc(), 1));
-		}
-		if (options.getDesc() != null) {
-			results.sort(new Document(options.getDesc(), -1));
-		}
-		if (options.getInclude() != null) {
-			results.projection(Projections.include(new ArrayList<>(options.getInclude())));
-			if (!options.getInclude().contains("metadata")) {
-				lazyMetadata = true;
+		if (options != null) {
+			if (options.getLimit() != null) {
+				results.limit(options.getLimit());
 			}
-		}
-		if (options.getExclude() != null) {
-			results.projection(Projections.exclude(new ArrayList<>(options.getExclude())));
-			if (options.getExclude().contains("metadata")) {
-				lazyMetadata = true;
+			if (options.getOffset() != null) {
+				results.skip(options.getOffset());
+			}
+			if (options.getAsc() != null) {
+				results.sort(new Document(options.getAsc(), 1));
+			}
+			if (options.getDesc() != null) {
+				results.sort(new Document(options.getDesc(), -1));
+			}
+			if (options.getInclude() != null) {
+				results.projection(Projections.include(new ArrayList<>(options.getInclude())));
+				if (!options.getInclude().contains("metadata")) {
+					lazyMetadata = true;
+				}
+			}
+			if (options.getExclude() != null) {
+				results.projection(Projections.exclude(new ArrayList<>(options.getExclude())));
+				if (options.getExclude().contains("metadata")) {
+					lazyMetadata = true;
+				}
 			}
 		}
 		
