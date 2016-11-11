@@ -71,10 +71,6 @@ public class FemmeResource {
 		return Response.ok("pong").build();
 	}
 	
-	/*@QueryParam("limit") Integer limit, @QueryParam("offset") Integer offset,
-	@QueryParam("asc") String asc, @QueryParam("desc") String desc,
-	@QueryParam("include") List<String> include, @QueryParam("exclude") List<String> exclude,*/
-	
 	@GET
 	@Path("collections")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -82,18 +78,6 @@ public class FemmeResource {
 			@QueryParam("query") QueryMongo query,
 			@QueryParam("options") QueryOptionsFields options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
-		
-		/*QueryMongo query = null;
-		QueryOptionsFields options = null;
-		if (queryJson != null) {
-			try {
-				query = objectMapper.readValue(queryJson, QueryMongo.class);
-				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-			}
-		}*/
 		
 		if (query == null) {
 			logger.info("Query all Collections");
@@ -156,16 +140,6 @@ public class FemmeResource {
 			@QueryParam("query") QueryMongo query,
 			@QueryParam("xpath") String xpath) throws FemmeApplicationException {
 		
-		/*QueryMongo query = null;
-		if (queryJson != null) {
-			try {
-				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-			}
-		}*/
-		
 		FemmeResponse<Long> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Long> entity = new FemmeResponseEntity<>();
 
@@ -185,17 +159,6 @@ public class FemmeResource {
 			@QueryParam("options") QueryOptionsFields options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 
-		/*QueryMongo query = null;
-		QueryOptionsFields options = null;
-		if (queryJson != null) {
-			try {
-				query = objectMapper.readValue(queryJson, QueryMongo.class);
-				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-			}
-		}*/
 		if (query == null) {
 			logger.info("Query all DataElements");
 		} else {
@@ -235,16 +198,6 @@ public class FemmeResource {
 			@QueryParam("options") QueryOptionsFields options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		/*QueryOptionsFields options = null;
-		try {
-			if (optionsJson != null) {
-				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
-			}
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-		}*/
-			
 		QueryMongo query = null;
 		if (ids.size() > 0) {
 			List<CriterionMongo> idsCriteria = ids.stream().map(id -> CriterionBuilderMongo.root().eq("_id", new ObjectId(id)).end()).collect(Collectors.toList());
@@ -289,15 +242,6 @@ public class FemmeResource {
 			@QueryParam("options") QueryOptionsFields options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		/*QueryOptionsFields options = null;
-		try {
-			if (optionsJson != null) {
-				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
-			}
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-		}*/
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		
@@ -335,15 +279,6 @@ public class FemmeResource {
 			@QueryParam("options") QueryOptionsFields options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
-		/*QueryOptionsFields options = null;
-		try {
-			if (optionsJson != null) {
-				options = objectMapper.readValue(optionsJson, QueryOptionsFields.class);					
-			}
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-		}*/
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		

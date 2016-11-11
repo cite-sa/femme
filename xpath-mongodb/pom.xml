@@ -40,6 +40,12 @@
 					</arguments>
 				</configuration> -->
 				<configuration>
+					<sourceDirectory>
+						${basedir}/src/main/antlr4/gr/cite/mongodb/xpath/grammar
+					</sourceDirectory>
+					<outputDirectory>
+						${project.build.directory}/generated-sources/antlr4/gr/cite/mongodb/xpath/grammar
+					</outputDirectory>
 					<listener>true</listener>
 					<visitor>true</visitor>
 				</configuration>

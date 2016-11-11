@@ -2,7 +2,7 @@ package gr.cite.femme.query.api;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -27,10 +27,10 @@ public class QueryOptionsFields {
 	private String desc;
 	
 	@JsonProperty
-	private HashSet<String> include;
+	private Set<String> include;
 	
 	@JsonProperty
-	private HashSet<String> exclude;
+	private Set<String> exclude;
 
 	public Integer getLimit() {
 		return limit;
@@ -64,19 +64,19 @@ public class QueryOptionsFields {
 		this.desc = desc;
 	}
 
-	public HashSet<String> getInclude() {
+	public Set<String> getInclude() {
 		return include;
 	}
 
-	public void setInclude(HashSet<String> include) {
+	public void setInclude(Set<String> include) {
 		this.include = include;
 	}
 
-	public HashSet<String> getExclude() {
+	public Set<String> getExclude() {
 		return exclude;
 	}
 
-	public void setExclude(HashSet<String> exclude) {
+	public void setExclude(Set<String> exclude) {
 		this.exclude = exclude;
 	}
 	
@@ -88,5 +88,51 @@ public class QueryOptionsFields {
 		return null;
 	}
 	
+	public static Builder builder() {
+		return new QueryOptionsFields.Builder();
+	}
+	
+	public static class Builder {
+		
+		private QueryOptionsFields options;
+		
+		private Builder() {
+			this.options = new QueryOptionsFields();
+		}
+		
+		public Builder limit(Integer limit) {
+			options.setLimit(limit);
+			return this;
+		}
+		
+		public Builder offset(Integer offset) {
+			options.setOffset(offset);
+			return this;
+		}
+		
+		public Builder asc(String asc) {
+			options.setAsc(asc);
+			return this;
+		}
+		
+		public Builder desc(String desc) {
+			options.setDesc(desc);
+			return this;
+		}
+		
+		public Builder include(Set<String> include) {
+			options.setInclude(include);
+			return this;
+		}
+		
+		public Builder exclude(Set<String> exclude) {
+			options.setExclude(exclude);
+			return this;
+		}
+		
+		public QueryOptionsFields build() {
+			return this.options;
+		}
+	}
 	
 }

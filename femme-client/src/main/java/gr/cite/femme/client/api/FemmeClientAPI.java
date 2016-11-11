@@ -9,6 +9,7 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
+import gr.cite.femme.query.api.QueryOptionsFields;
 
 public interface FemmeClientAPI {
 
@@ -23,13 +24,11 @@ public interface FemmeClientAPI {
 
 	public List<Collection> getCollections(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException;
 
-	public List<Collection> getCollections(Integer limit, Integer offset, String asc, String desc, List<String> include,
-			List<String> exclude, String xPath) throws FemmeDatastoreException, FemmeClientException;
+	public List<Collection> getCollections(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException;
 
-	public <T extends Criterion> List<Collection> findCollections(Query<T> query, Integer limit, Integer offset,
-			String asc, String desc, List<String> include, List<String> exclude, String xPath)
+	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsFields options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException;
-
+	
 	public Collection getCollectionById(String id) throws FemmeDatastoreException;
 
 	public Collection getCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException;
@@ -41,29 +40,29 @@ public interface FemmeClientAPI {
 
 	public List<DataElement> getDataElements(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException;
 
-	public List<DataElement> getDataElements(Integer limit, Integer offset, String asc, String desc,
-			List<String> include, List<String> exclude, String xPath) throws FemmeDatastoreException, FemmeClientException;
+	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException;
 
-	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, Integer limit, Integer offset,
-			String asc, String desc, List<String> include, List<String> exclude, String xPath)
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsFields options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException;
-
-	public List<DataElement> getDataElementsInCollectionById(String collectionId) throws FemmeDatastoreException;
-
-	public List<DataElement> getDataElementsInCollectionById(String collectionId, Integer limit, Integer offset)
-			throws FemmeDatastoreException, FemmeClientException;
-
-	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException;
-
-	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint, Integer limit, Integer offset)
-			throws FemmeDatastoreException, FemmeClientException;
-
-	public List<DataElement> getDataElementsByIdInCollectionById(String collectionId, String dataElementId) throws FemmeDatastoreException, FemmeClientException;
 	
 	public DataElement getDataElementById(String id) throws FemmeDatastoreException;
 
-	public DataElement getDataElementByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException;
-
 	public List<DataElement> getDataElementsByName(String name) throws FemmeDatastoreException, FemmeClientException;
+	
 
+	public List<DataElement> getDataElementsInCollectionById(String collectionId) throws FemmeDatastoreException, FemmeClientException;
+
+	public List<DataElement> getDataElementsInCollectionById(String collectionId, Integer limit, Integer offset)
+			throws FemmeDatastoreException, FemmeClientException;
+	
+	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException;
+	
+	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint, Integer limit, Integer offset)
+			throws FemmeDatastoreException, FemmeClientException;
+	
+	public List<DataElement> getDataElementsInCollectionByName(String endpoint) throws FemmeDatastoreException, FemmeClientException;
+	
+	public List<DataElement> getDataElementsInCollectionByName(String endpoint, Integer limit, Integer offset)
+			throws FemmeDatastoreException, FemmeClientException;
+	
 }

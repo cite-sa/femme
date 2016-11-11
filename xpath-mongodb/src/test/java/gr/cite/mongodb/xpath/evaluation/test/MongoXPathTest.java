@@ -24,9 +24,22 @@ public class MongoXPathTest {
 		XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
 
 		ParseTree tree = parser.main();
-		
-		System.out.println(tree.toStringTree());
 
-		System.out.println(parser.getNumberOfSyntaxErrors());
+		assertTrue(parser.getNumberOfSyntaxErrors() == 0);
+	}
+
+	@Test
+	public void invalid() {
+
+		CharStream stream = new ANTLRInputStream(INVALID_EXPRESSION);
+		XPathLexer lexer = new XPathLexer(stream);
+		XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
+
+		// suppress errors
+		//parser.removeErrorListeners();
+
+		ParseTree tree = parser.main();
+
+		assertTrue(parser.getNumberOfSyntaxErrors() > 0);
 	}
 }

@@ -82,19 +82,22 @@ public final class WCSFemmeMapper {
 	}
 
 	public static Server collectionToServer(Collection collection) {
-		Server server = new Server();
-		server.setId(collection.getId());
-		server.setEndpoint(collection.getEndpoint());
+		if (collection != null) {
+			Server server = new Server();
+			server.setId(collection.getId());
+			server.setEndpoint(collection.getEndpoint());
+	
+			String describeCoverage = "";
+			if (collection.getMetadata() != null && collection.getMetadata().size() > 0) {
+				describeCoverage = collection.getMetadata().stream()
+						.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
+						.findFirst().get().getValue();
+			}
+			server.setMetadata(describeCoverage);
 
-		String describeCoverage = "";
-		if (collection.getMetadata() != null && collection.getMetadata().size() > 0) {
-			describeCoverage = collection.getMetadata().stream()
-					.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
-					.findFirst().get().getValue();
+			return server;
 		}
-		server.setMetadata(describeCoverage);
-
-		return server;
+		return null;
 	}
 
 }

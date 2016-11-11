@@ -1,6 +1,7 @@
 package gr.cite.femme.application.resources;
 
 import java.net.URI;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -60,6 +61,9 @@ public class FemmeAdminResource {
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<String>();
 		
 		try {
+			if (collection.getName() == null) {
+				collection.setName(UUID.randomUUID().toString());
+			}
 			id = datastore.insert(collection);
 			location = uriInfo.getBaseUri() + "collections/" + id;
 			entity.setHref(location);
@@ -113,7 +117,7 @@ public class FemmeAdminResource {
 		
 		try {
 			insertedDataElement = datastore.addToCollection(dataElement, collectionId);
-			location = uriInfo.getBaseUri() + "/collections/" + collectionId + "/dataElements/" + insertedDataElement.getId();
+			location = uriInfo.getBaseUri() + "collections/" + collectionId + "/dataElements/" + insertedDataElement.getId();
 			entity.setHref(location);
 			entity.setBody(insertedDataElement.getId());
 			

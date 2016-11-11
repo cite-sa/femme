@@ -107,8 +107,6 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	@Override
 	public  String insert(Element element) throws DatastoreException {
 		
-		ZonedDateTime now = ZonedDateTime.now();
-		
 		element.setId(new ObjectId().toString());
 		
 		insertMetadata(element.getMetadata(), element.getId());

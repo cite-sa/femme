@@ -1,6 +1,6 @@
 package gr.cite.femme.datastore.mongodb.utils;
 
-public class FieldNames {
+public final class FieldNames {
 	public static final String ID = "_id";
 	public static final String NAME = "name";
 	public static final String ENDPOINT = "endpoint";

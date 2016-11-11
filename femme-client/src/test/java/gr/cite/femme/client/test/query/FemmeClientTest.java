@@ -1,4 +1,4 @@
-/*package gr.cite.femme.client.test.query;
+package gr.cite.femme.client.test.query;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -42,48 +42,12 @@ public class FemmeClientTest {
 		System.out.println(json);
 		
 	}
-	
-//	@Test
-	public void testDatastore() throws FemmeDatastoreException {
-		DataElement dataElement = new DataElement();
-		dataElement.setName("testName");
-		dataElement.setEndpoint("testEndpoint");
-		
-		String id = client.insert(dataElement);
-		
-		List<DataElement> stored = client.getDataElementByEndpoint(dataElement.getEndpoint());
-		for (DataElement element: stored) {
-			System.out.println(element.toString());
-		}
-		
-		QueryClient query = new QueryClient();
-		query.addCriterion(CriterionBuilderClient.root().eq("endpoint", "test").end());
-		
-//		client.findDataElements(query, null, null);
-	}
-	
+
 	@Test
-	public void queryDatastore() throws FemmeDatastoreException {
-		List<DataElement> dataElements = client.getDataElements();
-		System.out.println(dataElements);
-		Collection collection = client.getCollectionByEndpoint("http://access.planetserver.eu:8080/rasdaman/ows");
-		System.out.println(collection.getEndpoint());
-		
-		QueryClient queryForCollection = new QueryClient();
-		queryForCollection.addCriterion(CriterionBuilderClient.root().eq("endpoint", "http://access.planetserver.eu:8080/rasdaman/ows").end());
-		List<Collection> collections = client.findCollections(queryForCollection, null, null, null);
-		for (Collection collectionFromList: collections) {
-			System.out.println("Collection from list: " + collectionFromList.getEndpoint());
-		}
-		
-		List<DataElement> dataElements = client.getDataElements(10, null);
-		for (DataElement dataElement: dataElements) {
-			System.out.println("DataElement from list: " + dataElement.getEndpoint());
-		}
-		
+	public void getCollectionById() throws FemmeDatastoreException {
+		Collection collection = client.getCollectionById("582493bdcd42310e58c7d49d");
 	}
 	
 	
 	
 }
-*/

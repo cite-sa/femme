@@ -341,12 +341,19 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 					System.out.println("found");
 					
 					inclusion = (Document)document;
+					return inclusion;
 				} else {
+					if (inclusion != null) {
+						return inclusion;
+					}
 					inclusion = findInclusionOperator(doc.getValue());
 				}
 			}
 		} else if (className.contains("List")) {
 			for (Document doc : (List<Document>)document) {
+				if (inclusion != null) {
+					return inclusion;
+				}
 				inclusion = findInclusionOperator(doc);
 			}
 		}
