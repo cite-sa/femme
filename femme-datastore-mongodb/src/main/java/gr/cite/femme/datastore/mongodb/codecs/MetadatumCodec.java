@@ -60,17 +60,18 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 		if (!documentHasId(value)) {
 			generateIdIfAbsentFromDocument(value);
 		}
+		
 		if (value.getId() != null) {
 			writer.writeObjectId(FieldNames.ID, new ObjectId(value.getId()));
 			/*writer.writeObjectId(METADATUM_FILE_ID_KEY, new ObjectId(value.getId()));*/			
 		}
-		
-		
+		if (value.getElementId() != null) {
+			writer.writeObjectId(FieldNames.METADATA_ELEMENT_ID, new ObjectId(value.getElementId()));
+		}
 		/* writer.writeString(METADATUM_FILENAME_KEY, file.getSecond()); */
 		if (value.getName() != null) {
 			writer.writeString(FieldNames.NAME, value.getName());
 		}
-		
 		if (value.getContentType() != null) {
 			writer.writeString(FieldNames.METADATA_CONTENT_TYPE, value.getContentType());
 		}
@@ -95,7 +96,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 
 	@Override
 	public Metadatum decode(BsonReader reader, DecoderContext decoderContext) {
-		String id = null, name = null, contentType = null;
+		String id = null, name = null, contentType = null, elementId = null;;
 		/*List<MetadatumXPathCache> metadatumIndexes = null;*/
 		
 		reader.readStartDocument();
@@ -105,6 +106,8 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
             
             if (fieldName.equals(FieldNames.ID)) {
             	id = reader.readObjectId().toString();
+            } else if (fieldName.equals(FieldNames.METADATA_ELEMENT_ID)) {
+            	elementId = reader.readObjectId().toString();
             } else if (fieldName.equals(FieldNames.NAME)) {
             	name = reader.readString();
             } else if (fieldName.equals(FieldNames.METADATA_CONTENT_TYPE)) {
@@ -124,6 +127,7 @@ public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 
 		Metadatum metadatum = new Metadatum();
 		metadatum.setId(id);
+		metadatum.setElementId(elementId);
 		metadatum.setName(name);
 		metadatum.setContentType(contentType);
 		/*metadatum.setXPathCache(metadatumIndexes);*/
