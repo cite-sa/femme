@@ -86,7 +86,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(
 					new Document()
-					.append(FieldNames.ID, new ObjectId(metadatum.getElementId()))
+					.append(FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()))
 					.append(FieldNames.NAME, metadatum.getName())
 					.append(FieldNames.METADATA_CONTENT_TYPE, metadatum.getContentType())
 					.append(FieldNames.STATUS, Status.PENDING.getStatusCode())

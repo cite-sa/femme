@@ -73,7 +73,7 @@ public final class WCSFemmeMapper {
 		String describeCoverage = "";
 		if (dataElement.getMetadata() != null && dataElement.getMetadata().size() > 0) {
 			describeCoverage = dataElement.getMetadata().stream()
-					.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
+					.filter(metadatum -> metadatum != null ? WCSFemmeMapper.DESCRIBE_COVERAGE.equals(metadatum.getName()) : false)
 					.findFirst().get().getValue();
 		}
 		coverage.setMetadata(describeCoverage);
@@ -90,7 +90,7 @@ public final class WCSFemmeMapper {
 			String describeCoverage = "";
 			if (collection.getMetadata() != null && collection.getMetadata().size() > 0) {
 				describeCoverage = collection.getMetadata().stream()
-						.filter(metadatum -> metadatum != null ? "DescribeCoverage".equals(metadatum.getName()) : false)
+						.filter(metadatum -> metadatum != null ? WCSFemmeMapper.GET_CAPABILITIES.equals(metadatum.getName()) : false)
 						.findFirst().get().getValue();
 			}
 			server.setMetadata(describeCoverage);
