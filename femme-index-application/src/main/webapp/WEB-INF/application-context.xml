@@ -9,7 +9,7 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-   <context:property-placeholder location="classpath:index.properties"/>
+	<context:property-placeholder location="classpath:WEB-INF/index.properties"/>
    
 	<bean id="mongoMetadataIndex" class="gr.cite.femme.index.mongodb.MongoMetadataIndex">
 		<constructor-arg value="${index.db.host}"/>

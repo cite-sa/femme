@@ -11,8 +11,9 @@ locationPath
   ;
 
 absoluteLocationPathNoroot
-  :  '/' relativeLocationPath
+  :  '/' relativeLocationPath ?
   |  '//' relativeLocationPath
+  |  relativeLocationPath
   ;
 
 relativeLocationPath

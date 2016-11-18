@@ -1,0 +1,12 @@
+{
+	"server": {
+		"endpoint": "http://server",
+		"coverages": {
+			"coverage": {
+				"@": {
+					"endpoint": "http://coverage"
+				}
+			}
+		}
+	} 
+}
