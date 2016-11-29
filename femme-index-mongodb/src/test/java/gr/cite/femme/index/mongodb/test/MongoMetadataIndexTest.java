@@ -17,12 +17,12 @@ public class MongoMetadataIndexTest {
 	
 	private MongoMetadataIndex index;
 
-	@Before
+//	@Before
 	public void init() {
 		index = new MongoMetadataIndex("localhost:27017", "femme-index-db");
 	}
 	
-	@Test
+//	@Test
 	public void indexMetadatum() {
 		Client client = ClientBuilder.newClient();
 		 WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");

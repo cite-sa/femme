@@ -83,8 +83,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 
 	@Override
 	public void close() {
-		System.out.println("CLOSING");
-		mongoClient.close();
+		this.mongoClient.close();
 	}
 
 	public MetadataStore getMetadataStore() {

@@ -2,6 +2,8 @@ package gr.cite.femme.datastore.mongodb;
 
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -23,6 +25,9 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 
 public class MongoDatastoreClient {
+	
+	private static final Logger logger = LoggerFactory.getLogger(MongoDatastoreClient.class);
+			
 	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
 //	private static final String DATABASE_HOST = "localhost:27017";
 	private static final String DATABASE_NAME = "femme-db";
@@ -46,8 +51,8 @@ public class MongoDatastoreClient {
 	
 	public MongoDatastoreClient(String dbHost, String dbName) {
 		
-		client = new MongoClient(dbHost);
-		database = client.getDatabase(dbName);
+		this.client = new MongoClient(dbHost);
+		this.database = client.getDatabase(dbName);
 		
 		CodecRegistry codecRegistry = CodecRegistries
 				.fromRegistries(
@@ -60,33 +65,34 @@ public class MongoDatastoreClient {
 								new SystemicMetadataCodecProvider()),
 				MongoClient.getDefaultCodecRegistry());
 
-		collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
-		dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
-		metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
-		metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
+		this.collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
+		this.dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
+		this.metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
+		this.metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
 		
 		createIndexes();
 		
 	}
 
 	public MongoCollection<Collection> getCollections() {
-		return collections;
+		return this.collections;
 	}
 	
 	public MongoCollection<DataElement> getDataElements() {
-		return dataElements;
+		return this.dataElements;
 	}
 	
 	public MongoCollection<MetadatumJson> getMetadataJson() {
-		return metadataJson;
+		return this.metadataJson;
 	}
 	
 	public GridFSBucket getMetadataGridFS() {
-		return metadataGridFS;
+		return this.metadataGridFS;
 	}
 
 	public void close() {
-		client.close();
+		logger.info("Closing connection to " + this.client.getAddress());
+		this.client.close();
 	}
 	
 	private void createIndexes() {
@@ -94,17 +100,17 @@ public class MongoDatastoreClient {
 		uniqueIndexOptions.unique(true);
 		
 		// Collections indexes
-		database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
-		database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.NAME), uniqueIndexOptions);
+		this.database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
+		this.database.getCollection(COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.NAME), uniqueIndexOptions);
 		
 		// DataElements indexes
-		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
-		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
+		this.database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
+		this.database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
 				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT)), uniqueIndexOptions);
-		database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
+		this.database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
 				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_NAME)), uniqueIndexOptions);
 		
-		database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending("metadata.elementId"));
+		this.database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending(FieldNames.METADATA_ELEMENT_ID_EMBEDDED));
 	}
 	
 }

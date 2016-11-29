@@ -1,21 +1,30 @@
 package gr.cite.earthserver.wcs.utils;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
+import gr.cite.femme.model.BBox;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.utils.Pair;
 
 public final class WCSFemmeMapper {
 
 	private static final String GET_CAPABILITIES = "GetCapabilities";
 
 	private static final String DESCRIBE_COVERAGE = "DescribeCoverage";
+	
+	private static final ObjectMapper mapper = new ObjectMapper();
 	
 	private WCSFemmeMapper() {
 		
@@ -33,7 +42,7 @@ public final class WCSFemmeMapper {
 		
 
 		/*collectionBuilder.metadatum(fromWCSMetadata(response, GET_CAPABILITIES));*/
-		collection.setMetadata(Arrays.asList(fromWCSMetadata(response, GET_CAPABILITIES)));
+		collection.setMetadata(Arrays.asList(WCSFemmeMapper.fromWCSMetadata(response, GET_CAPABILITIES)));
 
 		/*return collectionBuilder.build();*/
 		return collection;
@@ -45,7 +54,23 @@ public final class WCSFemmeMapper {
 		dataElement.setName(WCSParseUtils.getCoverageId(response.getResponse()));
 		dataElement.setEndpoint(response.getEndpoint());
 
-		dataElement.getMetadata().add(fromWCSMetadata(response, DESCRIBE_COVERAGE));
+		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
+		
+		Map<String, Object> other = new HashMap<>();
+		
+		Pair<String, String> bboxGeoJsonWithCRS = WCSParseUtils.getBoundingBoxJSON(response.getResponse());
+		String bboxJson = null;
+		if (bboxGeoJsonWithCRS.getRight() != null) {
+			BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
+			
+			try {
+				bboxJson = mapper.writeValueAsString(bbox);
+			} catch (JsonProcessingException e) {
+				throw new ParseException(e.getMessage(), e);
+			}
+			other.put("bbox", bboxJson);
+		}
+		dataElement.getSystemicMetadata().setOther(other);
 
 		return dataElement;
 	}
@@ -65,7 +90,7 @@ public final class WCSFemmeMapper {
 
 		List<Server> servers = null;
 		if (dataElement.getCollections() != null) {
-			servers = dataElement.getCollections().stream().map(collection -> collectionToServer(collection))
+			servers = dataElement.getCollections().stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
 					.collect(Collectors.toList());
 		}
 		coverage.setServers(servers);

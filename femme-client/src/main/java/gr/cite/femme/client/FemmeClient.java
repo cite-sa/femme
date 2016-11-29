@@ -248,7 +248,26 @@ public class FemmeClient implements FemmeClientAPI {
 	
 	@Override
 	public List<DataElement> getDataElementsInCollectionById(String collectionId) throws FemmeDatastoreException, FemmeClientException {
-		return getDataElementsInCollectionById(collectionId, null, null);
+		//return getDataElementsInCollectionById(collectionId, null, null);
+		
+		Response response = null;
+		FemmeResponse<DataElementList> femmeResponse = null;
+		
+		response = webTarget
+				.path("collections").path(collectionId)
+				.path("dataElements")
+				.request().get(Response.class);
+		
+		femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+			logger.debug(femmeResponse.getMessage());
+			return null;
+		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeDatastoreException(femmeResponse.getMessage());
+		}
+		
+		return femmeResponse.getEntity().getBody().getDataElements();
 	}
 	
 	@Override

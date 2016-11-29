@@ -106,7 +106,7 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 			results = this.collection.find(queryDocument);
 			
 			if (query != null) {
-				logger.debug("Query: " + queryDocument.toJson());
+				logger.info("Query: " + queryDocument.toJson());
 			}
 	}
 
@@ -309,11 +309,18 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 			
 			if (inclusionOperatorDocument != null) {
 				List<Collection> collections = new ArrayList<>();
+				
+				//System.out.println(inclusionOperatorDocument.get("$in_any_collection"));
+				
+				//List<Document> docs = postProcessIdField((Object)inclusionOperatorDocument.get("$in_any_collection"));
+				
+				//System.out.println(docs);
+				
 				datastore.getCollections().find(new Document("$or", inclusionOperatorDocument.get("$in_any_collection")))
 					/*.projection(Projections.include(FieldNames.ID))*/
 					.into(collections);
-				System.out.println(queryDocument);
 				inclusionOperatorDocument.remove("$in_any_collection");
+				System.out.println(queryDocument);
 				
 				List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
 				
@@ -325,6 +332,22 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 			return new Document();
 		}
 		
+	}
+	
+	private List<Document> postProcessIdField(Object document) {
+		List<Document> docs = new ArrayList<>();
+		if (document.getClass().getSimpleName().contains("List")) {
+			for (Document doc : (List<Document>)document) {
+				Document idDoc = (Document)(doc.get("_id"));
+				String id = (String)(idDoc.get("$eq"));
+				idDoc.remove("$eq");
+				idDoc.append("$eq", new ObjectId(id));
+				
+				docs.add(doc);
+				
+			}
+		}
+		return docs;
 	}
 	
 	private Document findInclusionOperator(Object document) {

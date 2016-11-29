@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.query.api.Operator;
 import gr.cite.femme.query.mongodb.ComparisonOperatorMongo.ComparisonOperator;
 import gr.cite.femme.query.mongodb.InclusionOperatorMongo.InclusionOperator;
@@ -169,6 +171,9 @@ public class OperatorMongo implements Operator<CriterionMongo> {
 	
 	private void addComparisonOperator(ComparisonOperator comparisonOperatorType, String field, Object value) {
 		ComparisonOperatorMongo comparisonOperator = new ComparisonOperatorMongo();
+		/*if (FieldNames.ID.equals(field)) {
+			value = new ObjectId(value.toString());
+		}*/
 		switch (comparisonOperatorType) {
 		case EQ:
 			comparisonOperator.eq(field, value);

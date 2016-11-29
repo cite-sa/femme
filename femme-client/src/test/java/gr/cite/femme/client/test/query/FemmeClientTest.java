@@ -21,7 +21,7 @@ public class FemmeClientTest {
 	
 	private FemmeClient client;
 	
-	@Before
+//	@Before
 	public void initClient() {
 		client = new FemmeClient("http://localhost:8081/femme-application");
 	}
@@ -43,7 +43,7 @@ public class FemmeClientTest {
 		
 	}
 
-	@Test
+//	@Test	
 	public void getCollectionById() throws FemmeDatastoreException {
 		Collection collection = client.getCollectionById("582493bdcd42310e58c7d49d");
 	}

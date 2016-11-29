@@ -36,7 +36,7 @@ public class WCSAdapterTest {
 	
 	private WCSAdapterAPI wcsAdapter;
 	
-	@Before
+//	@Before
 	public void init() {
 		this.wcsAdapter = new WCSAdapter("http://localhost:8081/femme-application");
 //		this.wcsAdapter = new WCSAdapter("http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT");
@@ -57,12 +57,12 @@ public class WCSAdapterTest {
 		return null;
 	}
 	
-	@Test
+//	@Test
 	public void getServers() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getServers().size() > 0);
 	}
 	
-	@Test
+//	@Test
 	public void getServersLimitOffset()  throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getServers(1, 0).size() == 1);
 	}
@@ -72,12 +72,12 @@ public class WCSAdapterTest {
 		assertTrue(this.wcsAdapter.getServers(1, 0).size() == 1);
 	}
 	
-	@Test
+//	@Test
 	public void getServerEndpoint() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getServer("https://rsg.pml.ac.uk/rasdaman/ows") != null);
 	}
 	
-	@Test
+//	@Test
 	public void getServerName() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getServer("1412f147-7468-4dcc-bcd4-5858c816b81b") != null);
 	}
@@ -88,12 +88,12 @@ public class WCSAdapterTest {
 				return null;
 	}
 	
-	@Test
+//	@Test
 	public void getCoverages() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoverages().size() == 59);
 	}
 	
-	@Test
+//	@Test
 	public void getCoveragesLimitOffset() throws FemmeDatastoreException, FemmeClientException {
 		List<Coverage> coverages = this.wcsAdapter.getCoverages(1, 5);
 		assertTrue(coverages.size() ==1 && coverages.get(0).getCoverageId().equals("small_no_nulls"));
@@ -104,7 +104,7 @@ public class WCSAdapterTest {
 		return null;
 	}
 	
-	@Test
+//	@Test
 	public void getCoverageById() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoverageById("582493bfcd42310e58c7d4b7").getCoverageId().equals("small_no_nulls"));
 	}
@@ -115,40 +115,40 @@ public class WCSAdapterTest {
 				return null;
 	}
 	
-	@Test
+//	@Test
 	public void getCoverageIds() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoverageIds().size() == 59);
 	}
 	
-	@Test
+//	@Test
 	public void getCoverageIdsInServer() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoverageIdsInServer(Arrays.asList("1412f147-7468-4dcc-bcd4-5858c816b81b")).size() == 59);
 		assertTrue(this.wcsAdapter.getCoverageIdsInServer(Arrays.asList("https://rsg.pml.ac.uk/rasdaman/ows")).size() == 59);
 	}
 	
-	@Test
+//	@Test
 	public void getCoverageIdsInServerLimitOffset() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoverageIdsInServer(Arrays.asList("https://rsg.pml.ac.uk/rasdaman/ows"), 1, null, null).size() == 1);
 	}
 	
-	@Test
+//	@Test
 	public void getCoveragesByCoverageId() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoveragesByCoverageId("small_no_nulls").size() == 1);
 	}
 
-	@Test
+//	@Test
 	public void getCoveragesInServer() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoveragesInServer(Arrays.asList("1412f147-7468-4dcc-bcd4-5858c816b81b")).size() == 59);
 		assertTrue(this.wcsAdapter.getCoveragesInServer(Arrays.asList("https://rsg.pml.ac.uk/rasdaman/ows")).size() == 59);
 	}
 	
-	@Test
+//	@Test
 	public void getCoveragesInServerLimitOffset() throws FemmeDatastoreException, FemmeClientException {
 		assertTrue(this.wcsAdapter.getCoveragesInServer(Arrays.asList("1412f147-7468-4dcc-bcd4-5858c816b81b"), 5, null, null).size() == 5);
 		assertTrue(this.wcsAdapter.getCoveragesInServer(Arrays.asList("https://rsg.pml.ac.uk/rasdaman/ows"), 5, null, null).size() == 5);
 	}
 	
-	@Test
+//	@Test
 	public void getCoverageByCoverageIdInServer() throws FemmeDatastoreException, FemmeClientException {
 		assertEquals(this.wcsAdapter.getCoverageByCoverageIdInServer("1412f147-7468-4dcc-bcd4-5858c816b81b", "small_no_nulls").getCoverageId(), "small_no_nulls");
 		assertEquals(this.wcsAdapter.getCoverageByCoverageIdInServer("https://rsg.pml.ac.uk/rasdaman/ows", "small_no_nulls").getCoverageId(), "small_no_nulls");

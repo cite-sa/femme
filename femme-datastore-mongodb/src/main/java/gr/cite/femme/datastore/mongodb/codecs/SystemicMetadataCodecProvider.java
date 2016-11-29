@@ -11,7 +11,7 @@ public class SystemicMetadataCodecProvider implements CodecProvider {
 	@Override
 	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
 		if (clazz == SystemicMetadata.class) {
-			return (Codec<T>) new SystemicMetadataCodec();
+			return (Codec<T>) new SystemicMetadataCodec(registry);
 		}
 		return null;
 	}

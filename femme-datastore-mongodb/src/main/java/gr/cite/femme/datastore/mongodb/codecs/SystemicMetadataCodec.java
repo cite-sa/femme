@@ -1,18 +1,28 @@
+
 package gr.cite.femme.datastore.mongodb.codecs;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.BsonWriter;
+import org.bson.Document;
 import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
+import com.mongodb.util.JSON;
+
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.model.BBox;
+import gr.cite.femme.model.Element;
 /*import gr.cite.femme.model.DateTime;*/
 import gr.cite.femme.model.SystemicMetadata;
 
@@ -24,8 +34,10 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	private static final String SYSTEMIC_METADATA_OFFSET_ID_KEY = "offsetId";
 	private static final String SYSTEMIC_METADATA_ZONE_ID_KEY = "zoneId";*/
 	
-	public SystemicMetadataCodec() {
-		
+	private CodecRegistry codecRegistry;
+	
+	public SystemicMetadataCodec(CodecRegistry codecRegistry) {
+		this.codecRegistry = codecRegistry;
 	}
 	
 	@Override
@@ -45,6 +57,21 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		if (value.getModified() != null) {
 			writer.writeDateTime(FieldNames.MODIFIED, value.getModified().toEpochMilli());
 		}
+		if (value.getOther() != null && value.getOther().size() > 0) {
+			writer.writeName("other");
+			writer.writeStartDocument();
+
+//	        writer.writeObjectId(FieldNames.ID, new ObjectId());
+
+	        for (final Map.Entry<String, Object> entry : value.getOther().entrySet()) {
+        		writer.writeName(entry.getKey());
+        		encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse((String)entry.getValue()));
+	        }
+	        writer.writeEndDocument();
+		}
+		
+		
+		
 		/*}*/
 		writer.writeEndDocument();
 	}
@@ -57,8 +84,6 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		writer.writeEndDocument();
 	}*/
 	
-	
-	
 	@Override
 	public Class<SystemicMetadata> getEncoderClass() {
 		return SystemicMetadata.class;
@@ -67,6 +92,7 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	public SystemicMetadata decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null;
 		Instant created = null, modified = null;
+		Map<String, Object> other = null;
 		
 		reader.readStartDocument();
 		
@@ -79,12 +105,27 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	        	created = Instant.ofEpochMilli(reader.readDateTime());
 	        } else if (fieldName.equals(FieldNames.MODIFIED)) {
 	        	modified = Instant.ofEpochMilli(reader.readDateTime());
+	        } else if (fieldName.equals("other")) {
+	        	other = new HashMap<>();
+	        	reader.readStartDocument();
+	        	while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+	        		String otherFieldName = reader.readName();
+	        		if ("bbox".equals(otherFieldName)) {
+		        		Document value = null;
+		        		if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+		            		value = codecRegistry.get(Document.class).decode(reader, decoderContext);
+		            	}
+		        		BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
+		                other.put(otherFieldName, bbox);
+	        		}
+	        	}
+	        	reader.readEndDocument();
 	        }
         }
 		
 		reader.readEndDocument();
 		
-		return new SystemicMetadata(id, created, modified);
+		return new SystemicMetadata(id, created, modified, other);
 	}
 	
 	/*private DateTime decodeZonedDateTime(BsonReader reader) {

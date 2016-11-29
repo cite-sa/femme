@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -167,6 +168,10 @@ public class JsonNode {
 }
 
 class JsonNodeSerializer extends JsonSerializer<JsonNode> {
+	
+	private static final String ATTRIBUTES = "@";
+	
+	private static final String NAMESPACES = "ns";
 
 	@Override
 	public void serialize(JsonNode jsonNode, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
@@ -182,10 +187,10 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 		} else {
 			jsonGenerator.writeStartObject();
 			if (jsonNode.getNamespaces() != null) {
-				jsonGenerator.writeObjectField("namespaces", jsonNode.getNamespaces());
+				jsonGenerator.writeObjectField(JsonNodeSerializer.NAMESPACES, jsonNode.getNamespaces());
 			}
 			if (jsonNode.getAttributes() != null) {
-				jsonGenerator.writeObjectField("attributes", jsonNode.getAttributes());
+				jsonGenerator.writeObjectField(JsonNodeSerializer.ATTRIBUTES, jsonNode.getAttributes());
 			}
 			if (jsonNode.getChildren() != null) {
 				List<String> names = jsonNode.getChildren()

@@ -32,6 +32,8 @@ public class SystemicMetadata {
 	@JsonDeserialize(using = CustomInstantDeserializer.class)
 	private Instant modified;
 	
+	private Map<String, Object> other;
+	
 	/*private Map<String, MetadataStatistics> xPathFrequencies;*/
 	
 
@@ -39,30 +41,46 @@ public class SystemicMetadata {
 		
 	}
 	
-	public SystemicMetadata(String id, Instant created, Instant modified) {
+	public SystemicMetadata(String id, Instant created, Instant modified, Map<String, Object> other) {
 		this.id = id;
 		this.created = created;
 		this.modified = modified;
+		this.other = other;
 	}
 	
 	public String getId() {
 		return id;
 	}
+	
 	public void setId(String id) {
 		this.id = id;
 	}
+	
 	public Instant getCreated() {
 		return created;
 	}
+	
 	public void setCreated(Instant created) {
 		this.created = created;
 	}
+	
 	public Instant getModified() {
 		return modified;
 	}
+	
 	public void setModified(Instant modified) {
 		this.modified = modified;
 	}
+
+	public Map<String, Object> getOther() {
+		return other;
+	}
+
+	public void setOther(Map<String, Object> other) {
+		this.other = other;
+	}
+	
+	
 
 	/*public Map<String, MetadataStatistics> getxPathFrequencies() {
 		return xPathFrequencies;
