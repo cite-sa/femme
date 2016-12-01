@@ -9,7 +9,7 @@
 		<slf4j.version>1.7.21</slf4j.version>
 		<logback.version>1.1.7</logback.version>
 		<jackson.version>2.7.5</jackson.version>
-		<antlr.version>4.5.3</antlr.version>
+		<antlr.version>4.5</antlr.version>
 		<junit.version>4.12</junit.version>
 		<mongo-driver.version>3.3.0</mongo-driver.version>
 	</properties>

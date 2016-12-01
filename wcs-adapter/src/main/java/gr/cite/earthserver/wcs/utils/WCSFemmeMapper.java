@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -19,7 +22,9 @@ import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.utils.Pair;
 
 public final class WCSFemmeMapper {
-
+	
+	private static final Logger logger = LoggerFactory.getLogger(WCSFemmeMapper.class);
+	
 	private static final String GET_CAPABILITIES = "GetCapabilities";
 
 	private static final String DESCRIBE_COVERAGE = "DescribeCoverage";
@@ -56,21 +61,27 @@ public final class WCSFemmeMapper {
 
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
 		
-		Map<String, Object> other = new HashMap<>();
-		
-		Pair<String, String> bboxGeoJsonWithCRS = WCSParseUtils.getBoundingBoxJSON(response.getResponse());
-		String bboxJson = null;
-		if (bboxGeoJsonWithCRS.getRight() != null) {
-			BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
+		try {
 			
-			try {
-				bboxJson = mapper.writeValueAsString(bbox);
-			} catch (JsonProcessingException e) {
-				throw new ParseException(e.getMessage(), e);
+			Pair<String, String> bboxGeoJsonWithCRS = WCSParseUtils.getBoundingBoxJSON(response.getResponse());
+			
+			Map<String, Object> other = new HashMap<>();
+			String bboxJson = null;
+			if (bboxGeoJsonWithCRS.getRight() != null) {
+				BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
+				
+				try {
+					bboxJson = mapper.writeValueAsString(bbox);
+				} catch (JsonProcessingException e) {
+					throw new ParseException(e.getMessage(), e);
+				}
+				other.put("bbox", bboxJson);
 			}
-			other.put("bbox", bboxJson);
+			dataElement.getSystemicMetadata().setOther(other);
+			
+		} catch(ParseException e) {
+			logger.error(e.getMessage());
 		}
-		dataElement.getSystemicMetadata().setOther(other);
 
 		return dataElement;
 	}

@@ -116,6 +116,13 @@ public final class WCSParseUtils {
 				}
 			}
 			
+			CoordinateReferenceSystem currentCrs = null;
+			try {
+				currentCrs = CRS.decode(crsString);
+			} catch(NoSuchAuthorityCodeException e) {
+				throw new ParseException(e.getMessage(), e);
+			}
+			
 			String axisLabelsString = null;
 			String[] axisLabels = null;
 			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/@axisLabels");
@@ -211,8 +218,13 @@ public final class WCSParseUtils {
 			}
 			
 			CoordinateReferenceSystem defaultCrs = CRS.decode("EPSG:4326");
-			CoordinateReferenceSystem currentCrs = CRS.decode(crsString);
-		    ReferencedEnvelope envelope = new ReferencedEnvelope(lowerCornerLatitude, lowerCornerLongtitude, upperCornerLatitude, upperCornerLongtitude, currentCrs);
+			//CoordinateReferenceSystem currentCrs = CRS.decode(crsString);
+			ReferencedEnvelope envelope = null;
+			try {
+				envelope = new ReferencedEnvelope(lowerCornerLongtitude, upperCornerLongtitude, lowerCornerLatitude, upperCornerLatitude, currentCrs);
+			} catch(MismatchedDimensionException e) {
+				throw new ParseException(e);				
+			}
 		    
 		    if (!currentCrs.getName().equals(defaultCrs.getName())) {		    	
 		    	envelope = envelope.transform(defaultCrs, true);

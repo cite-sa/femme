@@ -1,10 +1,12 @@
 package gr.cite.femme.resources;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,11 +19,16 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.QueryClient;
+import gr.cite.femme.model.BBox;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.api.QueryOptionsFields;
@@ -85,5 +92,31 @@ public class FemmeGeoResource {
 		}
 		
 		return Response.ok(dataElements).build();
+	}
+	
+	@GET
+	@Path("coverages/{dataElementId}/bbox")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getBBox(@PathParam("dataElementId") String dataElementId) throws JsonParseException, JsonMappingException, IOException {
+		
+		
+		Object geoJson = null;
+		/*QueryClient query = QueryClient.query()
+				.addCriterion(CriterionBuilderClient.root().inAnyCollection(Arrays.asList(CriterionBuilderClient.root().eq("_id", endpointId).end())).end());*/
+		try {
+			DataElement dataElement = femmeClient.getDataElementById(dataElementId);
+			Map<String, Object> other = dataElement.getSystemicMetadata().getOther();
+			if (other != null) {
+				Map<String, Object> bbox = (Map<String, Object>) other.get("bbox");
+				if (bbox != null) {
+					geoJson = bbox.get("geoJson");
+				}
+			}
+			
+		} catch (FemmeDatastoreException e) {
+			throw new WebApplicationException(e.getMessage(), e);
+		}
+		
+		return Response.ok(geoJson).build();
 	}
 }
