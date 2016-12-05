@@ -15,7 +15,6 @@ public class FemmeApplication extends ResourceConfig {
 	public FemmeApplication() {
 		register(JacksonFeature.class);
 		/*register(MultiPartFeature.class);*/
-		/*register(CORSResponseFilter.class);*/
 		register(FemmeAdminResource.class);
 		register(FemmeResource.class);
 	}

@@ -266,6 +266,9 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 	
 					@Override
 					public T call() throws Exception {
+						if (element.getMetadata() == null) {
+							element.setMetadata(metadataStore.find(element.getId()));
+						}
 						if (metadataStore.xPath(element, xPath) != null) {
 							return element;					
 						}
@@ -284,7 +287,11 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 			
 			for(Future<T> future : futures) {
 				try {
-					elements.add(future.get());
+					T element = future.get();
+					if (element != null) {
+						elements.add(element);
+					}
+					//elements.add(future.get());
 				} catch (InterruptedException e) {
 					cursor.close();
 					logger.error(e.getMessage(), e);

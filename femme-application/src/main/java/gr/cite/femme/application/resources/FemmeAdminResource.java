@@ -95,7 +95,7 @@ public class FemmeAdminResource {
 			entity.setHref(location);
 			entity.setBody(id);
 			
-			femmeResponse.setStatus(201).setMessage("Collection " + id + " successfully inserted").setEntity(entity);
+			femmeResponse.setStatus(201).setMessage("DataElement " + id + " successfully inserted").setEntity(entity);
 			logger.info("DataElement " + id + " successfully inserted");
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
@@ -123,7 +123,7 @@ public class FemmeAdminResource {
 			
 			femmeResponse.setStatus(201).setMessage("DataElement " + insertedDataElement.getId() + " successfully inserted in collection " + collectionId)
 				.setEntity(entity);
-			logger.info("DataElement " + dataElement.getId() + " successfully added to Collection " + collectionId);
+			logger.info("DataElement " + insertedDataElement.getId() + " successfully inserted in Collection " + collectionId);
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());

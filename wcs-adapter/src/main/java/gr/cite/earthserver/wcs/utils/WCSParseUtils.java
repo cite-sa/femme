@@ -106,7 +106,6 @@ public final class WCSParseUtils {
 					String srsQueryParam = srsQueryParams.length > 0 ? srsQueryParams[0] : null;
 					if (srsQueryParam != null) {
 						crsString = srsQueryParam.replace("1=", "");
-						//crsString = srsQueryParam.contains("EPSG") && srsQueryParam.contains("4326") ? "EPSG:4326" : null;
 						crsString = crsString.substring(crsString.indexOf("/crs/") + 5, crsString.indexOf("/crs/") + 9) + ":" + crsString.substring(crsString.lastIndexOf("/") + 1);
 	
 					}
@@ -148,70 +147,62 @@ public final class WCSParseUtils {
 			Double upperCornerLongtitude = 0.0;
 			if (axisLabels != null) {
 				for (int i = 0 ; i < axisLabels.length; i ++) {
-					if (crsString.equals("EPSG:4326")) {
-						switch (axisLabels[i].toLowerCase()) {
-						case "lat":
-							
-							double lCornerLat = Double.parseDouble(lowerCorner[i]);
-							if (lCornerLat > 90.0) {
-								lCornerLat = Math.floor(lCornerLat);
-							} else if (lCornerLat < -90.0) {
-								lCornerLat = Math.ceil(lCornerLat);
-							}
-							lowerCornerLatitude = lCornerLat;
-							
-							double uCornerLat = Double.parseDouble(upperCorner[i]);
-							if (uCornerLat > 90.0) {
-								uCornerLat = Math.floor(uCornerLat);
-							} else if (lCornerLat < -90.0) {
-								uCornerLat = Math.ceil(uCornerLat);
-							}
-							upperCornerLatitude = uCornerLat;
-							
-							break;
-							
-						case "long":
-							
-							double lCornerLong = Double.parseDouble(lowerCorner[i]);
-							if (lCornerLong > 180.0) {
-								lCornerLong = Math.floor(lCornerLong);
-							} else if (lCornerLong < -180.0) {
-								lCornerLong = Math.ceil(lCornerLong);
-							}
-							lowerCornerLongtitude = lCornerLong;
-							
-							double uCornerLong = Double.parseDouble(upperCorner[i]);
-							if (uCornerLong > 180.0) {
-								uCornerLong = Math.floor(uCornerLong);
-							} else if (uCornerLong < -180.0) {
-								uCornerLong = Math.ceil(uCornerLong);
-							}
-							upperCornerLongtitude = uCornerLong;
-							
-							break;
-							
-						default:
-							break;
+					switch (axisLabels[i].toLowerCase()) {
+					case "lat":
+						
+						double lCornerLat = Double.parseDouble(lowerCorner[i]);
+						if (lCornerLat > 90.0) {
+							lCornerLat = Math.floor(lCornerLat);
+						} else if (lCornerLat < -90.0) {
+							lCornerLat = Math.ceil(lCornerLat);
 						}
-					} else {
-						switch (axisLabels[i].toLowerCase()) {
-						case "e":
-							
-							lowerCornerLatitude = Double.parseDouble(lowerCorner[i]);
-							upperCornerLatitude = Double.parseDouble(upperCorner[i]);
-							
-							break;
-							
-						case "n":
-							
-							lowerCornerLongtitude = Double.parseDouble(lowerCorner[i]);
-							upperCornerLongtitude = Double.parseDouble(upperCorner[i]);
-							
-							break;
-							
-						default:
-							break;
+						lowerCornerLatitude = lCornerLat;
+						
+						double uCornerLat = Double.parseDouble(upperCorner[i]);
+						if (uCornerLat > 90.0) {
+							uCornerLat = Math.floor(uCornerLat);
+						} else if (lCornerLat < -90.0) {
+							uCornerLat = Math.ceil(uCornerLat);
 						}
+						upperCornerLatitude = uCornerLat;
+						
+						break;
+						
+					case "long":
+						
+						double lCornerLong = Double.parseDouble(lowerCorner[i]);
+						if (lCornerLong > 180.0) {
+							lCornerLong = Math.floor(lCornerLong);
+						} else if (lCornerLong < -180.0) {
+							lCornerLong = Math.ceil(lCornerLong);
+						}
+						lowerCornerLongtitude = lCornerLong;
+						
+						double uCornerLong = Double.parseDouble(upperCorner[i]);
+						if (uCornerLong > 180.0) {
+							uCornerLong = Math.floor(uCornerLong);
+						} else if (uCornerLong < -180.0) {
+							uCornerLong = Math.ceil(uCornerLong);
+						}
+						upperCornerLongtitude = uCornerLong;
+						
+						break;
+						
+					case "e":
+						
+						lowerCornerLongtitude = Double.parseDouble(lowerCorner[i]);
+						upperCornerLongtitude = Double.parseDouble(upperCorner[i]);
+						
+						break;
+						
+					case "n":
+						
+						lowerCornerLatitude = Double.parseDouble(lowerCorner[i]);
+						upperCornerLatitude = Double.parseDouble(upperCorner[i]);
+						
+						break;
+					default:
+						break;
 					}
 					
 				}
