@@ -1,14 +1,13 @@
 package gr.cite.femme.query.api;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,6 +19,10 @@ public class QueryOptionsFields {
 	
 	@JsonProperty
 	private Integer offset;
+
+	// TODO implement orderBy
+	@JsonProperty
+	private List<String> orderBy;
 	
 	@JsonProperty
 	private String asc;

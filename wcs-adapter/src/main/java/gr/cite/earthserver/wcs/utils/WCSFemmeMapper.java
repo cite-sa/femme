@@ -31,10 +31,6 @@ public final class WCSFemmeMapper {
 	
 	private static final ObjectMapper mapper = new ObjectMapper();
 	
-	private WCSFemmeMapper() {
-		
-	}
-	
 	public static Collection fromServer(String endpoint, String name, WCSResponse response) throws ParseException {
 		/*Collection.Builder collectionBuilder = Collection.builder();*/
 		Collection collection = new Collection();
@@ -66,7 +62,7 @@ public final class WCSFemmeMapper {
 			Pair<String, String> bboxGeoJsonWithCRS = WCSParseUtils.getBoundingBoxJSON(response.getResponse());
 			
 			Map<String, Object> other = new HashMap<>();
-			String bboxJson = null;
+			String bboxJson;
 			if (bboxGeoJsonWithCRS.getRight() != null) {
 				BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
 				
