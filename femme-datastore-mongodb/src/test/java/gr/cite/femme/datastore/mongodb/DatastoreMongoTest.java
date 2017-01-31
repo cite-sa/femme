@@ -62,7 +62,7 @@ public class DatastoreMongoTest {
 		try {
 			List<DataElement> elements = query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
 					.expression(query.<DataElement>expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
-					.isChildOf(dataElement2).and().isParentOf(dataElement1).build().find();
+					.isChildOf(dataElement2).and().isParentOf(dataElement1).build().query();
 		} catch (UnsupportedQueryOperationException e1) {
 			fail();
 		}
@@ -106,7 +106,7 @@ public class DatastoreMongoTest {
 		/*or (int i = 0; i < 1; i ++) {
 			Instant start = Instant.now();
 			
-			r = mongo.<DataElement>find(query, DataElement.class).limit(1).list()
+			r = mongo.<DataElement>query(query, DataElement.class).limit(1).list()
 					.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
 					.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
 			
@@ -116,7 +116,7 @@ public class DatastoreMongoTest {
 		}*/
 		/*Instant start = Instant.now();
 		
-		r = mongo.<DataElement>find(query, DataElement.class).limit(1)
+		r = mongo.<DataElement>query(query, DataElement.class).limit(1)
 				.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
 				.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
 		

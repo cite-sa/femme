@@ -19,6 +19,7 @@
         <module>../femme-application</module>
         <module>../femme-client</module>
         <module>../wcs-adapter</module>
+        <module>../femme-xpath</module>
     </modules>
 
 </project>

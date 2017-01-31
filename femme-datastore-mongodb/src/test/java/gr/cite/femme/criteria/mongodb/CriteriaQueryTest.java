@@ -106,7 +106,7 @@ public class CriteriaQueryTest {
 	 .metadatum(metadatumtest).or().metadatum(metadatumtest) )).build();
 	 
 	 MongoCursor<Element> cursor =
-	 mongo.getElementCollection().find(query).iterator(); try { while
+	 mongo.getElementCollection().query(query).iterator(); try { while
 	 (cursor.hasNext()) { System.out.println(cursor.next()); } } finally {
 	 cursor.close(); } System.out.println(query); }
 	 
@@ -158,7 +158,7 @@ public class CriteriaQueryTest {
 	 * query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
 	 * .expression(query.<DataElement>expressionFactory().expression(metadatum1)
 	 * .or().expression(metadatum2)).and()
-	 * .isChildOf(dataElement2).and().isParentOf(dataElement1).build().find(); }
+	 * .isChildOf(dataElement2).and().isParentOf(dataElement1).build().query(); }
 	 * catch (UnsupportedQueryOperationException e1) { fail(); }
 	 * 
 	 * }
@@ -174,7 +174,7 @@ public class CriteriaQueryTest {
 	 * List<Metadatum> elements =
 	 * query.whereBuilder().expression(m1).or().exists(m2).and()
 	 * .expression(query.<Metadatum>expressionFactory().expression(m1).or().
-	 * expression(m2)).and().isChildOf(e2).build() .find();
+	 * expression(m2)).and().isChildOf(e2).build() .query();
 	 * 
 	 * }
 	 */

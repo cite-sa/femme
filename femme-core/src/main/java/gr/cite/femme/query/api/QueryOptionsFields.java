@@ -14,26 +14,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @JsonInclude(Include.NON_EMPTY)
 public class QueryOptionsFields {
 	
-	@JsonProperty
+	@JsonProperty("limit")
 	private Integer limit;
 	
-	@JsonProperty
+	@JsonProperty("offset")
 	private Integer offset;
 
 	// TODO implement orderBy
-	@JsonProperty
+	@JsonProperty("orderBy")
 	private List<String> orderBy;
 	
-	@JsonProperty
+	@JsonProperty("asc")
 	private String asc;
 	
-	@JsonProperty
+	@JsonProperty("desc")
 	private String desc;
 	
-	@JsonProperty
+	@JsonProperty("include")
 	private Set<String> include;
 	
-	@JsonProperty
+	@JsonProperty("exclude")
 	private Set<String> exclude;
 
 	public Integer getLimit() {

@@ -1,10 +1,11 @@
 package gr.cite.femme.query.mongodb;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -13,6 +14,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.query.api.Criterion;
+import gr.cite.femme.query.api.Query;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -20,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.MongoQueryException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -31,7 +34,6 @@ import gr.cite.femme.datastore.api.MetadataStore;
 import gr.cite.femme.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.exceptions.DatastoreException;
-import gr.cite.femme.exceptions.InvalidQueryOperation;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
@@ -49,69 +51,85 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 	private MongoCollection<T> collection;
 	
 	private MetadataStore metadataStore;
+
+	private Document queryDocument;
+
+	private QueryOptionsFields options;
 	
 	private FindIterable<T> results;
 	
-	private Boolean lazyMetadata = false;
+	private boolean loadMetadata = true;
+
+	private Instant queryDuration;
 	
 	public QueryOptionsMongo() {
 		
 	}
 	
-	public QueryOptionsMongo(MongoCollection<T> collection) {
-		this.collection = collection;
-		this.results = collection.find();
+	public QueryOptionsMongo(MongoDatastore datastore, Class<T> elementSubtype) {
+		this.datastore = datastore;
+		if (elementSubtype == DataElement.class) {
+			collection = (MongoCollection<T>) datastore.getDataElements();
+		} else if (elementSubtype == Collection.class) {
+			collection = (MongoCollection<T>) datastore.getCollections();
+		}
+		metadataStore = datastore.getMetadataStore();
 	}
 	
-	public QueryOptionsMongo(QueryMongo query, MongoDatastore datastore, Class<T> elementSubtype) {
+	/*public QueryOptionsMongo(MongoDatastore datastore, Class<T> elementSubtype) {
 			this.datastore = datastore;
-			
-			Document queryDocument = postProcessQuery(query, datastore);
-			
 			if (elementSubtype == DataElement.class) {
 				collection = (MongoCollection<T>) datastore.getDataElements();
 				
-				/*if (query != null && !query.isCollectionsResolved() && query.getQuery().containsKey("collections")) {
+				*//*if (query != null && !query.isCollectionsResolved() && query.getQuery().containsKey("collections")) {
 					Map<String, Object> collectionsIn = (Map<String, Object>) query.getQuery().get("collections");
 					
 					List<Document> resolvedCollections = new ArrayList<>();
-					datastore.getCollections().find(new Document(((CriteriaOldMongo)collectionsIn.get("$in")).getCriteria()))
+					datastore.getCollections().query(new Document(((CriteriaOldMongo)collectionsIn.get("$in")).getCriteria()))
 					.map(collection -> {
 						return new Document().append("_id", new ObjectId(collection.getId()));
 					}).into(resolvedCollections);
 					
 					collectionsIn.put("$in", resolvedCollections);
 					query.resolveCollections();
-				}*/
+				}*//*
 				
 			} else if (elementSubtype == Collection.class) {
 				collection = (MongoCollection<T>) datastore.getCollections();
 				
-				/*if (query != null && !query.isDataElementsResolved() && query.getQuery().containsKey("dataElements")) {
+				*//*if (query != null && !query.isDataElementsResolved() && query.getQuery().containsKey("dataElements")) {
 					Map<String, Object> dataElementsIn = (Map<String, Object>) query.getQuery().get("dataElements");
 					
 					List<Document> resolvedDataElements = new ArrayList<>();
-					datastore.getDataElements().find(new Document(((CriteriaOldMongo)dataElementsIn.get("$in")).getCriteria()))
+					datastore.getDataElements().query(new Document(((CriteriaOldMongo)dataElementsIn.get("$in")).getCriteria()))
 					.map(dataElement -> {
 						return new Document().append("_id", new ObjectId(dataElement.getId()));
 					}).into(resolvedDataElements);
 				
 					dataElementsIn.put("$in", resolvedDataElements);
 					query.resolveCollections();
-				}*/
+				}*//*
 			}
-			
+
 			metadataStore = datastore.getMetadataStore();
-//			results = query == null ? this.collection.find() : this.collection.find(query.build()); 
-			results = this.collection.find(queryDocument);
-			
-			if (query != null) {
-				logger.info("Query: " + queryDocument.toJson());
-			}
-	}
+//			results = query == null ? this.collection.query() : this.collection.query(query.build());
+
+	}*/
 
 	public QueryOptions<T> options(QueryOptionsFields options) {
+		this.options = options;
+
+
+
 		if (options != null) {
+			if (options.getInclude() != null && !options.getInclude().contains("metadata")) {
+				loadMetadata = true;
+			}
+			if (options.getExclude() != null && options.getExclude().contains("metadata")) {
+				loadMetadata = false;
+			}
+		}
+		if (results != null && options != null) {
 			if (options.getLimit() != null) {
 				results.limit(options.getLimit());
 			}
@@ -126,92 +144,175 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 			}
 			if (options.getInclude() != null) {
 				results.projection(Projections.include(new ArrayList<>(options.getInclude())));
-				if (!options.getInclude().contains("metadata")) {
-					lazyMetadata = true;
-				}
 			}
 			if (options.getExclude() != null) {
 				results.projection(Projections.exclude(new ArrayList<>(options.getExclude())));
-				if (options.getExclude().contains("metadata")) {
-					lazyMetadata = true;
-				}
 			}
 		}
 		
 		return this;
 	}
-	
-	/*@Override
-	public QueryOptions<T> limit(Integer limit) {
-		if (limit != null) {
-			results.limit(limit);
+
+	@Override
+	public <U extends Criterion> QueryOptions<T> find(Query<U> query) {
+		queryDuration = Instant.now();
+		if (query != null) {
+			queryDocument = postProcessQuery((QueryMongo) query, datastore);
+			//results = this.collection.find(queryDocument);
+
+			logger.info("Query: " + queryDocument.toJson());
 		}
 		return this;
 	}
 
 	@Override
-	public QueryOptions<T> skip(Integer skip) {
-		if (skip != null) {
-			results.skip(skip);
-		}
-		return this;
-	}
+	public QueryOptions<T> xPath(String xPath) throws DatastoreException {
+		List<T> elements = new ArrayList<>();
 
-	@Override
-	public QueryOptions<T> asc(String field) {
-		if (field != null) {
-			results.sort(new Document(field, 1));
+		//if (queryDocument == null) {
+		Document findElementsWithMetadataQuery = null;
+		if (xPath != null) {
+			List<Metadatum> metadataXPathResults;
+			try {
+				metadataXPathResults = metadataStore.xPath(xPath);
+			} catch (MetadataStoreException e) {
+				throw new DatastoreException("Error on XPath", e);
+			}
+
+			findElementsWithMetadataQuery = new Document().append(FieldNames.METADATA + "." + FieldNames.ID,
+					new Document().append("$in",
+							metadataXPathResults.stream().filter(metadatum -> metadatum.getId() != null)
+									.map(metadatum -> new ObjectId(metadatum.getId())).collect(Collectors.toList())));
 		}
-		return this;
-	}
-	
-	@Override
-	public QueryOptions<T> desc(String field) {
-		if (field != null) {
-			results.sort(new Document(field, -1));
+
+//			logger.info(findElementsWithMetadataQuery.toString());
+
+			if (queryDocument == null) {
+				queryDocument = findElementsWithMetadataQuery;
+			} else if (findElementsWithMetadataQuery != null) {
+				queryDocument = new Document().append("$and", Arrays.asList(queryDocument, findElementsWithMetadataQuery));
+			}
+
+			/*MongoCursor<T> cursor = collection.find(findElementsWithMetadataQuery).iterator();
+			List<Future<T>> futures = new ArrayList<>();
+			ExecutorService executor = Executors.newFixedThreadPool(50);
+			try {
+				while (cursor.hasNext()) {
+					T element = cursor.next();
+
+					futures.add(executor.submit(() -> {
+                        *//*if (element.getMetadata() == null) {
+                            element.setMetadata(metadataStore.find(element.getId()));
+                        }*//*
+                        if (loadMetadata) {
+                            element.setMetadata(metadataStore.find(element.getId()));
+                        }
+                        return element;
+                    }));
+
+				}
+			} finally {
+				for (Future<T> future : futures) {
+					try {
+						T element = future.get();
+						if (element != null) {
+							elements.add(element);
+						}
+					} catch (InterruptedException | ExecutionException e) {
+						cursor.close();
+						logger.error(e.getMessage(), e);
+						throw new DatastoreException(e.getMessage(), e);
+					}
+				}
+				executor.shutdown();
+				cursor.close();
+			}
+			return elements;
+
+		} else {
+			MongoCursor<T> cursor = results.iterator();
+
+			List<Future<T>> futures = new ArrayList<>();
+			ExecutorService executor = Executors.newFixedThreadPool(50);
+
+			try {
+				while (cursor.hasNext()) {
+					T element = cursor.next();
+
+					futures.add(executor.submit(() -> {
+                        if (element.getMetadata() == null) {
+                            element.setMetadata(metadataStore.find(element.getId()));
+                        }
+                        if (metadataStore.xPath(element, xPath) != null) {
+                            return element;
+                        }
+                        return null;
+                    }));
+
+					*//*if (metadataStore.query(element, xPath) != null) {
+						elements.add(element);
+					}*//*
+				}
+			*//*}  catch (MetadataStoreException e) {
+				logger.error(e.getMessage(), e);*//*
+			} finally {
+				executor.shutdown();
+
+				for (Future<T> future : futures) {
+					try {
+						T element = future.get();
+						if (element != null) {
+							elements.add(element);
+						}
+						//elements.add(future.get());
+					} catch (InterruptedException | ExecutionException e) {
+						cursor.close();
+						logger.error(e.getMessage(), e);
+						throw new DatastoreException(e.getMessage(), e);
+					}
+				}
+
+				cursor.close();
+			}
 		}
+
+		return elements;*/
 		return this;
 	}
-	
-	@Override
-	public QueryOptions<T> include(String ...fields) {
-		results.projection(Projections.include(fields));
-		return this;
-	}
-	
-	@Override
-	public QueryOptions<T> exclude(String ...fields) {
-		lazyMetadata = Arrays.asList(fields).contains("metadata") ? true : false;
-		results.projection(Projections.exclude(fields));
-		return this;
-	}*/
 
 	@Override
 	public List<T> list() throws DatastoreException {
 		List<T> elements = new ArrayList<>();
+
+		if (queryDocument != null) {
+			results = collection.find(queryDocument);
+		} else {
+			results = collection.find();
+		}
+		options(options);
+		//}
+
+		logger.info(queryDocument.toString());
 		
-		if (!lazyMetadata) {
+		if (loadMetadata) {
 			MongoCursor<T> cursor = null;
 			try {				
-				cursor = (MongoCursor<T>) results.iterator();
+				cursor = results.iterator();
 			} catch (MongoQueryException e) {
 				logger.error(e.getMessage(), e);
 				throw new DatastoreException(e.getMessage(), e);
 			}
-			List<Future<T>> futures = new ArrayList<Future<T>>();
+			List<Future<T>> futures = new ArrayList<>();
 			ExecutorService executor = Executors.newFixedThreadPool(10);
 		
 			try {
 				while (cursor.hasNext()) {
 					T element = cursor.next();
-					futures.add(executor.submit(new Callable<T>() {
-						@Override
-						public T call() throws Exception {
-							element.setMetadata(metadataStore.find(element.getId()));
-							logger.debug("Element " + element.getName() +" found");
-							return element;
-						}
-					}));
+					futures.add(executor.submit(() -> {
+                        element.setMetadata(metadataStore.find(element.getId()));
+                        logger.debug("Element " + element.getName() +" found");
+                        return element;
+                    }));
 				}
 			} finally {
 				for(Future<T> future : futures) {
@@ -232,6 +333,7 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 		} else {
 			results.into(elements);
 		}
+		logger.info("Query completed in: " + Duration.between(queryDuration, Instant.now()).toMillis() + "ms");
 		return elements;
 	}
 
@@ -250,65 +352,6 @@ public class QueryOptionsMongo<T extends Element> implements QueryOptions<T> {
 		return element;
 	}
 
-	@Override
-	public List<T> xPath(String xPath) throws DatastoreException {
-		List<T> elements = new ArrayList<>();
-		MongoCursor<T> cursor = (MongoCursor<T>) results.iterator();
-		
-		List<Future<T>> futures = new ArrayList<Future<T>>();
-		ExecutorService executor = Executors.newFixedThreadPool(50);
-		
-		try {
-			while (cursor.hasNext()) {
-				T element = cursor.next();
-				
-				futures.add(executor.submit(new Callable<T>() {
-	
-					@Override
-					public T call() throws Exception {
-						if (element.getMetadata() == null) {
-							element.setMetadata(metadataStore.find(element.getId()));
-						}
-						if (metadataStore.xPath(element, xPath) != null) {
-							return element;					
-						}
-						return null;
-					}
-				}));
-				
-				/*if (metadataStore.find(element, xPath) != null) {
-					elements.add(element);					
-				}*/
-			}
-		/*}  catch (MetadataStoreException e) {
-			logger.error(e.getMessage(), e);*/
-		} finally {
-			executor.shutdown();
-			
-			for(Future<T> future : futures) {
-				try {
-					T element = future.get();
-					if (element != null) {
-						elements.add(element);
-					}
-					//elements.add(future.get());
-				} catch (InterruptedException e) {
-					cursor.close();
-					logger.error(e.getMessage(), e);
-					throw new DatastoreException(e.getMessage(), e);
-				} catch (ExecutionException e) {
-					cursor.close();
-					logger.error(e.getMessage(), e);
-					throw new DatastoreException(e.getMessage(), e);
-				}
-			}
-			
-			cursor.close();
-		}
-		
-		return elements;
-	}
-	
 	private Document postProcessQuery(QueryMongo query, MongoDatastore datastore) {
 		if (query != null) {
 			Document queryDocument = query.build();

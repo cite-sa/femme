@@ -167,9 +167,10 @@ public class FemmeResource {
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
 			
-			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			/*List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOption.xPath(xPath) : queryOptions.list();*/
+			List<DataElement> dataElements = queryOptions.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -213,8 +214,9 @@ public class FemmeResource {
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
 			
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
-			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			List<DataElement> dataElements = queryOptions.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -250,9 +252,10 @@ public class FemmeResource {
 					CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
 							CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end()))
 					.end());
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
 			
-			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			List<DataElement> dataElements = queryOptions.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -292,7 +295,8 @@ public class FemmeResource {
 			
 			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
 			
-			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
+			List<DataElement> dataElements = queryOptions.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {

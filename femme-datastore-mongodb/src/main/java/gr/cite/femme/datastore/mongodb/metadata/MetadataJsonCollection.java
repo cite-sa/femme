@@ -65,24 +65,24 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	}
 
 	/*@Override
-	public <T extends Element> T find(T element, String xPath) throws MetadataStoreException {
+	public <T extends Element> T query(T element, String xPath) throws MetadataStoreException {
 		return null;
 	}
 	
 	@Override
-	public <T extends Element> List<T> find(List<T> elementIds, String xPath) throws MetadataStoreException {
+	public <T extends Element> List<T> query(List<T> elementIds, String xPath) throws MetadataStoreException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Metadatum> find(Metadatum metadatum) {
+	public List<Metadatum> query(Metadatum metadatum) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Metadatum> find(List<Metadatum> metadataList) throws MetadataStoreException {
+	public List<Metadatum> query(List<Metadatum> metadataList) throws MetadataStoreException {
 		// TODO Auto-generated method stub
 		return null;
 	}

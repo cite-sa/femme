@@ -21,11 +21,15 @@ public interface QueryOptions<T extends Element> {
 	public QueryOptions<T> exclude(String ...fields);*/
 	
 	public QueryOptions<T> options(QueryOptionsFields options);
+
+	public <U extends Criterion> QueryOptions<T> find(Query<U> query);
+
+	public QueryOptions<T> xPath(String xPath) throws DatastoreException;
 	
 	public List<T> list() throws DatastoreException;
 	
 	public T first() throws DatastoreException;
 	
-	public List<T> xPath(String xPath) throws DatastoreException;
+
 	
 }

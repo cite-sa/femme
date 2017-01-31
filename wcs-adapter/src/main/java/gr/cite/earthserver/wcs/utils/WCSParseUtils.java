@@ -43,6 +43,8 @@ import gr.cite.scarabaues.utils.xml.exceptions.XMLConversionException;
 import gr.cite.scarabaues.utils.xml.exceptions.XPathEvaluationException;
 
 public final class WCSParseUtils {
+
+	private static final Logger logger = LoggerFactory.getLogger(WCSParseUtils.class);
 	
 	private WCSParseUtils() {
 		
@@ -51,7 +53,9 @@ public final class WCSParseUtils {
 	public static List<String> getCoverageIds(String getCapabilitiesXML) throws ParseException {
 		try {
 			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(getCapabilitiesXML, true));
-			return xPathEvaluator.evaluate("/wcs:Capabilities/wcs:Contents/wcs:CoverageSummary/wcs:CoverageId/text()");
+			List<String> coverageIds = xPathEvaluator.evaluate("/wcs:Capabilities/wcs:Contents/wcs:CoverageSummary/wcs:CoverageId/text()");
+			logger.info("Total coverages: " + coverageIds.size());
+			return coverageIds;
 		} catch (XPathFactoryConfigurationException e) {
 			throw new ParseException(e);
 		} catch (XMLConversionException e) {

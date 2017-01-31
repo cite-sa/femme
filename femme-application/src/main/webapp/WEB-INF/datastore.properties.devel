@@ -1,3 +1,12 @@
 gr.cite.femme.datastore.mongodb.host=localhost\:27017
 gr.cite.femme.datastore.mongodb.name=femme-db
-gr.cite.femme.datastore.mongodb.index.host=http://localhost:8083/femme-index-application/metadata-index
+
+gr.cite.femme.datastore.metadata.db.host=localhost\:27017
+gr.cite.femme.datastore.metadata.db.name=femme-db
+gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
+
+gr.cite.femme.datastore.metadata.xpath.db.host=localhost\:27017
+gr.cite.femme.datastore.metadata.xpath.db.name=materialized-paths-db
+gr.cite.femme.datastore.metadata.xpath.db.collection.name=paths
+
+#gr.cite.femme.datastore.mongodb.index.host=http://localhost:8083/femme-index-application/metadata-index

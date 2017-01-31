@@ -10,11 +10,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import gr.cite.femme.dto.FemmeResponseEntity;
 import org.apache.commons.lang3.RandomUtils;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.uri.UriComponent;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,9 +40,19 @@ public class FemmeResourceTest {
 //	@Before
 	public void init() {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
-		webTarget = client.target("http://localhost:8081/femme-application/");
+		webTarget = client.target("http://localhost:8081/femme-application-devel/");
 	}
-	
+
+//	@Test
+	public void query() {
+		FemmeResponse<DataElementList> response = webTarget
+				.path("dataElements")
+				.queryParam("xpath", "//RectifiedGrid[@dimension=2]")
+				.request().get(new GenericType<FemmeResponse<DataElementList>>(){});
+
+		System.out.println(response);
+	}
+
 //	@Test
 	public void insert() throws JsonProcessingException {
 //		Collection collection = createDemoCollection();

@@ -28,21 +28,21 @@ public class MongoDatastoreClient {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MongoDatastoreClient.class);
 			
-	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
-//	private static final String DATABASE_HOST = "localhost:27017";
+//	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
+	private static final String DATABASE_HOST = "localhost:27017";
 	private static final String DATABASE_NAME = "femme-db";
 	private static final String COLLECTIONS_COLLECTION_NAME = "collections";
 	private static final String DATA_ELEMENTS_COLLECTION_NAME = "dataElements";
-	private static final String METADATA_COLLECTION_NAME = "metadataJson";
-	private static final String METADATA_BUCKET_NAME = "metadataGridFS";
+	/*private static final String METADATA_COLLECTION_NAME = "metadataJson";
+	private static final String METADATA_BUCKET_NAME = "metadataGridFS";*/
 	/*private static final String METADATA_INDEX_COLLECTION_NAME = "metadataIndex";*/
 
 	private MongoClient client;
 	private MongoDatabase database;
 	private MongoCollection<Collection> collections;
 	private MongoCollection<DataElement> dataElements;
-	private MongoCollection<MetadatumJson> metadataJson;
-	private GridFSBucket metadataGridFS;
+	/*private MongoCollection<MetadatumJson> metadataJson;
+	private GridFSBucket metadataGridFS;*/
 	/*private MongoCollection<MetadatumXPathCache> metadataIndex;*/
 	
 	public MongoDatastoreClient() {
@@ -67,8 +67,8 @@ public class MongoDatastoreClient {
 
 		this.collections = database.getCollection(COLLECTIONS_COLLECTION_NAME, Collection.class).withCodecRegistry(codecRegistry);
 		this.dataElements = database.getCollection(DATA_ELEMENTS_COLLECTION_NAME, DataElement.class).withCodecRegistry(codecRegistry);
-		this.metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
-		this.metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);
+		/*this.metadataJson = database.getCollection(METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(codecRegistry);
+		this.metadataGridFS = GridFSBuckets.create(database, METADATA_BUCKET_NAME);*/
 		
 		createIndexes();
 		
@@ -82,13 +82,13 @@ public class MongoDatastoreClient {
 		return this.dataElements;
 	}
 	
-	public MongoCollection<MetadatumJson> getMetadataJson() {
+	/*public MongoCollection<MetadatumJson> getMetadataJson() {
 		return this.metadataJson;
 	}
 	
 	public GridFSBucket getMetadataGridFS() {
 		return this.metadataGridFS;
-	}
+	}*/
 
 	public void close() {
 		logger.info("Closing connection to " + this.client.getAddress());
@@ -110,7 +110,7 @@ public class MongoDatastoreClient {
 		this.database.getCollection(DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
 				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_NAME)), uniqueIndexOptions);
 		
-		this.database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending(FieldNames.METADATA_ELEMENT_ID_EMBEDDED));
+		/*this.database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indexes.ascending(FieldNames.METADATA_ELEMENT_ID_EMBEDDED));*/
 	}
 	
 }

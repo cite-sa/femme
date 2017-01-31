@@ -9,19 +9,33 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-	<context:property-placeholder location="classpath:WEB-INF/datastore.properties.devel" />
-   
-	<bean id="mongoDatastore" name="mongoDatastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore" destroy-method="close">
+	<context:property-placeholder location="WEB-INF/datastore.properties.devel" />
+
+	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.metadata.xpath.core.MetadataXPath" destroy-method="close">
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.host}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.name}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.collection.name}"/>
+	</bean>
+
+	<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore" destroy-method="close">
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.db.host}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.db.name}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
+		<constructor-arg ref="metadataXPath"/>
+	</bean>
+
+	<bean id="femmeDatastore" name="femmeDatastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore" destroy-method="close">
 		<constructor-arg value="${gr.cite.femme.datastore.mongodb.host}"/>
 		<constructor-arg value="${gr.cite.femme.datastore.mongodb.name}"/>
-		<constructor-arg value="${gr.cite.femme.datastore.mongodb.index.host}"/>
+		<!--<constructor-arg value="${gr.cite.femme.datastore.mongodb.index.host}"/>-->
+		<constructor-arg ref="metadataStore"/>
 	</bean>
    
    <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
-   		<constructor-arg ref="mongoDatastore" />
+   		<constructor-arg ref="femmeDatastore" />
    </bean>
    <bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
-   		<constructor-arg ref="mongoDatastore" />
+   		<constructor-arg ref="femmeDatastore" />
    </bean>
 	
 	<context:annotation-config/>

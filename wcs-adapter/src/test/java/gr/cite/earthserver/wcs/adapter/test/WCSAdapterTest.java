@@ -1,9 +1,16 @@
 package gr.cite.earthserver.wcs.adapter.test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+
+import gr.cite.earthserver.wcs.core.*;
+import gr.cite.earthserver.wcs.utils.WCSParseUtils;
+import org.ejml.alg.block.BlockInnerTriangularSolver;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,9 +24,6 @@ import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterCoverages;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterRequest;
 import gr.cite.earthserver.wcs.adapter.request.WCSAdapterServers;
-import gr.cite.earthserver.wcs.core.Coverage;
-import gr.cite.earthserver.wcs.core.Server;
-import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeClientException;
@@ -40,6 +44,52 @@ public class WCSAdapterTest {
 	public void init() {
 		this.wcsAdapter = new WCSAdapter("http://localhost:8081/femme-application");
 //		this.wcsAdapter = new WCSAdapter("http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT");
+	}
+
+//	@Test
+	public void retrieve() throws WCSRequestException, ParseException {
+		String endpoint = "http://access.planetserver.eu:8080/rasdaman/ows";
+		String getCapabilities = new WCSRequestBuilder().endpoint(endpoint).getCapabilities().build().get().getResponse();
+		List<String> ids = WCSParseUtils.getCoverageIds(getCapabilities);
+
+		ExecutorService executor = Executors.newFixedThreadPool(10);
+		List<Future<String>> futures = new ArrayList<>();
+		for (int i = 0; i < ids.size(); i ++) {
+			final int inc = i;
+			futures.add(executor.submit(() -> {
+				String describeCoverage = null;
+				String id = null;
+				try {
+					describeCoverage = new WCSRequestBuilder().endpoint(endpoint).describeCoverage().coverageId(ids.get(inc)).build().get().getResponse();
+					id = WCSParseUtils.getCoverageId(describeCoverage);
+//					System.out.println();
+				} catch (ParseException | WCSRequestException e) {
+					e.printStackTrace();
+				}
+				return inc + ": " + id;
+			}));
+		}
+
+//		List<String> idAndInc = new ArrayList<>();
+		for (Future<String> future: futures) {
+			try {
+				String result = future.get();
+//				idAndInc.add(result);
+				System.out.println(result);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} finally {
+				executor.shutdown();
+			}
+		}
+//		List<String> sorted = idAndInc.stream().sorted().collect(Collectors.toList());
+		/*for (int i = 0; i < ids.size(); i ++) {
+			String describeCoverage = new WCSRequestBuilder().endpoint(endpoint).describeCoverage().coverageId(ids.get(i)).build().get().getResponse();
+			System.out.println(i + ": " + WCSParseUtils.getCoverageId(describeCoverage));
+		}*/
+
 	}
 	
 //	@Test

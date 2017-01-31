@@ -1,14 +1,12 @@
 package gr.cite.femme.datastore.mongodb;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -19,7 +17,6 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoGridFSException;
 import com.mongodb.MongoWriteConcernException;
 import com.mongodb.MongoWriteException;
-import com.mongodb.QueryBuilder;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -28,14 +25,12 @@ import com.mongodb.client.model.ReturnDocument;
 import gr.cite.femme.datastore.api.Datastore;
 import gr.cite.femme.datastore.api.MetadataStore;
 /*import gr.cite.femme.datastore.mongodb.cache.MongoXPathCacheManager;*/
-import gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore;
 import gr.cite.femme.datastore.mongodb.utils.Documentizer;
 import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.exceptions.DatastoreException;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
-import gr.cite.femme.model.DateTime;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.api.Criterion;
@@ -60,17 +55,26 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	
 
 	public MongoDatastore() {
-		mongoClient = new MongoDatastoreClient();
-		collections = mongoClient.getCollections();
-		dataElements = mongoClient.getDataElements();
-		metadataStore = new MongoMetadataStore(mongoClient);
+		this.mongoClient = new MongoDatastoreClient();
+		this.collections = mongoClient.getCollections();
+		this.dataElements = mongoClient.getDataElements();
+//		this.metadataStore = new MongoMetadataStore(mongoClient);
 	}
 
-	public MongoDatastore(String dbHost, String dbName, String metadataIndexHost) {
-		mongoClient = new MongoDatastoreClient(dbHost, dbName);
-		collections = mongoClient.getCollections();
-		dataElements = mongoClient.getDataElements();
-		metadataStore = new MongoMetadataStore(mongoClient, metadataIndexHost);
+	public MongoDatastore(String dbHost, String dbName) {
+		this.mongoClient = new MongoDatastoreClient(dbHost, dbName);
+		this.collections = mongoClient.getCollections();
+		this.dataElements = mongoClient.getDataElements();
+
+//		this.metadataStore = new MongoMetadataStore(mongoClient);
+	}
+
+	public MongoDatastore(String dbHost, String dbName, MetadataStore metadataStore) {
+		this.mongoClient = new MongoDatastoreClient(dbHost, dbName);
+		this.collections = mongoClient.getCollections();
+		this.dataElements = mongoClient.getDataElements();
+
+		this.metadataStore = metadataStore;
 	}
 
 	public MongoCollection<Collection> getCollections() {
@@ -93,7 +97,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) throws DatastoreException {
 		for (Metadatum metadatum : metadata) {
 			try {
-				metadatum.setElementId(elementId.toString());
+				metadatum.setElementId(elementId);
 				metadataStore.insert(metadatum);
 			} catch (MetadataStoreException e) {
 				logger.error(e.getMessage(), e);
@@ -440,12 +444,12 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	}
 
 	/*@Override
-	public <T extends Element> Element find(String id, Class<T> elementSubtype) throws IllegalElementSubtype {
+	public <T extends Element> Element query(String id, Class<T> elementSubtype) throws IllegalElementSubtype {
 		String subtype = elementSubtype.getSimpleName();
 		if (subtype.equals("DataElement")) {
-			return dataElements.find(new Document().append(FieldNames.ID, id)).limit(1).first();
+			return dataElements.query(new Document().append(FieldNames.ID, id)).limit(1).first();
 		} else if (subtype.equals("Collection")) {
-			return collections.find(new Document().append(FieldNames.ID, id)).limit(1).first();
+			return collections.query(new Document().append(FieldNames.ID, id)).limit(1).first();
 		} else {
 			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
 		}
@@ -485,7 +489,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	@Override
 	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		QueryMongo queryMongo = (QueryMongo) query;
-		return new QueryOptionsBuilderMongo<T>().find(queryMongo, this, elementSubtype);
+		return new QueryOptionsBuilderMongo<T>().query(this, elementSubtype).find(queryMongo);
 	}
 	
 	@Override
