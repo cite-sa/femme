@@ -10,7 +10,7 @@ import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 public interface WCSAdapterAPI {
 	
@@ -31,7 +31,7 @@ public interface WCSAdapterAPI {
 	
 	/*public Server getServerByAlias(String alias) throws FemmeDatastoreException, FemmeClientException;*/
 	
-	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException;
 	
 	
@@ -43,7 +43,7 @@ public interface WCSAdapterAPI {
 	
 	public Coverage getCoverageById(String id) throws FemmeDatastoreException, FemmeClientException;
 	
-	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException, FemmeClientException;
 	
 	

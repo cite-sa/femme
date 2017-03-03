@@ -55,29 +55,23 @@ public class BBox {
 }
 
 class CustomBBoxSerializer extends JsonSerializer<BBox> {
-
 	@Override
 	public void serialize(BBox value, JsonGenerator jgen, SerializerProvider provider)
 			throws IOException, JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
 		jgen.writeStartObject();
 		jgen.writeStringField("crs", value.getCrs());
 		jgen.writeFieldName("geoJson");
 		jgen.writeRawValue(value.getGeoJson());
 		jgen.writeEndObject();
-		
 	}
 }
 
 class CustomBBoxDeserializer extends JsonDeserializer<BBox> {
-
 	@Override
 	public BBox deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException, JsonProcessingException {
 		Map<String, Object> bbox = jsonParser.readValueAs(new TypeReference<Map<String, Object>>() {});
-		
 		String crs = (String) bbox.get("crs");
 		String geoJson = (String) bbox.get("geoJson");
-		
 		return new BBox(crs,  geoJson);
 	}
 }

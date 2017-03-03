@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryMongo implements Query<CriterionMongo> {

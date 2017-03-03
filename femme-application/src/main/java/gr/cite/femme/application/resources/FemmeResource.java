@@ -1,14 +1,11 @@
 package gr.cite.femme.application.resources;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -25,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 
 import gr.cite.femme.application.exception.FemmeApplicationException;
 import gr.cite.femme.datastore.api.Datastore;
@@ -41,10 +37,9 @@ import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.query.mongodb.CriterionMongo;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptions;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryExecutor;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 import gr.cite.femme.query.mongodb.QueryMongo;
-import gr.cite.femme.utils.Pair;
 
 @Component
 @Path("")
@@ -76,7 +71,7 @@ public class FemmeResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findCollections(
 			@QueryParam("query") QueryMongo query,
-			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
 		if (query == null) {
@@ -88,16 +83,16 @@ public class FemmeResource {
 		FemmeResponse<CollectionList> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<CollectionList> entity = new FemmeResponseEntity<>();
 		
-		QueryOptions<Collection> queryOptions = datastore.find(query, Collection.class).options(options);
+		QueryExecutor<Collection> queryExecutor = datastore.find(query, Collection.class).options(options);
 		
 		try {
-			CollectionList collectionList = new CollectionList(queryOptions.list());
-			
-			if (collectionList.getSize() == 0) {
+			List<Collection> collections = queryExecutor.list();
+
+			if (collections.isEmpty()) {
 				logger.error("No collections found");
 				throw new FemmeApplicationException("No collections found for this query", Response.Status.NOT_FOUND.getStatusCode());
 			}
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(collectionList.getSize() + " collections found").setEntity(entity.setBody(collectionList));
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(collections.size() + " collections found").setEntity(entity.setBody(new CollectionList(collections)));
 
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
@@ -111,12 +106,11 @@ public class FemmeResource {
 	@GET
 	@Path("collections/{id}")
 	public Response getCollectionById(@PathParam("id") String id) throws FemmeApplicationException {
-		Collection collection = null;
+		Collection collection;
 		FemmeResponse<Collection> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
 		
 		try {
-			
 			collection = datastore.getCollection(id);
 			
 			if (collection == null) {
@@ -156,7 +150,7 @@ public class FemmeResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response findDataElements(
 			@QueryParam("query") QueryMongo query,
-			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 
 		if (query == null) {
@@ -167,10 +161,10 @@ public class FemmeResource {
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
+			QueryExecutor<DataElement> queryExecutor = datastore.find(query, DataElement.class).xPath(xPath).options(options);
 			
-			/*List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOption.xPath(xPath) : queryOptions.list();*/
-			List<DataElement> dataElements = queryOptions.list();
+			/*List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOption.xPath(xPath) : queryExecutor.list();*/
+			List<DataElement> dataElements = queryExecutor.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -196,7 +190,7 @@ public class FemmeResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response findDataElementsByIds(
 			@QueryParam("id") List<String> ids,
-			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
 		QueryMongo query = null;
@@ -214,9 +208,9 @@ public class FemmeResource {
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
 			
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
-//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
-			List<DataElement> dataElements = queryOptions.list();
+			QueryExecutor<DataElement> queryExecutor = datastore.find(query, DataElement.class).xPath(xPath).options(options);
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryExecutor.xPath(xPath) : queryExecutor.list();
+			List<DataElement> dataElements = queryExecutor.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -241,7 +235,7 @@ public class FemmeResource {
 	@Path("collections/{collectionId}/dataElements")
 	public Response getDataElementsInCollection(
 			@PathParam("collectionId") String collectionId,
-			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
 		
@@ -252,10 +246,10 @@ public class FemmeResource {
 					CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
 							CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end()))
 					.end());
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).xPath(xPath).options(options);
+			QueryExecutor<DataElement> queryExecutor = datastore.find(query, DataElement.class).xPath(xPath).options(options);
 			
-//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
-			List<DataElement> dataElements = queryOptions.list();
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryExecutor.xPath(xPath) : queryExecutor.list();
+			List<DataElement> dataElements = queryExecutor.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -279,7 +273,7 @@ public class FemmeResource {
 	public Response getDataElementsInCollection(
 			@PathParam("collectionId") String collectionId,
 			@PathParam("dataElementId") String dataElementId,
-			@QueryParam("options") QueryOptionsFields options,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
 		
@@ -293,10 +287,10 @@ public class FemmeResource {
 			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
 					CriterionBuilderMongo.root().and(Arrays.asList(collectionCriterion, dataElementCriterion)).end());
 			
-			QueryOptions<DataElement> queryOptions = datastore.find(query, DataElement.class).options(options);
+			QueryExecutor<DataElement> queryExecutor = datastore.find(query, DataElement.class).options(options);
 			
-//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryOptions.xPath(xPath) : queryOptions.list();
-			List<DataElement> dataElements = queryOptions.list();
+//			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryExecutor.xPath(xPath) : queryExecutor.list();
+			List<DataElement> dataElements = queryExecutor.list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -322,8 +316,8 @@ public class FemmeResource {
 		FemmeResponse<DataElement> femmeResponse = new FemmeResponse<>();
 		
 		try {
-			QueryOptions<DataElement> query = datastore.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), DataElement.class);
-			QueryOptionsFields options = new QueryOptionsFields();
+			QueryExecutor<DataElement> query = datastore.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), DataElement.class);
+			QueryOptionsMessenger options = new QueryOptionsMessenger();
 			options.setLimit(1);
 			DataElement dataElement = query.options(options).first();
 			

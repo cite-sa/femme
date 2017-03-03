@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.CriterionClient;
@@ -32,7 +31,7 @@ import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 public class FemmeClient implements FemmeClientAPI {
 	
@@ -119,11 +118,11 @@ public class FemmeClient implements FemmeClientAPI {
 	
 	@Override
 	public List<Collection> getCollections(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return findCollections(null, QueryOptionsFields.builder().limit(limit).offset(offset).build(), xPath);
+		return findCollections(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath);
 	}
 	
 	@Override
-	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException {
 		
 		String queryJson = null, optionsJson = null;
@@ -182,7 +181,7 @@ public class FemmeClient implements FemmeClientAPI {
 	public Collection getCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException {
 		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("endpoint", endpoint).end());
 		
-		List<Collection> collections = findCollections(query, QueryOptionsFields.builder().limit(1).build(), null);
+		List<Collection> collections = findCollections(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		return collections.size() > 0 ? collections.get(0) : null;
 	}
 
@@ -191,7 +190,7 @@ public class FemmeClient implements FemmeClientAPI {
 		
 		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("name", name).end());
 		
-		List<Collection> collections = findCollections(query, QueryOptionsFields.builder().limit(1).build(), null);
+		List<Collection> collections = findCollections(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		return collections.size() > 0 ? collections.get(0) : null;
 	}
 	
@@ -208,11 +207,11 @@ public class FemmeClient implements FemmeClientAPI {
 	
 	@Override
 	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return findDataElements(null, QueryOptionsFields.builder().limit(limit).offset(offset).build(), xPath);
+		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath);
 	}
 	
 	@Override
-	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException {
 		
 		String queryJson = null, optionsJson = null;
@@ -276,7 +275,7 @@ public class FemmeClient implements FemmeClientAPI {
 		QueryClient collectionQuery = QueryClient.query().addCriterion(CriterionBuilderClient.root().inCollections(
 				Arrays.asList(CriterionBuilderClient.root().eq("_id", collectionId).end())).end());
 		
-		return findDataElements(collectionQuery, QueryOptionsFields.builder().limit(limit).offset(offset).build(), null);
+		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
 	@Override
@@ -302,7 +301,7 @@ public class FemmeClient implements FemmeClientAPI {
 		}*/
 		
 		/*return response.getEntity().getBody().getDataElements();*/
-		return findDataElements(collectionQuery, QueryOptionsFields.builder().limit(limit).offset(offset).build(), null);
+		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
 	@Override
@@ -357,7 +356,7 @@ public class FemmeClient implements FemmeClientAPI {
 		}*/
 		
 		/*return response.getEntity().getBody().getDataElements();*/
-		return findDataElements(collectionQuery, QueryOptionsFields.builder().limit(limit).offset(offset).build(), null);
+		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
 	public List<DataElement> getDataElementsByIdInCollectionById(String collectionid, String dataElementId) throws FemmeDatastoreException, FemmeClientException {

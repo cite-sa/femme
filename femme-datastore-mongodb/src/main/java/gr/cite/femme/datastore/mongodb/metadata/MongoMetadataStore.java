@@ -3,23 +3,18 @@ package gr.cite.femme.datastore.mongodb.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
 
-import gr.cite.femme.metadata.xpath.core.MetadataXPath;
+import gr.cite.commons.utils.hash.HashGenerationException;
+import gr.cite.femme.metadata.xpath.MetadataXPath;
+import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.client.MongoCollection;
-
 //import gr.cite.femme.client.api.MetadataIndexClient;
 import gr.cite.femme.datastore.api.MetadataStore;
-import gr.cite.femme.datastore.mongodb.MongoDatastoreClient;
-import gr.cite.femme.datastore.mongodb.cache.XPathCacheManager;
-import gr.cite.femme.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
-import gr.cite.femme.model.MetadatumXPathCache;
 
 public class MongoMetadataStore implements MetadataStore {
 	
@@ -71,6 +66,12 @@ public class MongoMetadataStore implements MetadataStore {
 			try {
 				metadataXPath.index(metadatum);
 			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
+			} catch (MetadataIndexException e) {
+				logger.error(e.getMessage(), e);
+				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
+			} catch (HashGenerationException e) {
 				logger.error(e.getMessage(), e);
 				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
 			}
@@ -131,7 +132,11 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public List<Metadatum> xPath(String xPath) throws MetadataStoreException {
-		return metadataXPath.xPath(xPath);
+		try {
+			return metadataXPath.xPath(xPath);
+		} catch (MetadataIndexException e) {
+			throw new MetadataStoreException(e.getMessage(), e);
+		}
 	}
 
 	@Override

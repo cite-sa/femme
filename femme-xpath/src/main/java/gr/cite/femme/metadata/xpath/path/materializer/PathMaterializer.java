@@ -1,4 +1,4 @@
-package gr.cite.femme.metadata.xpath.transformation;
+package gr.cite.femme.metadata.xpath.path.materializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

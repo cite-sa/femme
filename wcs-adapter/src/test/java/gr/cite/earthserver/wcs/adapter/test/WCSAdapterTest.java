@@ -4,37 +4,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 import gr.cite.earthserver.wcs.core.*;
 import gr.cite.earthserver.wcs.utils.WCSParseUtils;
-import org.ejml.alg.block.BlockInnerTriangularSolver;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import gr.cite.earthserver.wcs.adapter.WCSAdapter;
 import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
-import gr.cite.earthserver.wcs.adapter.request.WCSAdapterCoverages;
-import gr.cite.earthserver.wcs.adapter.request.WCSAdapterRequest;
-import gr.cite.earthserver.wcs.adapter.request.WCSAdapterServers;
 import gr.cite.earthserver.wcs.utils.ParseException;
-import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
-import gr.cite.femme.client.api.FemmeClientAPI;
-import gr.cite.femme.client.query.QueryClient;
-import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
-import gr.cite.femme.utils.Pair;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 public class WCSAdapterTest {
 	
@@ -133,7 +118,7 @@ public class WCSAdapterTest {
 	}
 
 //	@Test
-	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException {
 				return null;
 	}
@@ -160,7 +145,7 @@ public class WCSAdapterTest {
 	}
 	
 //	@Test
-	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException, FemmeClientException {
 				return null;
 	}

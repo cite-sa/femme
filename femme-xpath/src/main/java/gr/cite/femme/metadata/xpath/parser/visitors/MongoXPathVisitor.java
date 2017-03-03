@@ -1,168 +1,296 @@
 package gr.cite.femme.metadata.xpath.parser.visitors;
 
+import gr.cite.femme.metadata.xpath.core.MetadataIndexQuery;
+import gr.cite.femme.metadata.xpath.datastores.MetadataIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryNode;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryTree;
 import gr.cite.femme.metadata.xpath.grammar.XPathBaseVisitor;
 import gr.cite.femme.metadata.xpath.grammar.XPathParser;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.AbsoluteLocationPathNorootContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.AxisSpecifierContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.ExprContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.FilterExprContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.LocationPathContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.NameTestContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.NodeTestContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.PathExprNoRootContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.PredicateContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.RelativeLocationPathContext;
-import gr.cite.femme.metadata.xpath.grammar.XPathParser.StepContext;
 import gr.cite.femme.metadata.xpath.mongodb.evaluation.MongoQuery;
-import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class MongoXPathVisitor extends XPathBaseVisitor<MongoQuery> {
+public class MongoXPathVisitor extends XPathBaseVisitor<MetadataIndexQuery> {
 	
 	private MongoQuery mongoQuery;
 
 	private Queue<String> slashQueue = new LinkedList<>();
 	
-	private List<Document> queryAndList = new ArrayList<>();
+	/*private List<Document> queryAndList = new ArrayList<>();*/
 
 	private String tempKey;
 
 	public String axisSpecifier;
 
+
+	private MetadataSchemaIndexDatastore metadataSchemaDatastore;
+	private MetadataIndexDatastore metadataIndexDatastore;
+	private MetadataIndexQuery query = new MetadataIndexQuery();
+
+	private boolean predicateMode;
+
+	private List<StringBuilder> regexBuilders;
+	private List<StringBuilder> filterBuilders;
+	private List<String> paths;
+	private List<List<Map<String, Boolean>>> filters;
+
+	//private List<StringBuilder> filter;
+	private String filterOperator;
+
+	private QueryTree<QueryNode> queryTree;
+	private int currentTreeLevel = 0;
+
+
+
+	public MongoXPathVisitor() {
+		this.regexBuilders = new ArrayList<>();
+		this.regexBuilders.add(new StringBuilder());
+		/*this.regexBuilder = new StringBuilder();*/
+		this.filters = new ArrayList<>();
+
+		this.queryTree = new QueryTree<>();
+	}
+
+	public MongoXPathVisitor(MetadataSchemaIndexDatastore metadataSchemaDatastore, MetadataIndexDatastore metadataIndexDatastore) {
+		this.metadataSchemaDatastore = metadataSchemaDatastore;
+		this.metadataIndexDatastore = metadataIndexDatastore;
+
+		this.regexBuilders = new ArrayList<>();
+		this.regexBuilders.add(new StringBuilder());
+		/*this.regexBuilder = new StringBuilder();*/
+		this.filters = new ArrayList<>();
+
+		this.queryTree = new QueryTree<>();
+	}
+
 	/*public MongoXPathVisitor(MongoQuery mongoQuery) {
 		this.mongoQuery = mongoQuery;
 	}*/
 
-	public MongoXPathVisitor(List<Document> queryAndList) {
+	/*public MongoXPathVisitor(List<Document> queryAndList) {
 		this.queryAndList = queryAndList;
 	}
 
 	public List<Document> getQueryAndList() {
 		return queryAndList;
-	}
-
+	}*/
+/*
 	public void setQueryAndList(List<Document> queryAndList) {
 		this.queryAndList = queryAndList;
+	}*/
+
+
+
+
+	@Override
+	public MetadataIndexQuery visitAbsoluteLocationPathNoroot(XPathParser.AbsoluteLocationPathNorootContext ctx) {
+		String rootPath = ctx.getChild(0).getText();
+		if ("/".equals(rootPath)) {
+			regexBuilders.forEach(regExBuilder -> regExBuilder.append("^"));
+		}
+		visit(ctx.relativeLocationPath());
+		return query;
 	}
 
 	@Override
-	public MongoQuery visitExpr(ExprContext ctx) {
-		System.out.println("Expr: " + ctx.getText());
-		return visitChildren(ctx);
-	}
-	
-	@Override
-	public MongoQuery visitLocationPath(LocationPathContext ctx) {
-		System.out.println("LocationPath: " + ctx.getText());
-		/*for (int i = 0; i < ctx.getChildCount(); i++) {
-			System.out.println("LocationPathChild: " + ctx.getChild(i).getText());
-		}*/
-		return visitChildren(ctx);
-	}
-
-	@Override
-	public MongoQuery visitAbsoluteLocationPathNoroot(AbsoluteLocationPathNorootContext ctx) {
-		System.out.println("AbsoluteLocationPathNoRoot: " + ctx.getText());
-		/*for (int i = 0; i < ctx.getChildCount(); i++) {
-			System.out.println("AbsoluteLocationPathChild: " + ctx.getChild(i).getText());
-		}*/
-		/*if ("/".equals(ctx.getStart().getText())) {
-			mongoQuery.appendPathRegEx("^");
-		} else if ("//".equals(ctx.getStart().getText())) {
-			mongoQuery.appendPathRegEx("");
-		}*/
-		return visitChildren(ctx);
-	}
-
-	@Override
-	public MongoQuery visitRelativeLocationPath(RelativeLocationPathContext ctx) {
-		/*System.out.println(ctx.getStart().getText());*/
-		System.out.println("RelativeLocationPath: " + ctx.getText());
-
-		/*for (int i = 0; i < ctx.getChildCount(); i++) {
-			System.out.println("RelativeLocationPathChild: " + ctx.getChild(i).getText());
-		}*/
+	public MetadataIndexQuery visitRelativeLocationPath(XPathParser.RelativeLocationPathContext ctx) {
 
 		for (int i = 0; i < ctx.getChildCount(); i ++) {
 			if ("/".equals(ctx.getChild(i).getText())) {
-				slashQueue.add(ctx.getChild(i).getText());
+				regexBuilders.forEach(regExBuilder -> regExBuilder.append("\\."));
 			} else if ("//".equals(ctx.getChild(i).getText())) {
-				slashQueue.add("*");
+				regexBuilders.forEach(regExBuilder -> regExBuilder.append("\\.*"));
+			} else {
+				visit(ctx.getChild(i));
+				if (filterBuilders.size() > 0) {
+					/*queryTree.addLevel();*/
+				}
 			}
+
 		}
-		return visitChildren(ctx);
+		return query;
 	}
 
 	@Override
-	public MongoQuery visitPathExprNoRoot(PathExprNoRootContext ctx) {
-		System.out.println("PathExprNoRoot: " + ctx.getText());
-		return visitChildren(ctx);
-	}
-	
-	@Override
-	public MongoQuery visitStep(StepContext ctx) {
-		/*for (int i = 0; i < ctx.getChildCount(); i++) {
-			System.out.println("Step child: " + ctx.getChild(i).getText());
-		}*/
-		System.out.println("Step: " + ctx.getText());
+	public MetadataIndexQuery visitStep(XPathParser.StepContext ctx) {
 
 		/*String separator = slashQueue.size() > 0 ? slashQueue.remove() : "";*/
 		/*mongoQuery.appendPathRegEx(ctx.getText() + separator);*/
-
 		/*queryAndList.add(new Document().append("path", ));*/
 
-		/*System.out.println("Mongo query: " + mongoQuery.getPathRegEx().toString());*/
-		return visitChildren(ctx);
+		visitChildren(ctx);
+		return query;
 	}
 	
 	@Override
-	public MongoQuery visitAxisSpecifier(AxisSpecifierContext ctx) {
-		System.out.println("Axis: " + ctx.getText());
-		axisSpecifier = ctx.getText();
-		return visitChildren(ctx);
+	public MetadataIndexQuery visitAxisSpecifier(XPathParser.AxisSpecifierContext ctx) {
+		/*axisSpecifier = ctx.getText();*/
+		if (predicateMode) {
+			filterBuilders.forEach(filterBuilder -> filterBuilder.append("\\.@\\."));
+		}
+		visitChildren(ctx);
+		return query;
 	}
 
-
 	@Override
-	public MongoQuery visitNodeTest(NodeTestContext ctx) {
-		System.out.println("Node test: " + ctx.getText());
+	public MetadataIndexQuery visitNodeTest(XPathParser.NodeTestContext ctx) {
 		/*mongoQuery.appendPathRegEx(ctx.getText());*/
-		return visitChildren(ctx);
+		visitChildren(ctx);
+		return query;
 	}
 
 	@Override
-	public MongoQuery visitNameTest(NameTestContext ctx) {
-		System.out.println("Node test: " + ctx.getText());
-		if ("".equals(axisSpecifier)) {
+	public MetadataIndexQuery visitPredicate(XPathParser.PredicateContext ctx) {
+		predicateMode = true;
+		//filterBuilders = new ArrayList<>(regexBuilders);
+
+
+		/*filter = regexBuilders.stream().map(regexBuilder ->
+				metadataSchemaDatastore.findMetadataIndexPath(regexBuilder.toString()).stream()
+					.map(metadataSchema ->
+							metadataSchema.getSchema().stream().map(path -> {
+								Map<String, Boolean> pathBooleanExpr = new HashMap<>();
+								pathBooleanExpr.put(path, true);
+								return pathBooleanExpr;
+							}).collect(Collectors.toList())
+					).flatMap(List::stream).collect(Collectors.toList())
+				).flatMap(List::stream).collect(Collectors.toList());*/
+
+
+		visitChildren(ctx);
+		predicateMode = false;
+
+		System.out.println(filterBuilders);
+
+		return query;
+	}
+
+	@Override
+	public MetadataIndexQuery visitEqualityExpr(XPathParser.EqualityExprContext ctx) {
+		/*for (int i = 0; i < ctx.getChildCount(); i++) {
+			System.out.println("Predicate child: " + ctx.getChild(i).getText());
+		}*/
+
+		if (predicateMode) {
+			filterBuilders = regexBuilders.stream().map(regexBuilder ->
+					metadataSchemaDatastore.findMetadataIndexPath(regexBuilder.toString() + "$")
+							.stream().map(metadataSchema ->
+							metadataSchema.getSchema().stream().map(path -> new StringBuilder(path.getPath())/*{
+											Map<StringBuilder, Boolean> pathBooleanExpr = new HashMap<>();
+											pathBooleanExpr.put(new StringBuilder(path), "=".equals(ctx.getChild(childIndex).getText()));
+											return pathBooleanExpr;
+										}*/).collect(Collectors.toList())
+					).flatMap(List::stream).collect(Collectors.toList())
+			).flatMap(List::stream).collect(Collectors.toList());
+			/*if ("=".equals(ctx.getChild(i).getText()) || "!=".equals(ctx.getChild(i).getText())) {
+				System.out.println("ATTRIBUTE EQUALITY");
+			}*/
+		}
+
+		/*for (int i = 0; i < ctx.getChildCount(); i ++) {*/
+			/*if (predicateMode) {
+				final int childIndex = i;
+				filterBuilders = regexBuilders.stream().map(regexBuilder ->
+						metadataSchemaDatastore.findMetadataIndexPath(regexBuilder.toString() + "$")
+						.stream().map(metadataSchema ->
+										metadataSchema.getSchema().stream().map(path -> new StringBuilder(path)*//*{
+											Map<StringBuilder, Boolean> pathBooleanExpr = new HashMap<>();
+											pathBooleanExpr.put(new StringBuilder(path), "=".equals(ctx.getChild(childIndex).getText()));
+											return pathBooleanExpr;
+										}*//*).collect(Collectors.toList())
+								).flatMap(List::stream).collect(Collectors.toList())
+				).flatMap(List::stream).collect(Collectors.toList());
+				if ("=".equals(ctx.getChild(i).getText()) || "!=".equals(ctx.getChild(i).getText())) {
+					System.out.println("ATTRIBUTE EQUALITY");
+				}
+			}*/
+			/*visit(ctx.getChild(i));
+		}*/
+			visitChildren(ctx);
+		return query;
+	}
+
+	@Override
+	public MetadataIndexQuery visitFilterExpr(XPathParser.FilterExprContext ctx) {
+		filterBuilders.forEach(filter -> filter.append(":").append(ctx.getText()));
+
+		visitChildren(ctx);
+		return query;
+	}
+
+	/*@Override
+	public MetadataIndexQuery visitPrimaryExpr(XPathParser.PrimaryExprContext ctx) {
+		filterBuilders.forEach(filter -> filter.append(ctx.getText()));
+
+		visitChildren(ctx);
+		return query;
+	}*/
+
+	@Override
+	public MetadataIndexQuery visitNameTest(XPathParser.NameTestContext ctx) {
+		/*if ("".equals(axisSpecifier)) {
 			String separator = slashQueue.size() > 0 ? slashQueue.remove() : "";
 			queryAndList.add(new Document().append("path", new Document().append("$regex", separator + ctx.getText())));
 		} else if ("@".equals(axisSpecifier)) {
 			tempKey = axisSpecifier + "." + ctx.getText();
-		}
-		/*mongoQuery.appendPathRegEx(ctx.getText());*/
-		return visitChildren(ctx);
-	}
-
-	@Override
-	public MongoQuery visitPredicate(PredicateContext ctx) {
-		/*ctx.get*/
-		System.out.println("Predicate: " + ctx.getText());
-		/*for (int i = 0; i < ctx.getChildCount(); i++) {
-			System.out.println("Predicate child: " + ctx.getChild(i).getText());
 		}*/
-		return visitChildren(ctx);
+		/*mongoQuery.appendPathRegEx(ctx.getText());*/
+		if ("*".equals(ctx.getText())) {
+			/*regexBuilders.forEach(regexBuilder -> regexBuilder.append());*/
+			if (predicateMode) {
+				appendToStringBuilders(filterBuilders, ".+");
+			} else {
+				appendToStringBuilders(regexBuilders, ".+");
+			}
+		} else if (ctx.getText().contains(":*")) {
+			visit(ctx.nCName());
+			/*regexBuilders.forEach(regexBuilder -> regexBuilder.append(":\\.+"));*/
+			if (predicateMode) {
+				appendToStringBuilders(filterBuilders, ":\\.+");
+			} else {
+				appendToStringBuilders(regexBuilders, ":\\.+");
+			}
+		} else {
+			visitChildren(ctx);
+		}
+		return query;
 	}
 
 	@Override
-	public MongoQuery visitFilterExpr(FilterExprContext ctx) {
-		queryAndList.add(new Document().append(tempKey, ctx.getText()));
-
-		return visitChildren(ctx);
+	public MetadataIndexQuery visitQName(XPathParser.QNameContext ctx) {
+		for (int i = 0; i < ctx.getChildCount(); i ++) {
+			if (":".equals(ctx.getChild(i).getText())) {
+				if (predicateMode) {
+					appendToStringBuilders(filterBuilders, ":");
+				} else {
+					appendToStringBuilders(regexBuilders, ":");
+				}
+			} else {
+				visit(ctx.getChild(i));
+			}
+		}
+		return query;
 	}
-	
+
+	@Override
+	public MetadataIndexQuery visitNCName(XPathParser.NCNameContext ctx) {
+		/*regexBuilder.append(ctx.getChild(0).getText());*/
+		/*regexBuilder.append(ctx.getText());*/
+
+		/*regexBuilders.forEach(regexBuilder -> regexBuilder.append(ctx.getText()));*/
+		if (predicateMode) {
+			appendToStringBuilders(filterBuilders, ctx.getText());
+		} else {
+			appendToStringBuilders(regexBuilders, ctx.getText());
+		}
+		visitChildren(ctx);
+		return query;
+	}
+
+	private void appendToStringBuilders(List<StringBuilder> builders, String symbol) {
+		builders.forEach(builder -> builder.append(symbol));
+	}
 	
 }

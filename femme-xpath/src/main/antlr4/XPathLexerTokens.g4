@@ -66,7 +66,7 @@ GREATER_THAN: '>';
 GREATER_THAN_SLASH: '/>';
 GREATER_OR_EQUAL_THAN: '>=';
 IMAGINARY_PART: ('i'|'I')('m'|'M');
-ID:	('i'|'I')('d'|'D');
+//ID:	('i'|'I')('d'|'D');
 IMGCRSDOMAIN: ('i'|'I')('m'|'M')('g'|'G')('c'|'C')('r'|'R')('s'|'S')('d'|'D')('o'|'O')('m'|'M')('a'|'A')('i'|'I')('n'|'N');
 IN:	('i'|'I')('n'|'N');
 LEFT_BRACE: '{';

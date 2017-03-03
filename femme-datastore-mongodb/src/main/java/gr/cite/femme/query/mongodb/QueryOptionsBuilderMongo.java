@@ -9,9 +9,9 @@ import gr.cite.femme.model.Element;
 
 public class QueryOptionsBuilderMongo<T extends Element> {
 	
-	public QueryOptionsMongo<T> query(MongoDatastore datastore, Class<T> elementSubtype) {
+	public QueryExecutorMongo<T> query(MongoDatastore datastore, Class<T> elementSubtype) {
 		
-		return new QueryOptionsMongo<T>(datastore, elementSubtype);
+		return new QueryExecutorMongo<T>(datastore, elementSubtype);
 
 	}
 	

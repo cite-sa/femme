@@ -7,19 +7,19 @@ public class DatastoreException extends Exception {
 		super();
 	}
 
-	public DatastoreException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
-	public DatastoreException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
 	public DatastoreException(String message) {
 		super(message);
 	}
 
 	public DatastoreException(Throwable cause) {
 		super(cause);
+	}
+
+	public DatastoreException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public DatastoreException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }

@@ -8,7 +8,7 @@ import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptions;
+import gr.cite.femme.query.api.QueryExecutor;
 
 public interface Datastore<R extends Criterion, S extends Query<R>>  {
 	
@@ -30,7 +30,7 @@ public interface Datastore<R extends Criterion, S extends Query<R>>  {
 	
 	public <T extends Element> void delete(S query, Class<T> elementSubtype) throws DatastoreException;
 	
-	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
+	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype);
 	

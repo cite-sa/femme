@@ -11,7 +11,7 @@
    
 	<context:property-placeholder location="WEB-INF/datastore.properties.devel" />
 
-	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.metadata.xpath.core.MetadataXPath" destroy-method="close">
+	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.metadata.xpath.MetadataXPath" destroy-method="close">
 		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.host}"/>
 		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.name}"/>
 		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.collection.name}"/>

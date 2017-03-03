@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import gr.cite.femme.query.api.QueryExecutor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -35,7 +36,6 @@ import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptions;
 import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.query.mongodb.CriterionMongo;
 import gr.cite.femme.query.mongodb.QueryMongo;
@@ -108,7 +108,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	}
 
 	@Override
-	public  String insert(Element element) throws DatastoreException {
+	public String insert(Element element) throws DatastoreException {
 		
 		element.setId(new ObjectId().toString());
 		
@@ -116,15 +116,9 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 
 		try {
 			if (element instanceof Collection) {
-
 				insertCollection((Collection) element);
-				// insertCollection(new CollectionMongo((Collection) element));
-				
 			} else if (element instanceof DataElement) {
-				
 				insertDataElement((DataElement)element);
-				// insertDataElement(new DataElementMongo((DataElement)element));
-
 				/*if (dataElement.getCollections().size() > 0) {
 					collections.insertMany(dataElement.getCollections());
 				}*/
@@ -157,7 +151,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		} catch (MongoException e) {
 			// Duplicate key error. Collection already exists
 			if (11000 == e.getCode()) {
-				logger.info("Collection " + collection.getName() + " insertion failed. " + e.getMessage());
+				logger.info("Collection " + collection.getName() + " already exists. " + e.getMessage());
 			} else {
 				logger.info("Collection " + collection.getName() + " insertion failed. ", e);
 				throw new DatastoreException("Collection " + collection.getName() + " insertion failed. " + e.getMessage(), e);				
@@ -185,20 +179,13 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	private void insertDataElement(DataElement dataElement) throws DatastoreException {
 		
 		Instant now = Instant.now();
-		
 		dataElement.getSystemicMetadata().setCreated(now);
 		dataElement.getSystemicMetadata().setModified(now);
 		
 		try {
 			dataElements.insertOne(dataElement);
-		} catch (MongoWriteException e1) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e1);
-		} catch (MongoWriteConcernException e2) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e2);
-		} catch(MongoCommandException e3) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e3);
-		} catch(MongoException e4) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e4);
+		} catch (MongoException e) {
+			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e);
 		}
 		
 		
@@ -487,7 +474,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 	}
 
 	@Override
-	public <T extends Element> QueryOptions<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
+	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		QueryMongo queryMongo = (QueryMongo) query;
 		return new QueryOptionsBuilderMongo<T>().query(this, elementSubtype).find(queryMongo);
 	}

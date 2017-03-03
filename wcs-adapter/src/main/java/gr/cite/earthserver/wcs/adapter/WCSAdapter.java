@@ -19,7 +19,7 @@ import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 public class WCSAdapter implements WCSAdapterAPI {
@@ -67,7 +67,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 	
 	@Override
-	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsFields options, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
 		return femmeClient.findCollections(query, options, xPath)
 				.stream().map(collection -> WCSFemmeMapper.collectionToServer(collection)).collect(Collectors.toList());
 	}
@@ -103,7 +103,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 	
 	@Override
-	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsFields options, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
 		return femmeClient.findDataElements(query, options, xPath)
 				.stream().map(dataElement -> WCSFemmeMapper.dataElementToCoverage(dataElement))
 				.collect(Collectors.toList());
@@ -112,7 +112,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<String> getCoverageIds() throws FemmeDatastoreException, FemmeClientException {
-		QueryOptionsFields options = QueryOptionsFields.builder().include(Sets.newHashSet("id")).build();
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build();
 		return femmeClient.findDataElements(null, options, null)
 			.stream().map(dataElement -> dataElement.getId()).collect(Collectors.toList());
 	}
@@ -145,7 +145,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 				.map(collectionFilterValue -> CriterionBuilderClient.root().eq(filterKey, collectionFilterValue).end())
 				.collect(Collectors.toList());
 		
-		QueryOptionsFields options = QueryOptionsFields.builder().limit(limit).offset(offset).include(Sets.newHashSet("name")).build();
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).include(Sets.newHashSet("name")).build();
 				
 		return femmeClient.findDataElements(
 				QueryClient.query().addCriterion(CriterionBuilderClient.root().inAnyCollection(serverFilterCriteria).end()),
@@ -186,7 +186,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 				.map(collectionFilterValue -> CriterionBuilderClient.root().eq(filterKey, collectionFilterValue).end())
 				.collect(Collectors.toList());
 		
-		QueryOptionsFields options = QueryOptionsFields.builder().limit(limit).offset(offset).build();
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).build();
 				
 		return femmeClient.findDataElements(
 				QueryClient.query().addCriterion(CriterionBuilderClient.root().inAnyCollection(serverFilterCriteria).end()),
@@ -208,7 +208,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 				CriterionBuilderClient.root().and(Arrays.asList(collectionNameCriterion, dataElementCriterion)).end());
 		
 		List<Coverage> coverages = null;
-		coverages = findCoverages(query, QueryOptionsFields.builder().limit(1).build(), null);
+		coverages = findCoverages(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		
 		if (coverages.size() == 0) {
 			CriterionClient collectionEndpointCriterion = CriterionBuilderClient.root().inAnyCollection(Arrays.asList(
@@ -217,7 +217,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 			query = QueryClient.query().addCriterion(
 					CriterionBuilderClient.root().and(Arrays.asList(collectionEndpointCriterion, dataElementCriterion)).end());
 			
-			coverages = findCoverages(query, QueryOptionsFields.builder().limit(1).build(), null);
+			coverages = findCoverages(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		}
 		
 		return coverages.size() > 0 ? coverages.get(0) : null;

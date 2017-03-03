@@ -31,7 +31,7 @@ import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.model.BBox;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 @Path("/")
 public class FemmeGeoResource {
@@ -51,7 +51,7 @@ public class FemmeGeoResource {
 		
 		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("systemicMetadata.other.bbox.crs", crs).end());
 		try {
-			List<DataElement> dataElements = femmeClient.findDataElements(query, QueryOptionsFields.builder().include(new HashSet<>(Arrays.asList("collections"))).build(), null);
+			List<DataElement> dataElements = femmeClient.findDataElements(query, QueryOptionsMessenger.builder().include(new HashSet<>(Arrays.asList("collections"))).build(), null);
 			for (DataElement dataElement: dataElements) {
 				for(Collection collection: dataElement.getCollections()) {
 					if (!collectionExistsInSet(collection, endpoints)) {						

@@ -184,7 +184,7 @@
 				<version>${tomcat7-maven-plugin.version}</version>
 				<configuration>
 					<port>8090</port>
-					<path>/femme-application-devel</path>
+					<nodePath>/femme-application-devel</nodePath>
 					<!--<contextFile>src/main/webapp/WEB-INF/web.xml</contextFile>-->
 					<!--<mode>context</mode>-->
 					<charset>UTF-8</charset>

@@ -170,8 +170,8 @@ public class JsonNode {
 class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 	
 	private static final String ATTRIBUTES = "@";
-	
 	private static final String NAMESPACES = "ns";
+	private static final String TEXT = "#text";
 
 	@Override
 	public void serialize(JsonNode jsonNode, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
@@ -233,7 +233,7 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 				}
 			}
 			if (jsonNode.getText() != null) {
-				jsonGenerator.writeStringField("text", jsonNode.getText());
+				jsonGenerator.writeStringField(JsonNodeSerializer.TEXT, jsonNode.getText());
 			}
 			jsonGenerator.writeEndObject();
 		}

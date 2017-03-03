@@ -1,12 +1,8 @@
 package gr.cite.commons.converter.xml;
 
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -21,6 +17,8 @@ import gr.cite.commons.converter.json.JsonNode;
 public class XmlParser {
 
 	private static final Logger logger = LoggerFactory.getLogger(XmlParser.class);
+
+	private static final String DEFAULT_NAMESPACE = "_default";
 
 	private JsonDocument jsonDoc;
 
@@ -85,7 +83,7 @@ public class XmlParser {
 			for (int i = 0; i < streamReader.getNamespaceCount(); i++) {
 				String namespacePrefix = streamReader.getNamespacePrefix(i);
 				if (StringUtils.isBlank(namespacePrefix)) {
-					namespacePrefix = "_default";
+					namespacePrefix = XmlParser.DEFAULT_NAMESPACE;
 				}
 				namespaces.put(namespacePrefix, streamReader.getNamespaceURI(i));
 			}

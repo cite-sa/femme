@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @JsonInclude(Include.NON_EMPTY)
-public class QueryOptionsFields {
+public class QueryOptionsMessenger {
 	
 	@JsonProperty("limit")
 	private Integer limit;
@@ -52,6 +52,14 @@ public class QueryOptionsFields {
 		this.offset = offset;
 	}
 
+	public List<String> getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(List<String> orderBy) {
+		this.orderBy = orderBy;
+	}
+
 	public String getAsc() {
 		return asc;
 	}
@@ -84,24 +92,24 @@ public class QueryOptionsFields {
 		this.exclude = exclude;
 	}
 	
-	public static QueryOptionsFields valueOf(String optionsJson) throws JsonParseException, JsonMappingException, IOException {
+	public static QueryOptionsMessenger valueOf(String optionsJson) throws JsonParseException, JsonMappingException, IOException {
 		if (optionsJson != null) {
 			final ObjectMapper mapper = new ObjectMapper();
-			return mapper.readValue(optionsJson, QueryOptionsFields.class);
+			return mapper.readValue(optionsJson, QueryOptionsMessenger.class);
 		}
 		return null;
 	}
 	
 	public static Builder builder() {
-		return new QueryOptionsFields.Builder();
+		return new QueryOptionsMessenger.Builder();
 	}
 	
 	public static class Builder {
 		
-		private QueryOptionsFields options;
+		private QueryOptionsMessenger options;
 		
 		private Builder() {
-			this.options = new QueryOptionsFields();
+			this.options = new QueryOptionsMessenger();
 		}
 		
 		public Builder limit(Integer limit) {
@@ -134,7 +142,7 @@ public class QueryOptionsFields {
 			return this;
 		}
 		
-		public QueryOptionsFields build() {
+		public QueryOptionsMessenger build() {
 			return this.options;
 		}
 	}

@@ -14,6 +14,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.GeneralEnvelope;
@@ -119,13 +120,14 @@ public final class WCSParseUtils {
 				}
 			}
 			
-			CoordinateReferenceSystem currentCrs = null;
+			CoordinateReferenceSystem currentCrs;
 			try {
 				currentCrs = CRS.decode(crsString);
 			} catch(NoSuchAuthorityCodeException e) {
+				logger.error("Invalid CRS: " + e.getMessage());
 				throw new ParseException(e.getMessage(), e);
 			}
-			
+
 			String axisLabelsString = null;
 			String[] axisLabels = null;
 			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/@axisLabels");
@@ -145,10 +147,10 @@ public final class WCSParseUtils {
 			String[] upperCorner = upperCornerString.split(" ");
 			
 			
-			Double lowerCornerLatitude = 0.0;
-			Double lowerCornerLongtitude = 0.0;
-			Double upperCornerLatitude = 0.0;
-			Double upperCornerLongtitude = 0.0;
+			Double lowerCornerLat = 0.0;
+			Double lowerCornerLon = 0.0;
+			Double upperCornerLat = 0.0;
+			Double upperCornerLon = 0.0;
 			if (axisLabels != null) {
 				for (int i = 0 ; i < axisLabels.length; i ++) {
 					switch (axisLabels[i].toLowerCase()) {
@@ -160,7 +162,7 @@ public final class WCSParseUtils {
 						} else if (lCornerLat < -90.0) {
 							lCornerLat = Math.ceil(lCornerLat);
 						}
-						lowerCornerLatitude = lCornerLat;
+						lowerCornerLat = lCornerLat;
 						
 						double uCornerLat = Double.parseDouble(upperCorner[i]);
 						if (uCornerLat > 90.0) {
@@ -168,7 +170,7 @@ public final class WCSParseUtils {
 						} else if (lCornerLat < -90.0) {
 							uCornerLat = Math.ceil(uCornerLat);
 						}
-						upperCornerLatitude = uCornerLat;
+						upperCornerLat = uCornerLat;
 						
 						break;
 						
@@ -180,7 +182,7 @@ public final class WCSParseUtils {
 						} else if (lCornerLong < -180.0) {
 							lCornerLong = Math.ceil(lCornerLong);
 						}
-						lowerCornerLongtitude = lCornerLong;
+						lowerCornerLon = lCornerLong;
 						
 						double uCornerLong = Double.parseDouble(upperCorner[i]);
 						if (uCornerLong > 180.0) {
@@ -188,35 +190,33 @@ public final class WCSParseUtils {
 						} else if (uCornerLong < -180.0) {
 							uCornerLong = Math.ceil(uCornerLong);
 						}
-						upperCornerLongtitude = uCornerLong;
+						upperCornerLon = uCornerLong;
 						
 						break;
 						
 					case "e":
-						
-						lowerCornerLongtitude = Double.parseDouble(lowerCorner[i]);
-						upperCornerLongtitude = Double.parseDouble(upperCorner[i]);
+
+						lowerCornerLon = Double.parseDouble(lowerCorner[i]);
+						upperCornerLon = Double.parseDouble(upperCorner[i]);
 						
 						break;
 						
 					case "n":
 						
-						lowerCornerLatitude = Double.parseDouble(lowerCorner[i]);
-						upperCornerLatitude = Double.parseDouble(upperCorner[i]);
+						lowerCornerLat = Double.parseDouble(lowerCorner[i]);
+						upperCornerLat = Double.parseDouble(upperCorner[i]);
 						
 						break;
 					default:
 						break;
 					}
-					
 				}
 			}
 			
 			CoordinateReferenceSystem defaultCrs = CRS.decode("EPSG:4326");
-			//CoordinateReferenceSystem currentCrs = CRS.decode(crsString);
-			ReferencedEnvelope envelope = null;
+			ReferencedEnvelope envelope;
 			try {
-				envelope = new ReferencedEnvelope(lowerCornerLongtitude, upperCornerLongtitude, lowerCornerLatitude, upperCornerLatitude, currentCrs);
+				envelope = new ReferencedEnvelope(lowerCornerLon, upperCornerLon, lowerCornerLat, upperCornerLat, currentCrs);
 			} catch(MismatchedDimensionException e) {
 				throw new ParseException(e);				
 			}
@@ -248,22 +248,23 @@ public final class WCSParseUtils {
 			throw new ParseException(e);
 		}
 		
-		return new Pair<String, String>(defaultCrsName, boundingBoxJSON);
+		return new Pair<>(defaultCrsName, boundingBoxJSON);
 	}
 	
 	public static void main(String[] args) throws ParseException, NoSuchAuthorityCodeException, FactoryException {
 		
 		Client client = ClientBuilder.newClient();
-		 WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
+		 WebTarget webTarget = client.target("http://eodataservice.org/rasdaman/ows");
 		 
 		 String xml = webTarget
 				 .queryParam("service", "WCS")
 				 .queryParam("version", "2.0.1")
 				 .queryParam("request", "DescribeCoverage")
-				 .queryParam("coverageId", "mslp")
+				 .queryParam("coverageId", "L8_B5_32634_30")
 				 .request().get(String.class);
 		 
 		 //System.out.println(WCSParseUtils.getBoundingBoxJSON(xml));
-		 System.out.println(CRS.decode("EPSG:4326").getName());
+		 //System.out.println(CRS.decode("EPSG:4326").getName());
+		WCSParseUtils.getBoundingBoxJSON(xml);
 	}
 }

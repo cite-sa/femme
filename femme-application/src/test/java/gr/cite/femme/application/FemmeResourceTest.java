@@ -10,15 +10,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import gr.cite.femme.dto.FemmeResponseEntity;
 import org.apache.commons.lang3.RandomUtils;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.uri.UriComponent;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +23,7 @@ import gr.cite.femme.dto.FemmeResponse;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Metadatum;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 public class FemmeResourceTest {
 	private Client client;
@@ -57,7 +51,7 @@ public class FemmeResourceTest {
 	public void insert() throws JsonProcessingException {
 //		Collection collection = createDemoCollection();
 		
-		QueryOptionsFields options = new QueryOptionsFields();
+		QueryOptionsMessenger options = new QueryOptionsMessenger();
 		options.setLimit(5);
 		HashSet<String> exclude = new HashSet<>();
 		exclude.add("metadata");

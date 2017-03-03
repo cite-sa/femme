@@ -163,4 +163,5 @@ public class MaterializedPathsNodeCodec implements CollectibleCodec<Materialized
         }
         return new BsonString(materializedPathsNode.getId());
     }
+
 }

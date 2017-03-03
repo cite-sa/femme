@@ -4,12 +4,11 @@ import java.util.List;
 
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
-import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.model.Collection;
 import gr.cite.femme.model.DataElement;
 import gr.cite.femme.query.api.Criterion;
 import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsFields;
+import gr.cite.femme.query.api.QueryOptionsMessenger;
 
 public interface FemmeClientAPI {
 
@@ -26,7 +25,7 @@ public interface FemmeClientAPI {
 
 	public List<Collection> getCollections(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException;
 
-	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException;
 	
 	public Collection getCollectionById(String id) throws FemmeDatastoreException;
@@ -42,7 +41,7 @@ public interface FemmeClientAPI {
 
 	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException;
 
-	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsFields options, String xPath)
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath)
 			throws FemmeDatastoreException, FemmeClientException;
 	
 	public DataElement getDataElementById(String id) throws FemmeDatastoreException;

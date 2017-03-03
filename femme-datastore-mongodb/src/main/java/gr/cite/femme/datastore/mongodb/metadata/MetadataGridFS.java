@@ -77,7 +77,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		
 		String value;
 		if (metadatum.getContentType().contains("xml")) {
-			value = metadatum.getValue().replaceAll(">\\s+<", "><").trim();			
+			value = metadatum.getValue().replaceAll(">\\s+<", "><").trim();
 		} else {
 			value = metadatum.getValue();
 		}
