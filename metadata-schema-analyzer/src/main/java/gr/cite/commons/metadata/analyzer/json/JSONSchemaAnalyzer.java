@@ -50,11 +50,18 @@ public class JSONSchemaAnalyzer {
     private static Set<JSONPath> traverseNode(String key, JsonNode node, StringBuilder path, Set<JSONPath> terminalNodePaths) {
         if (key != null) {
             path.append(key);
-            terminalNodePaths.add(new JSONPath(path.toString(), JsonNodeType.ARRAY.equals(node.getNodeType())));
+
+            boolean isObjectsOnlyArrayNode = false;
+            if (JsonNodeType.ARRAY.equals(node.getNodeType())) {
+                List<Boolean> isObject = Collections.synchronizedList(new ArrayList<>());
+                node.elements().forEachRemaining(arrayNode -> isObject.add(arrayNode.isValueNode()));
+                isObjectsOnlyArrayNode = isObject.stream().filter(Boolean::booleanValue).collect(Collectors.toList()).size() == 0;
+            }
+            terminalNodePaths.add(new JSONPath(path.toString(), isObjectsOnlyArrayNode));
         }
 
         if (JsonNodeType.ARRAY.equals(node.getNodeType())) {
-            node.elements().forEachRemaining(arrayNode ->traverseNode(null, arrayNode, new StringBuilder(path), terminalNodePaths));
+            node.elements().forEachRemaining(arrayNode -> traverseNode(null, arrayNode, new StringBuilder(path), terminalNodePaths));
             return terminalNodePaths;
         } else if (!isTerminalNode(node)) {
             path.append(".");

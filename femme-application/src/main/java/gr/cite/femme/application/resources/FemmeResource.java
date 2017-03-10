@@ -45,10 +45,8 @@ import gr.cite.femme.query.mongodb.QueryMongo;
 @Path("")
 @Produces(MediaType.APPLICATION_JSON)
 public class FemmeResource {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(FemmeResource.class);
-	
-	private static final ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Context
 	private UriInfo uriInfo;
@@ -156,7 +154,7 @@ public class FemmeResource {
 		if (query == null) {
 			logger.info("Query all DataElements");
 		} else {
-			logger.info("Query on DataElements: " + query.build());
+			logger.info("Query DataElements: " + query.build());
 		}
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
@@ -173,7 +171,7 @@ public class FemmeResource {
 			} else {
 				femmeResponse.setStatus(Response.Status.OK.getStatusCode())
 					.setMessage(dataElementList.getSize() + " data elements found")
-					.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
+					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElementList));
 			}
 			
 		} catch (DatastoreException e) {
@@ -207,7 +205,6 @@ public class FemmeResource {
 		
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			
 			QueryExecutor<DataElement> queryExecutor = datastore.find(query, DataElement.class).xPath(xPath).options(options);
 //			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryExecutor.xPath(xPath) : queryExecutor.list();
 			List<DataElement> dataElements = queryExecutor.list();
@@ -219,7 +216,7 @@ public class FemmeResource {
 			} else {
 				femmeResponse.setStatus(Response.Status.OK.getStatusCode())
 					.setMessage(dataElementList.getSize() + " data elements found")
-					.setEntity(new FemmeResponseEntity<DataElementList>(uriInfo.getRequestUri().toString(), dataElementList));
+					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElementList));
 			}
 			 
 		} catch (DatastoreException e) {
@@ -275,12 +272,9 @@ public class FemmeResource {
 			@PathParam("dataElementId") String dataElementId,
 			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
-		
-		
+
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
-		
 		try {
-			
 			CriterionMongo collectionCriterion = CriterionBuilderMongo.root().inAnyCollection(Arrays.asList(
 					CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end())).end();
 			CriterionMongo dataElementCriterion = CriterionBuilderMongo.root().eq(FieldNames.ID, dataElementId).end();
@@ -328,7 +322,7 @@ public class FemmeResource {
 			
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
 				.setMessage("Data element " + dataElement.getId() + " found")
-				.setEntity(new FemmeResponseEntity<DataElement>(uriInfo.getRequestUri().toString(), dataElement));
+				.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElement));
 			logger.info("DataElement " + id + " found");
 			
 		} catch (DatastoreException e) {
@@ -337,7 +331,6 @@ public class FemmeResource {
 		}
 
 		return Response.ok().entity(femmeResponse).build();
-
 	}
 
 	@GET
@@ -346,16 +339,7 @@ public class FemmeResource {
 	public Response countDataElements(
 			@QueryParam("query") QueryMongo query,
 			@QueryParam("xpath") String xpath) throws FemmeApplicationException {
-		
-		/*QueryMongo query = null;
-		if (queryJson != null) {
-			try {
-				query = objectMapper.readValue(queryJson, QueryMongo.class);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-				throw new FemmeApplicationException(e.getMessage(), Response.Status.BAD_REQUEST.getStatusCode(), e);
-			}
-		}*/
+
 		if (query == null) {
 			logger.info("Count all DataElements");
 		} else {

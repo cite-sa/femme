@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import gr.cite.femme.exceptions.MetadataIndexException;
 import gr.cite.femme.query.api.QueryExecutor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -94,14 +95,16 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 		return metadataStore;
 	}
 	
-	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) throws DatastoreException {
+	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) {
 		for (Metadatum metadatum : metadata) {
 			try {
 				metadatum.setElementId(elementId);
 				metadataStore.insert(metadatum);
 			} catch (MetadataStoreException e) {
-				logger.error(e.getMessage(), e);
-				throw new DatastoreException("Inserting element metadata failed.");
+				logger.error("Element " + elementId + " metadatum insertion failed", e);
+				//throw new DatastoreException("Element " + elementId + "metadatum insertion failed.");
+			} catch (MetadataIndexException e) {
+				logger.warn("Element " + elementId + " metadatum indexing failed", e);
 			}
 		}
 		return metadata;
@@ -109,9 +112,7 @@ public class MongoDatastore implements Datastore<CriterionMongo, QueryMongo>  {
 
 	@Override
 	public String insert(Element element) throws DatastoreException {
-		
 		element.setId(new ObjectId().toString());
-		
 		insertMetadata(element.getMetadata(), element.getId());
 
 		try {

@@ -2,46 +2,50 @@ package gr.cite.femme.metadata.xpath.elasticsearch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
-import gr.cite.femme.metadata.xpath.datastores.MetadataIndexDatastore;
-import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.ElasticScrollQuery;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.Node;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryNode;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.Tree;
+import gr.cite.femme.exceptions.MetadataIndexException;
 import gr.cite.femme.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
-import gr.cite.femme.metadata.xpath.elasticsearch.utils.ElasticResponseHit;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
-	private static final Logger logger = LoggerFactory.getLogger(ElasticMetadataIndexDatastore.class);
+	private static final String ELASTICSEARCH_TYPE_PREFIX = "metadataschema_";
 
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private ElasticMetadataIndexDatastoreClient client;
+	private MetadataSchemaIndexDatastore schemaIndexDatastore;
 
-	public ElasticMetadataIndexDatastore() throws UnknownHostException {
+	public ElasticMetadataIndexDatastore(MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException {
 		this.client = new ElasticMetadataIndexDatastoreClient();
+		this.schemaIndexDatastore = schemaIndexDatastore;
 	}
 
-	public ElasticMetadataIndexDatastore(ElasticMetadataIndexDatastoreClient client) {
-		this.client = client;
+	public ElasticMetadataIndexDatastore(String hostName, int port, MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException {
+		this.client = new ElasticMetadataIndexDatastoreClient(hostName, port);
+		this.schemaIndexDatastore = schemaIndexDatastore;
 	}
 
 	@Override
@@ -51,129 +55,173 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public void indexMetadatum(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) throws MetadataIndexException {
-		/*try {
-			client.get().prepareIndex("metadata", "jsonMetadatum")
-					.setSource(mapper.writeValueAsBytes(indexableMetadatum));
-		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Error during indexable metadata serialization", e);
-		}*/
-
-		/*try {
-			System.out.println(mapper.writeValueAsString(indexableMetadatum));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}*/
-		Response mapping = null;
 		try {
-			mapping = client.get().performRequest(
-					"GET",
-					"/metadataindex/_mapping/" + "metadataschema_" + indexableMetadatum.getMetadataSchemaId());
-		} catch (ResponseException e) {
-			if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-				createMapping(metadataSchema);
-			} else {
-				logger.error(e.getMessage(), e);
-				throw new MetadataIndexException("Mapping retrieval failed", e);
-			}
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Mapping retrieval failed", e);
-		}
-
-		try {
-			Map<String, Object> mappingEntity = mapper.readValue(
-					IOUtils.toString(mapping.getEntity().getContent(),
-							Charset.forName("UTF-8")), new TypeReference<Map<String, Object>>(){});
-			if (mappingEntity.size() == 0) {
+			Response mapping = client.get().performRequest(
+					"HEAD",
+					"/" + client.getIndexName() + "/_mapping/" + ElasticMetadataIndexDatastore.ELASTICSEARCH_TYPE_PREFIX + indexableMetadatum.getMetadataSchemaId());
+			if (mapping.getStatusLine().getStatusCode() == 404) {
 				createMapping(metadataSchema);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new MetadataIndexException("ElasticSearch mapping existence check failed", e);
 		}
 
 		HttpEntity entity;
 		try {
 			entity = new NStringEntity(mapper.writeValueAsString(indexableMetadatum), ContentType.APPLICATION_JSON);
 		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Error during indexable metadata serialization", e);
+			throw new MetadataIndexException("Indexable metadatum serialization failed", e);
 		}
-
-
-
 		try {
 			client.get().performRequest(
 					"POST",
-					"/metadataindex/metadataschema_" + indexableMetadatum.getMetadataSchemaId(),
+					"/" + client.getIndexName() + "/" + ElasticMetadataIndexDatastore.ELASTICSEARCH_TYPE_PREFIX + indexableMetadatum.getMetadataSchemaId(),
 					Collections.emptyMap(),
 					entity);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Indexing failed", e);
+			throw new MetadataIndexException("Metadatum indexing failed", e);
 		}
 	}
 
 	@Override
-	public List<IndexableMetadatum> query(String query) throws MetadataIndexException {
-		String finalQuery = "{" +
-				"\"query\": {" +
-					"\"term\" : {" +
-						query +
-					"}" +
-				"}" +
-			"}";
-		HttpEntity entity = new NStringEntity(finalQuery, ContentType.APPLICATION_JSON);
+	public List<IndexableMetadatum> query(Tree<QueryNode> queryTree) throws MetadataIndexException {
+		return query(queryTree, true);
+	}
 
-		Response indexResponse = null;
+	@Override
+	public List<IndexableMetadatum> query(Tree<QueryNode> queryTree, boolean lazy) throws MetadataIndexException {
+		/*HttpEntity entity = new NStringEntity(buildElasticSearchQuery(queryTree, lazy), ContentType.APPLICATION_JSON);
+		Response indexResponse;
 		try {
 			 indexResponse = client.get().performRequest(
 					"POST",
-					"/metadataindex/jsonMetadatum/_search",
+					"/" + client.getIndexName() + "/_search",
 					Collections.emptyMap(),
 					entity);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Metadata index query error", e);
+			throw new MetadataIndexException("Metadata index query failed", e);
 		}
 
-		ElasticResponseContent content = null;
+		ElasticResponseContent response;
 		try {
-			content = mapper.readValue(IOUtils.toString(indexResponse.getEntity().getContent(),
+			response = mapper.readValue(IOUtils.toString(indexResponse.getEntity().getContent(),
 					Charset.defaultCharset()), ElasticResponseContent.class);
 		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-			throw new MetadataIndexException("Metadata index query serialization error", e);
+			throw new MetadataIndexException("ElasticSearch response serialization failed", e);
 		}
 
-		List<IndexableMetadatum> results = content.getHits().getHits().stream().map(ElasticResponseHit::getSource).collect(Collectors.toList());
+		return response.getHits().getHits().stream().map(hit -> {
+			hit.getSource().setId(hit.getId());
+			return hit.getSource();
+		}).collect(Collectors.toList());*/
+
+		ElasticScrollQuery scrollQuery = new ElasticScrollQuery(this.client);
+		try {
+			scrollQuery.query(buildElasticSearchQuery(queryTree, lazy), true);
+		} catch (IOException e) {
+			throw new MetadataIndexException("ElasticSearch scroll query failed", e);
+		}
+
+		List<IndexableMetadatum> results = new ArrayList<>();
+		while (scrollQuery.hasNext()) {
+			results.addAll(scrollQuery.next());
+		}
 
 		return results;
 	}
 
-	private void createMapping(MetadataSchema schema) {
-		List<String> nestedValueMappings = schema.getSchema().stream().filter(JSONPath::isArray).map(jsonPath ->
-				"{" +
-					"\"properties\": {" +
-						"\"value." + jsonPath.getPath() + "\": {" +
-							"\"type\": \"nested\"" +
+	private void createMapping(MetadataSchema schema) throws MetadataIndexException {
+		String dynamicTemplate = schema.getSchema().stream().filter(JSONPath::isArray)
+				.map(nestedPath -> "{" +
+						"\"arrays_as_nested\":{" +
+							"\"path_match\":\"value." + nestedPath.getPath() + "\"," +
+							"\"mapping\":{" +
+								"\"type\":\"nested\"" +
+							"}" +
 						"}" +
-					"}" +
-				"}"
-		).collect(Collectors.toList());
+					"}").collect(Collectors.joining(",", "{\"dynamic_templates\":[", "]}"));
+		/*MappingTree mappingTree = new MappingTree();
+		String nestedValueMapping = mappingTree.buildMapping(schema.getSchema().stream().filter(JSONPath::isArray).map(JSONPath::getPath).collect(Collectors.toList()));*/
 
-		for (String nestedValueMapping: nestedValueMappings) {
-			HttpEntity entity = new NStringEntity(nestedValueMapping, ContentType.APPLICATION_JSON);
-			try {
-				Response indexResponse = client.get().performRequest(
-						"PUT",
-						"/metadataindex/_mapping/metadataschema_" + schema.getId(),
-						Collections.emptyMap(),
-						entity);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-			}
+		HttpEntity entity = new NStringEntity(dynamicTemplate, ContentType.APPLICATION_JSON);
+		try {
+			client.get().performRequest(
+					"PUT",
+					"/" + client.getIndexName() + "/_mapping/" + ElasticMetadataIndexDatastore.ELASTICSEARCH_TYPE_PREFIX + schema.getId(),
+					Collections.emptyMap(),
+					entity);
+		} catch (IOException e) {
+			throw new MetadataIndexException("ElasticSearch dynamic template creation failed");
 		}
+	}
 
+	private String buildElasticSearchQuery(Tree<QueryNode> queryTree, boolean lazy) {
+		return buildShoulds(queryTree.getRoot()).stream().map(
+				should -> should.stream().collect(Collectors.joining(
+						",",
+						"{\"bool\":{\"must\":[",
+						"]}}"))
+		).collect(Collectors.joining(
+				",",
+				"\"query\":{\"bool\":{\"filter\":{\"bool\":{\"should\":[",
+				"]}}}}"));
+	}
+
+	private List<List<String>> buildShoulds(Node<QueryNode> node) {
+		List<List<String>> shoulds = new ArrayList<>();
+		buildShould(node, new ArrayList<>(), shoulds);
+		return shoulds;
+	}
+
+	private void buildShould(Node<QueryNode> node, List<String> should, List<List<String>> shoulds) {
+		for (Node<QueryNode> child: node.getChildren()) {
+			QueryNode data = child.getData();
+			List<String> nodeShould = new ArrayList<>(should);
+			if (!"".equals(data.getFilterPath().toString()) || data.getValue() != null) {
+				nodeShould.add(buildTermOrNested(data));
+			}
+			buildShould(child, nodeShould, shoulds);
+		}
+		if (node.getChildren().size() == 0) {
+			shoulds.add(should);
+		}
+	}
+
+	private String buildTermOrNested(QueryNode node) {
+		String subQuery;
+		List<String> nestedNodes = schemaIndexDatastore.findArrayMetadataIndexPaths().stream()
+				.map(schema ->  schema.getSchema().stream().map(JSONPath::getPath).collect(Collectors.toList()))
+				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath)).collect(Collectors.toList());
+		if (nestedNodes.size() > 0) {
+			subQuery = "{" +
+					"\"nested\" : {" +
+						"\"path\": \"value." + nestedNodes.get(0) + "\"," +
+							"\"query\": {" +
+								"\"bool\": {" +
+									"\"must\": [" +
+										"{" +
+											"\"term\": {" +
+												"\"value." + node.getNodePath().toString() +
+												("".equals(node.getFilterPath().toString()) ? "" : ".") +
+												node.getFilterPath().toString() +
+												".keyword\"" + ":\"" +
+												node.getValue() + "\"" +
+											"}" +
+										"}" +
+									"]" +
+								"}" +
+							"}" +
+						"}" +
+					"}";
+		} else {
+			subQuery = "{" +
+					"\"term\":{" +
+						"\"value." + node.getNodePath().toString() +
+						("".equals(node.getFilterPath().toString()) ? "" : ".") +
+						node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
+					"}" +
+				"}";
+		}
+		return subQuery;
 	}
 }

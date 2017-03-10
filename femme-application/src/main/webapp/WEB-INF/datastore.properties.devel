@@ -5,8 +5,11 @@ gr.cite.femme.datastore.metadata.db.host=localhost\:27017
 gr.cite.femme.datastore.metadata.db.name=femme-db
 gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
 
-gr.cite.femme.datastore.metadata.xpath.db.host=localhost\:27017
-gr.cite.femme.datastore.metadata.xpath.db.name=materialized-paths-db
-gr.cite.femme.datastore.metadata.xpath.db.collection.name=paths
+#gr.cite.femme.datastore.metadata.xpath.db.host=localhost\:27017
+#gr.cite.femme.datastore.metadata.xpath.db.name=materialized-paths-db
+#gr.cite.femme.datastore.metadata.xpath.db.collection.name=paths
+gr.cite.femme.datastore.metadata.index.db.host.name=localhost
+gr.cite.femme.datastore.metadata.index.db.host.port=9200
+gr.cite.femme.datastore.metadata.schema.index.db.host=localhost\:27017
 
 #gr.cite.femme.datastore.mongodb.index.host=http://localhost:8083/femme-index-application/metadata-index

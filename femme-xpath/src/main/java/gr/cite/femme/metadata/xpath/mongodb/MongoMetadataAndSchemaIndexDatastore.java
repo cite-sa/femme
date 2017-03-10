@@ -6,9 +6,11 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
-import gr.cite.femme.metadata.xpath.datastores.MetadataIndexDatastore;
-import gr.cite.femme.metadata.xpath.datastores.MetadataSchemaIndexDatastore;
-import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryNode;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.Tree;
+import gr.cite.femme.exceptions.MetadataIndexException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -38,8 +40,8 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
         schemasCollection = mongoClient.getSchemasCollection();
     }
 
-    public MongoMetadataAndSchemaIndexDatastore(String dbHost, String dbName, String transformedMetadataCollectionName, String schemasCollectionName) {
-        mongoClient = new MongoMetadataIndexDatastoreClient(dbHost, dbName, transformedMetadataCollectionName, schemasCollectionName);
+    public MongoMetadataAndSchemaIndexDatastore(String dbHost) {
+        mongoClient = new MongoMetadataIndexDatastoreClient(dbHost, true);
         //materializedPaths = mongoClient.getMaterializedPaths();
         metadataCollection = mongoClient.getMetadataCollection();
         schemasCollection = mongoClient.getSchemasCollection();
@@ -74,6 +76,20 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
     }
 
     @Override
+    public List<MetadataSchema> findArrayMetadataIndexPaths() {
+        List<MetadataSchema> metadataSchemas = new ArrayList<>();
+
+        this.schemasCollection.aggregate(Arrays.asList(
+                Aggregates.match(new Document().append("schema.array", true)),
+                Aggregates.unwind("$schema"),
+                Aggregates.match(new Document().append("schema.array", true)),
+                Aggregates.group(null, Accumulators.addToSet("schema", "$schema"))
+        )).into(metadataSchemas);
+
+        return metadataSchemas;
+    }
+
+    @Override
     public List<MetadataSchema> findArrayMetadataIndexPaths(String id) {
         List<MetadataSchema> metadataSchemas = new ArrayList<>();
 
@@ -93,9 +109,14 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
     }
 
     @Override
-    public List<IndexableMetadatum> query(String query) throws MetadataIndexException {
+    public List<IndexableMetadatum> query(Tree<QueryNode> queryTree) throws MetadataIndexException {
+        return query(queryTree, true);
+    }
+
+    @Override
+    public List<IndexableMetadatum> query(Tree<QueryNode> queryTree, boolean lazyPayload) throws MetadataIndexException {
         List<IndexableMetadatum> results = new ArrayList<>();
-        metadataCollection.find(Document.parse(query)).into(results);
+        metadataCollection.find(Document.parse("")).into(results);
         return results;
     }
 

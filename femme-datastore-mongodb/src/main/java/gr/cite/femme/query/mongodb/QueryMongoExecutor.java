@@ -39,28 +39,21 @@ import gr.cite.femme.model.DataElement;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.query.api.QueryOptionsMessenger;
 
-public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
+public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
-	private static final Logger logger = LoggerFactory.getLogger(QueryExecutorMongo.class);
+	private static final Logger logger = LoggerFactory.getLogger(QueryMongoExecutor.class);
 	
 	private MongoDatastore datastore;
-	
-	private MongoCollection<T> collection;
-	
 	private MetadataStore metadataStore;
-
+	private MongoCollection<T> collection;
 	private Document queryDocument;
-
 	private QueryOptionsMessenger options;
-	
 	private FindIterable<T> results;
-	
 	private boolean loadMetadata = true;
-
 	private Instant totalQueryDuration;
 
 
-	public QueryExecutorMongo(MongoDatastore datastore, Class<T> elementSubtype) {
+	public QueryMongoExecutor(MongoDatastore datastore, Class<T> elementSubtype) {
 		this.datastore = datastore;
 		if (elementSubtype == DataElement.class) {
 			this.collection = (MongoCollection<T>) datastore.getDataElements();
@@ -101,7 +94,6 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 				}
 			}
 		}
-
 		return this;
 	}
 
@@ -117,9 +109,7 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public QueryExecutor<T> xPath(String xPath) throws DatastoreException {
-
-		Document findElementsWithMetadataQuery = null;
-		if (xPath != null) {
+		if (xPath != null && !xPath.trim().equals("")) {
 			List<Metadatum> metadataXPathResults;
 			try {
 				Duration xPathQueryDuration;
@@ -134,19 +124,24 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 				throw new DatastoreException("Error on XPath", e);
 			}
 
-			findElementsWithMetadataQuery = new Document().append(FieldNames.METADATA + "." + FieldNames.ID,
-					new Document().append("$in",
-							metadataXPathResults.stream().filter(metadatum -> metadatum.getId() != null)
-									.map(metadatum -> new ObjectId(metadatum.getId())).collect(Collectors.toList())));
-			logger.debug(findElementsWithMetadataQuery.toString());
+			/*Document retrieveXPathSatisfyElementsQuery = new Document()
+					.append(FieldNames.METADATA + "." + FieldNames.ID,
+						new Document().append("$in",
+								metadataXPathResults.stream().filter(metadatum -> metadatum.getId() != null)
+										.map(metadatum -> new ObjectId(metadatum.getId())).collect(Collectors.toList())));*/
+			Document retrieveXPathSatisfyElementsQuery = new Document()
+					.append(FieldNames.ID,
+						new Document().append("$in",
+								metadataXPathResults.stream()/*.filter(metadatum -> metadatum.getId() != null)*/
+										.map(metadatum -> new ObjectId(metadatum.getElementId()))
+										.distinct().collect(Collectors.toList())));
+			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
+
+			queryDocument = queryDocument == null
+					? retrieveXPathSatisfyElementsQuery
+					: new Document().append("$and", Arrays.asList(queryDocument, retrieveXPathSatisfyElementsQuery));
 		}
-
-		queryDocument = queryDocument == null
-				? findElementsWithMetadataQuery
-				: new Document().append("$and", Arrays.asList(queryDocument, findElementsWithMetadataQuery));
-
 		return this;
-
 	}
 
 	@Override
@@ -197,7 +192,6 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public T first() throws DatastoreException {
-
 		T element = results.first();
 		options(options);
 		if (element != null && loadMetadata) {
@@ -208,7 +202,6 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 				throw new DatastoreException(e.getMessage(), e);
 			}
 		}
-		
 		return element;
 	}
 
@@ -254,26 +247,19 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 				idDoc.append("$eq", new ObjectId(id));
 				
 				docs.add(doc);
-				
 			}
 		}
 		return docs;
 	}
 	
 	private Document findInclusionOperator(Object document) {
-		
 		Document inclusion = null;
 		String className = document.getClass().getSimpleName();
 		
 		if (className.equals("Document")) {
-			Iterator<Entry<String, Object>> iterator = ((Document)document).entrySet().iterator();
-			while (iterator.hasNext()) {
-				Entry<String, Object> doc = iterator.next();
+			for (Entry<String, Object> doc : ((Document) document).entrySet()) {
 				if (doc.getKey().equals("$in_any_collection")) {
-					
-					System.out.println("found");
-					
-					inclusion = (Document)document;
+					inclusion = (Document) document;
 					return inclusion;
 				} else {
 					if (inclusion != null) {
@@ -290,9 +276,6 @@ public class QueryExecutorMongo<T extends Element> implements QueryExecutor<T> {
 				inclusion = findInclusionOperator(doc);
 			}
 		}
-		
 		return inclusion;
-		
 	}
-
 }

@@ -1,4 +1,4 @@
-package gr.cite.femme.metadata.xpath.exceptions;
+package gr.cite.femme.exceptions;
 
 public class MetadataIndexException extends Exception {
 

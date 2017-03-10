@@ -5,7 +5,7 @@ import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
-import gr.cite.femme.metadata.xpath.datastores.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -29,8 +29,8 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 		this.schemasCollection = mongoClient.getSchemasCollection();
 	}
 
-	public MongoMetadataSchemaIndexDatastore(String dbHost, String dbName, String schemasCollectionName) {
-		this.mongoClient = new MongoMetadataIndexDatastoreClient(dbHost, dbName, schemasCollectionName);
+	public MongoMetadataSchemaIndexDatastore(String dbHost) {
+		this.mongoClient = new MongoMetadataIndexDatastoreClient(dbHost);
 		this.schemasCollection = mongoClient.getSchemasCollection();
 	}
 
@@ -40,10 +40,11 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 
 	@Override
 	public void indexSchema(MetadataSchema schema) {
-		List<MetadataSchema> existingSchema = new ArrayList<>();
-		schemasCollection.find(Filters.eq("hash", schema.getHash())).into(existingSchema);
-		if (existingSchema.size() == 0) {
+		MetadataSchema existingSchema = schemasCollection.find(Filters.eq("hash", schema.getHash())).limit(1).first();
+		if (existingSchema == null) {
 			schemasCollection.insertOne(schema);
+		} else {
+			schema.setId(existingSchema.getId());
 		}
 	}
 
@@ -56,6 +57,20 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 				Aggregates.unwind("$schema"),
 				filterByRegex,
 				//Aggregates.project(new Document().append("_id", 0).append("schema", 1)),
+				Aggregates.group(null, Accumulators.addToSet("schema", "$schema"))
+		)).into(metadataSchemas);
+
+		return metadataSchemas;
+	}
+
+	@Override
+	public List<MetadataSchema> findArrayMetadataIndexPaths() {
+		List<MetadataSchema> metadataSchemas = new ArrayList<>();
+
+		this.schemasCollection.aggregate(Arrays.asList(
+				Aggregates.match(new Document().append("schema.array", true)),
+				Aggregates.unwind("$schema"),
+				Aggregates.match(new Document().append("schema.array", true)),
 				Aggregates.group(null, Accumulators.addToSet("schema", "$schema"))
 		)).into(metadataSchemas);
 

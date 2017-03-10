@@ -9,10 +9,14 @@ import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.metadata.xpath.mongodb.codecs.MetadataSchemaCodecProvider;
 import gr.cite.femme.metadata.xpath.mongodb.codecs.IndexableMetadatumCodecProvider;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MongoMetadataIndexDatastoreClient {
 
@@ -24,47 +28,35 @@ public class MongoMetadataIndexDatastoreClient {
 	private static final String METADATA_SCHEMAS_COLLECTION_NAME = "metadataSchemas";
 
 	private MongoClient client;
-
 	private MongoDatabase database;
-
 	/*private MongoCollection<MaterializedPathsNode> materializedPaths;*/
-
-	/*private MongoCollection<MaterializedPathsNode> materializedPaths;*/
-
 	private MongoCollection<IndexableMetadatum> metadataCollection;
-
 	private MongoCollection<MetadataSchema> schemasCollection;
 
 	public MongoMetadataIndexDatastoreClient() {
-		this(MongoMetadataIndexDatastoreClient.DATABASE_HOST, MongoMetadataIndexDatastoreClient.DATABASE_NAME,
-				MongoMetadataIndexDatastoreClient.TRANSFORMED_METADATA_COLLECTION_NAME, MongoMetadataIndexDatastoreClient.METADATA_SCHEMAS_COLLECTION_NAME);
+		this(MongoMetadataIndexDatastoreClient.DATABASE_HOST);
 	}
 
-	public MongoMetadataIndexDatastoreClient(String dbHost, String dbName, String schemasCollectionName) {
-		client = new MongoClient(dbHost);
-		database = client.getDatabase(dbName);
-
-		CodecRegistry codecRegistry = CodecRegistries
-				.fromRegistries(MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(new MetadataSchemaCodecProvider()));
-		schemasCollection = database.getCollection(schemasCollectionName, MetadataSchema.class).withCodecRegistry(codecRegistry);
-
-		createIndexes();
+	public MongoMetadataIndexDatastoreClient(String dbHost) {
+		this(dbHost, false);
 	}
 
-	public MongoMetadataIndexDatastoreClient(String dbHost, String dbName, String transformedMetadataCollectionName, String schemasCollectionName) {
-
+	public MongoMetadataIndexDatastoreClient(String dbHost, boolean metadataIndexStorage) {
 		client = new MongoClient(dbHost);
-		database = client.getDatabase(dbName);
+		database = client.getDatabase(MongoMetadataIndexDatastoreClient.DATABASE_NAME);
 
-		CodecRegistry codecRegistry = CodecRegistries
-				.fromRegistries(
-						MongoClient.getDefaultCodecRegistry(),
-						CodecRegistries.fromProviders(new IndexableMetadatumCodecProvider(),
-								new MetadataSchemaCodecProvider()));
+		List<CodecProvider> codecProviders = new ArrayList<>();
+		codecProviders.add(new MetadataSchemaCodecProvider());
+		if (metadataIndexStorage) {
+			codecProviders.add(new IndexableMetadatumCodecProvider());
+		}
+		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(codecProviders));
 
 		/*materializedPaths = database.getCollection(MATERIALIZED_PATHS_COLLECTION_NAME, MaterializedPathsNode.class).withCodecRegistry(codecRegistry);*/
-		metadataCollection = database.getCollection(transformedMetadataCollectionName, IndexableMetadatum.class).withCodecRegistry(codecRegistry);
-		schemasCollection = database.getCollection(schemasCollectionName, MetadataSchema.class).withCodecRegistry(codecRegistry);
+		if (metadataIndexStorage) {
+			metadataCollection = database.getCollection(MongoMetadataIndexDatastoreClient.TRANSFORMED_METADATA_COLLECTION_NAME, IndexableMetadatum.class).withCodecRegistry(codecRegistry);
+		}
+		schemasCollection = database.getCollection(MongoMetadataIndexDatastoreClient.METADATA_SCHEMAS_COLLECTION_NAME, MetadataSchema.class).withCodecRegistry(codecRegistry);
 
 		createIndexes();
 
@@ -78,16 +70,8 @@ public class MongoMetadataIndexDatastoreClient {
 		return metadataCollection;
 	}
 
-	private void setMetadataCollection(MongoCollection<IndexableMetadatum> metadata) {
-		this.metadataCollection = metadata;
-	}
-
 	public MongoCollection<MetadataSchema> getSchemasCollection() {
 		return schemasCollection;
-	}
-
-	private void setSchemasCollection(MongoCollection<MetadataSchema> schemasCollection) {
-		this.schemasCollection = schemasCollection;
 	}
 
 	public void close() {

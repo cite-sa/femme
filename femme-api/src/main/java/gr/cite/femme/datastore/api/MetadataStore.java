@@ -2,6 +2,7 @@ package gr.cite.femme.datastore.api;
 
 import java.util.List;
 
+import gr.cite.femme.exceptions.MetadataIndexException;
 import gr.cite.femme.exceptions.MetadataStoreException;
 import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
@@ -10,7 +11,7 @@ public interface MetadataStore {
 
 	public void close();
 
-	public void insert(Metadatum metadatum) throws MetadataStoreException ;
+	public void insert(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
 	
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
 	

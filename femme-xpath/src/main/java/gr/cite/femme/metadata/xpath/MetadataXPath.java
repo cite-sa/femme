@@ -1,23 +1,30 @@
 package gr.cite.femme.metadata.xpath;
 
 import gr.cite.commons.converter.XmlJsonConverter;
-import gr.cite.commons.metadata.analyzer.core.MetadataSchemaAnalysis;
 import gr.cite.commons.metadata.analyzer.json.JSONSchemaAnalyzer;
 import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
-import gr.cite.femme.metadata.xpath.datastores.MetadataIndexDatastore;
-import gr.cite.femme.metadata.xpath.datastores.MetadataSchemaIndexDatastore;
-import gr.cite.femme.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore;
-import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
-import gr.cite.femme.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataIndexDatastore;
+import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryNode;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.Tree;
+import gr.cite.femme.exceptions.MetadataIndexException;
+import gr.cite.femme.metadata.xpath.grammar.XPathLexer;
+import gr.cite.femme.metadata.xpath.grammar.XPathParser;
+import gr.cite.femme.metadata.xpath.parser.visitors.MongoXPathVisitor;
 import gr.cite.femme.model.Metadatum;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,18 +32,8 @@ public class MetadataXPath {
 
     private static final Logger logger = LoggerFactory.getLogger(MetadataXPath.class);
 
-    /*private MongoMetadataAndSchemaIndexDatastore xPathDatastore;*/
     private MetadataIndexDatastore metadataIndexDatastore;
     private MetadataSchemaIndexDatastore metadataSchemaIndexDatastore;
-
-    /*public MetadataXPath() {
-        xPathDatastore = new MongoMetadataAndSchemaIndexDatastore();
-    }*/
-
-    public MetadataXPath() throws UnknownHostException {
-        this.metadataIndexDatastore = new ElasticMetadataIndexDatastore();
-        this.metadataSchemaIndexDatastore = new MongoMetadataSchemaIndexDatastore();
-    }
 
     public MetadataXPath(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, MetadataIndexDatastore metadataIndexDatastore) {
         this.metadataSchemaIndexDatastore = metadataSchemaIndexDatastore;
@@ -48,7 +45,7 @@ public class MetadataXPath {
         metadataSchemaIndexDatastore.close();
     }
 
-    public void index(Metadatum metadatum) throws IOException, UnsupportedOperationException, MetadataIndexException, HashGenerationException {
+    public void index(Metadatum metadatum) throws UnsupportedOperationException, MetadataIndexException {
         String metadatumJson;
         if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
             metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
@@ -59,11 +56,12 @@ public class MetadataXPath {
         /*List<MaterializedPathsNode> nodes = PathMaterializer.materialize(metadatum.getId(), metadatumJson);
         xPathDatastore.insertMany(nodes);*/
 
-        /*MetadataSchemaAnalysis metadataSchemaAnalysis = JSONSchemaAnalyzer.analyze(metadatumJson);*/
-        MetadataSchema metadataSchema = new MetadataSchema(JSONSchemaAnalyzer.analyze(metadatumJson));
-
-        /*metadataSchema.setSchema(metadataSchemaAnalysis.getSchema());
-        metadataSchema.setHash(metadataSchemaAnalysis.hash());*/
+        MetadataSchema metadataSchema;
+        try {
+            metadataSchema = new MetadataSchema(JSONSchemaAnalyzer.analyze(metadatumJson));
+        } catch (HashGenerationException | IOException e) {
+            throw new MetadataIndexException("Metadata schema analysis failed", e);
+        }
 
         metadataSchemaIndexDatastore.indexSchema(metadataSchema);
 
@@ -74,28 +72,37 @@ public class MetadataXPath {
         indexableMetadatum.setOriginalContentType(metadatum.getContentType());
         indexableMetadatum.setValue(metadatumJson);
         metadataIndexDatastore.indexMetadatum(indexableMetadatum, metadataSchema);
-
     }
 
     public List<Metadatum> xPath(String xPath) throws MetadataIndexException {
-        /*MongoXPathQuery xPathQuery = new MongoXPathQuery(xPathDatastore);*/
-        /*MongoXPathResult xPathResult = xPathQuery.query(xPath);*/
-        /*Bson mongoQuery = xPathQuery.query(xPath);
-        logger.info(mongoQuery.toString());*/
+        Instant start, end;
 
+        CharStream stream = new ANTLRInputStream(xPath);
+        XPathLexer lexer = new XPathLexer(stream);
+        XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
+        ParseTree tree = parser.xpath();
 
-        /*List<MetadataSchema> paths = metadataSchemaIndexDatastore.findMetadataIndexPath("wcs:CoverageDescription");*/
-        List<MetadataSchema> paths = metadataSchemaIndexDatastore.findMetadataIndexPath("boundedBy");
-        /*paths = metadataSchemaIndexDatastore.findMetadataIndexPath("RectifiedGrid$");*/
+        start = Instant.now();
+        MongoXPathVisitor visitor = new MongoXPathVisitor(metadataSchemaIndexDatastore);
+        Tree<QueryNode> queryTree = visitor.visit(tree);
+        end = Instant.now();
+        logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
 
-        List<IndexableMetadatum> xPathResult = metadataIndexDatastore.query("\"value.wcs:CoverageDescriptions.ns.wcs.keyword\" : \"http://www.opengis.net/wcs/2.0\"");
+        start = Instant.now();
+        List<IndexableMetadatum> xPathResult = metadataIndexDatastore.query(queryTree);
+        end = Instant.now();
+        logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
+
+        start = Instant.now();
         List<Metadatum> metadata = xPathResult.stream().map(indexableMetadatum -> {
             Metadatum metadatum = new Metadatum();
             metadatum.setId(indexableMetadatum.getMetadatumId());
+            metadatum.setElementId(indexableMetadatum.getElementId());
             return metadatum;
         }).collect(Collectors.toList());
+        end = Instant.now();
+        logger.info("IndexableMetadatum to Metadatum transformation duration: " + Duration.between(start, end).toMillis() + "ms");
 
         return metadata;
-
     }
 }

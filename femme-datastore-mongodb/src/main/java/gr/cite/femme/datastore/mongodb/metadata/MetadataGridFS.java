@@ -96,7 +96,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		try {
 			fileId = gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("Error while uploading metadatum of element with id: " + metadatum.getElementId().toString(), e);
+			throw new MetadataStoreException("Metadatum storage failed. Element id: " + metadatum.getElementId().toString(), e);
 		}
 		metadatum.setId(fileId.toString());
 		
@@ -112,7 +112,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		try {
 			gridFSBucket.downloadToStream(new ObjectId(fileId), metadatumStream);
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("GridsFSException when downloading metadatum with fileId: " + fileId.toString(), e);
+			throw new MetadataStoreException("Metadatum retrieval failed. File id: " + fileId.toString(), e);
 		}
 		
 		Metadatum metadatum = new Metadatum();
@@ -133,7 +133,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		Metadatum metadatum = new Metadatum();
 		metadatum.setElementId(elementId);
 		
-		MongoCursor<Metadatum> cursor = null;
+		MongoCursor<Metadatum> cursor;
 		try {
 			cursor = gridFSBucket.find(
 					new Document().append(METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY, new ObjectId(elementId)))

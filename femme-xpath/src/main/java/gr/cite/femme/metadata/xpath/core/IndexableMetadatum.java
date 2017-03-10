@@ -19,7 +19,6 @@ import java.util.Map;
 
 @JsonSerialize(using = CustomIndexableMetadatumSerializer.class)
 @JsonDeserialize(using = CustomIndexableMetadatumDeserializer.class)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IndexableMetadatum {
 
     private String id;
@@ -115,7 +114,9 @@ class CustomIndexableMetadatumDeserializer extends JsonDeserializer<IndexableMet
         String metadatumId = (String) indexableMetadatumInMap.get("metadatumId");
         String elementId = (String) indexableMetadatumInMap.get("elementId");
         String originalContentType = (String) indexableMetadatumInMap.get("originalContentType");
-        String value = mapper.writeValueAsString(indexableMetadatumInMap.get("value"));
+        String value = indexableMetadatumInMap.get("value") != null
+                ? mapper.writeValueAsString(indexableMetadatumInMap.get("value"))
+                : null;
 
         IndexableMetadatum indexableMetadatum = new IndexableMetadatum();
         indexableMetadatum.setMetadataSchemaId(metadataSchemaId);

@@ -11,10 +11,19 @@
    
 	<context:property-placeholder location="WEB-INF/datastore.properties.devel" />
 
+	<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore" destroy-method="close">
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.schema.index.db.host}"/>
+	</bean>
+
+	<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore" destroy-method="close">
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.index.db.host.name}"/>
+		<constructor-arg value="${gr.cite.femme.datastore.metadata.index.db.host.port}"/>
+		<constructor-arg ref="metadataSchemaIndexDatastore"/>
+	</bean>
+
 	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.metadata.xpath.MetadataXPath" destroy-method="close">
-		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.host}"/>
-		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.name}"/>
-		<constructor-arg value="${gr.cite.femme.datastore.metadata.xpath.db.collection.name}"/>
+		<constructor-arg ref="metadataSchemaIndexDatastore"/>
+		<constructor-arg ref="metadataIndexDatastore"/>
 	</bean>
 
 	<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.datastore.mongodb.metadata.MongoMetadataStore" destroy-method="close">

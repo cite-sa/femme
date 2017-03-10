@@ -40,13 +40,21 @@ public class QueryNode {
 		}
 	}
 
-	private StringBuilder nodePath;
+	private StringBuilder nodePath = new StringBuilder();
 
-	private StringBuilder filterPath;
+	private StringBuilder filterPath = new StringBuilder();
 
 	private Operator operator;
 
 	private String value;
+
+	public QueryNode() {
+
+	}
+
+	public QueryNode(QueryNode queryNode) {
+		this.nodePath = queryNode.getNodePath();
+	}
 
 	public StringBuilder getNodePath() {
 		return nodePath;

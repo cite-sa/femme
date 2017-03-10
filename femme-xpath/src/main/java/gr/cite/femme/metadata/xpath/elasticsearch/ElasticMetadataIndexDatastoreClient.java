@@ -1,21 +1,13 @@
 package gr.cite.femme.metadata.xpath.elasticsearch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.UUID;
 
 public class ElasticMetadataIndexDatastoreClient {
 
@@ -23,6 +15,9 @@ public class ElasticMetadataIndexDatastoreClient {
 	
 	private static final String ELASTICSEARCH_HOST_NAME = "localhost";
 	private static final int ELASTICSEARCH_PORT = 9200;
+	private static final String ELASTICSEARCH_INDEX_NAME = "metadataindex";
+
+	private String indexName;
 
 	private RestClient client;
 
@@ -33,22 +28,13 @@ public class ElasticMetadataIndexDatastoreClient {
 	public ElasticMetadataIndexDatastoreClient(String hostName, int port) throws UnknownHostException {
 		/*client = new PreBuiltTransportClient(Settings.EMPTY)
 				.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), port));*/
+		this.indexName = ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_INDEX_NAME;
 		client = RestClient.builder(new HttpHost(hostName, port, "http")).build();
-
-		/*String nestedValueMapping = "{" +
-			"\"mappings\": {" +
-				"\"jsonMetadatum\": {" +
-					"\"properties\": {" +
-						"\"value.wcs:CoverageDescriptions\": {" +
-							"\"type\": \"nested\"" +
-						"}" +
-					"}" +
-				"}" +
-			"}" +
-		"}";*/
-		//HttpEntity entity = new NStringEntity(nestedValueMapping, ContentType.APPLICATION_JSON);
 		try {
-			Response indexResponse = client.performRequest("PUT", "/metadataindex");
+			Response indexExistenceResponse = client.performRequest("HEAD", "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_INDEX_NAME);
+			if (indexExistenceResponse.getStatusLine().getStatusCode() == 404) {
+				client.performRequest("PUT", "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_INDEX_NAME);
+			}
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -60,5 +46,9 @@ public class ElasticMetadataIndexDatastoreClient {
 
 	public RestClient get() {
 		return client;
+	}
+
+	public String getIndexName() {
+		return indexName;
 	}
 }

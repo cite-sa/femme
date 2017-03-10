@@ -3,6 +3,8 @@ package gr.cite.femme.metadata.xpath.elasticsearch.utils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
 
+import java.util.List;
+
 public class ElasticResponseHit {
 
 	@JsonProperty("_index")
@@ -19,6 +21,9 @@ public class ElasticResponseHit {
 
 	@JsonProperty("_source")
 	private IndexableMetadatum source;
+
+	@JsonProperty("sort")
+	private List<Integer> sort;
 
 	public String getIndex() {
 		return index;
@@ -58,5 +63,13 @@ public class ElasticResponseHit {
 
 	public void setSource(IndexableMetadatum source) {
 		this.source = source;
+	}
+
+	public List<Integer> getSort() {
+		return sort;
+	}
+
+	public void setSort(List<Integer> sort) {
+		this.sort = sort;
 	}
 }

@@ -1,12 +1,10 @@
 package gr.cite.femme.datastore.mongodb.metadata;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.femme.metadata.xpath.MetadataXPath;
-import gr.cite.femme.metadata.xpath.exceptions.MetadataIndexException;
+import gr.cite.femme.exceptions.MetadataIndexException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,22 +57,11 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void insert(Metadatum metadatum) throws MetadataStoreException {
+	public void insert(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
 
 		getMetadataStore(metadatum).insert(metadatum);
 		if (isXPathable(metadatum)) {
-			try {
-				metadataXPath.index(metadatum);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
-			} catch (MetadataIndexException e) {
-				logger.error(e.getMessage(), e);
-				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
-			} catch (HashGenerationException e) {
-				logger.error(e.getMessage(), e);
-				throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
-			}
+			metadataXPath.index(metadatum);
 		}
 
 		/*ExecutorService executor = Executors.newFixedThreadPool(2);

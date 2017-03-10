@@ -23,14 +23,12 @@ public class MetadatumIndexCodec implements CollectibleCodec<MetadatumIndex> {
 	
 	private CodecRegistry codecRegistry;
 	
-
 	public MetadatumIndexCodec(CodecRegistry codecRegistry) {
 		this.codecRegistry = codecRegistry;
 	}
 	
 	@Override
 	public void encode(BsonWriter writer, MetadatumIndex value, EncoderContext encoderContext) {
-		
 		if (!documentHasId(value)) {
 			generateIdIfAbsentFromDocument(value);
 		}			
@@ -60,10 +58,9 @@ public class MetadatumIndexCodec implements CollectibleCodec<MetadatumIndex> {
 	@Override
 	public MetadatumIndex decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null, elementId = null, contentType = null, value = null;
-		Document valueDocument = null;
+		Document valueDocument;
 		
 		reader.readStartDocument();
-		
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
             
@@ -78,7 +75,6 @@ public class MetadatumIndexCodec implements CollectibleCodec<MetadatumIndex> {
         		value = valueDocument.toJson();
             }
         }
-
         reader.readEndDocument();
         
         return new MetadatumIndex(id, elementId, contentType, value);

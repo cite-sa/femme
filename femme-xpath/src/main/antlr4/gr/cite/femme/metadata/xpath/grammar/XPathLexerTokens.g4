@@ -80,7 +80,7 @@ LOWER_THAN: '<';
 LOWER_THAN_SLASH: '</';
 LOWER_OR_EQUAL_THAN: '<=';
 MAX:('m'|'M')('a'|'A')('x'|'X');
-METADATA: ('m' | 'M')('e' | 'E')('t' | 'T')('a' | 'A')('d' | 'D')('a' | 'A')('t' | 'T')('a' | 'A');
+//METADATA: ('m' | 'M')('e' | 'E')('t' | 'T')('a' | 'A')('d' | 'D')('a' | 'A')('t' | 'T')('a' | 'A');
 MIN: ('m'|'M')('i'|'I')('n'|'N');
 MINUS: '-';
 MIXED:('m'|'M')('i'|'I')('x'|'X')('e'|'E')('d'|'D');
