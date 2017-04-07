@@ -8,7 +8,6 @@ public class Server {
 	
 	private String metadata;
 
-	
 	public String getId() {
 		return id;
 	}

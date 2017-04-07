@@ -19,7 +19,7 @@ public class ElasticResponseContent {
 	private boolean timedOut;
 
 	@JsonProperty("_shards")
-	private Map<String, Integer> shards;
+	private ElasticResponseShards shards;
 
 	@JsonProperty("terminated_early")
 	private boolean terminatedEarly;
@@ -52,11 +52,11 @@ public class ElasticResponseContent {
 		this.timedOut = timedOut;
 	}
 
-	public Map<String, Integer> getShards() {
+	public ElasticResponseShards getShards() {
 		return shards;
 	}
 
-	public void setShards(Map<String, Integer> shards) {
+	public void setShards(ElasticResponseShards shards) {
 		this.shards = shards;
 	}
 

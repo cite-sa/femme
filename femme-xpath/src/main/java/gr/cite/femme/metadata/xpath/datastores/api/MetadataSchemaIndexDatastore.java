@@ -8,7 +8,7 @@ public interface MetadataSchemaIndexDatastore {
 
 	public void close();
 
-	public void indexSchema(MetadataSchema metadataSchema);
+	public void index(MetadataSchema metadataSchema);
 
 	public List<MetadataSchema> findMetadataIndexPath(String regex);
 

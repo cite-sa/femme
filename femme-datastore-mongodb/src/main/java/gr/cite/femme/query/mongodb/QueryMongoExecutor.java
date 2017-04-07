@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -53,14 +52,15 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	private Instant totalQueryDuration;
 
 
-	public QueryMongoExecutor(MongoDatastore datastore, Class<T> elementSubtype) {
+	public QueryMongoExecutor(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
 		this.datastore = datastore;
-		if (elementSubtype == DataElement.class) {
+		this.collection = this.datastore.getCollection(elementSubtype);
+		/*if (elementSubtype == DataElement.class) {
 			this.collection = (MongoCollection<T>) datastore.getDataElements();
 		} else if (elementSubtype == Collection.class) {
 			this.collection = (MongoCollection<T>) datastore.getCollections();
-		}
-		this.metadataStore = datastore.getMetadataStore();
+		}*/
+		this.metadataStore = metadataStore;
 	}
 	
 	public QueryExecutor<T> options(QueryOptionsMessenger options) {
@@ -68,9 +68,10 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 		if (options != null) {
 			if (options.getInclude() != null && !options.getInclude().contains("metadata")) {
-				loadMetadata = true;
+				loadMetadata = false;
 			}
 			if (options.getExclude() != null && options.getExclude().contains("metadata")) {
+				options.getExclude().remove("metadata");
 				loadMetadata = false;
 			}
 			if (results != null) {
@@ -87,10 +88,14 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 					results.sort(Sorts.descending(options.getDesc()));
 				}
 				if (options.getInclude() != null) {
-					results.projection(Projections.include(new ArrayList<>(options.getInclude())));
+					results.projection(Projections.include(
+							options.getInclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).collect(Collectors.toList())
+					));
 				}
 				if (options.getExclude() != null) {
-					results.projection(Projections.exclude(new ArrayList<>(options.getExclude())));
+					results.projection(Projections.exclude(
+							options.getExclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).collect(Collectors.toList())
+					));
 				}
 			}
 		}
@@ -101,7 +106,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	public <U extends Criterion> QueryExecutor<T> find(Query<U> query) {
 		totalQueryDuration = Instant.now();
 		if (query != null) {
-			queryDocument = postProcessQuery((QueryMongo) query, datastore);
+			this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
 			logger.info("Query: " + queryDocument.toJson());
 		}
 		return this;
@@ -137,9 +142,9 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 										.distinct().collect(Collectors.toList())));
 			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
 
-			queryDocument = queryDocument == null
+			this.queryDocument = this.queryDocument == null
 					? retrieveXPathSatisfyElementsQuery
-					: new Document().append("$and", Arrays.asList(queryDocument, retrieveXPathSatisfyElementsQuery));
+					: new Document().append("$and", Arrays.asList(this.queryDocument, retrieveXPathSatisfyElementsQuery));
 		}
 		return this;
 	}
@@ -148,7 +153,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	public List<T> list() throws DatastoreException {
 		List<T> elements = new ArrayList<>();
 
-		results = queryDocument == null ? collection.find() : collection.find(queryDocument);
+		results = this.queryDocument == null ? collection.find() : collection.find(this.queryDocument);
 		options(options);
 
 		if (loadMetadata) {
@@ -192,11 +197,12 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public T first() throws DatastoreException {
-		T element = results.first();
+		results = this.queryDocument == null ? collection.find().limit(1) : collection.find(this.queryDocument).limit(1);
 		options(options);
+		T element = results.first();
 		if (element != null && loadMetadata) {
 			try {
-				element.setMetadata(metadataStore.find(element.getId()));
+				element.setMetadata(this.metadataStore.find(element.getId()));
 			} catch (MetadataStoreException e) {
 				logger.error(e.getMessage(), e);
 				throw new DatastoreException(e.getMessage(), e);
@@ -219,7 +225,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				//List<Document> docs = postProcessIdField((Object)inclusionOperatorDocument.get("$in_any_collection"));
 				
 				//System.out.println(docs);
-				
+
 				datastore.getCollections().find(new Document("$or", inclusionOperatorDocument.get("$in_any_collection")))
 					/*.projection(Projections.include(FieldNames.ID))*/
 					.into(collections);

@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class HashGeneratorUtils {
+public class ChecksumGeneratorUtils {
 	public static String generateMD5(String value) throws HashGenerationException {
 		return hash(value, "MD5");
 
@@ -30,7 +30,7 @@ public class HashGeneratorUtils {
 
 			return convertByteArrayToHexString(hashedBytes);
 		} catch (NoSuchAlgorithmException | IOException ex) {
-			throw new HashGenerationException("Could not generate hash from string", ex);
+			throw new HashGenerationException("Could not generate getChecksum from string", ex);
 		}
 
 	}
@@ -54,6 +54,6 @@ public class HashGeneratorUtils {
 				.queryParam("coverageId", "hrl0000c067_07_if185l_trr3")
 				.request().get(String.class);
 
-		System.out.println(HashGeneratorUtils.generateMD5(xml));
+		System.out.println(ChecksumGeneratorUtils.generateMD5(xml));
 	}
 }

@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import gr.cite.femme.metadata.xpath.ReIndexingProcess;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.metadata.xpath.datastores.api.MetadataIndexDatastore;
@@ -40,8 +41,8 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
         schemasCollection = mongoClient.getSchemasCollection();
     }
 
-    public MongoMetadataAndSchemaIndexDatastore(String dbHost) {
-        mongoClient = new MongoMetadataIndexDatastoreClient(dbHost, true);
+    public MongoMetadataAndSchemaIndexDatastore(String host, int port, String name) {
+        mongoClient = new MongoMetadataIndexDatastoreClient(host, port, name, true);
         //materializedPaths = mongoClient.getMaterializedPaths();
         metadataCollection = mongoClient.getMetadataCollection();
         schemasCollection = mongoClient.getSchemasCollection();
@@ -52,9 +53,9 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
     }
 
     @Override
-    public void indexSchema(MetadataSchema schema) {
+    public void index(MetadataSchema schema) {
         List<MetadataSchema> existingSchema = new ArrayList<>();
-        schemasCollection.find(Filters.eq("hash", schema.getHash())).into(existingSchema);
+        schemasCollection.find(Filters.eq("checksum", schema.getChecksum())).into(existingSchema);
         if (existingSchema.size() == 0) {
             schemasCollection.insertOne(schema);
         }
@@ -104,8 +105,13 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
     }
 
     @Override
-    public void indexMetadatum(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) {
+    public void index(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) {
         metadataCollection.insertOne(indexableMetadatum);
+    }
+
+    @Override
+    public ReIndexingProcess retrieveReIndexer(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore) {
+        return null;
     }
 
     @Override
@@ -119,8 +125,6 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
         metadataCollection.find(Document.parse("")).into(results);
         return results;
     }
-
-
 
     /*public List<IndexableMetadatum> findMetadata(Bson query) {
         List<IndexableMetadatum> metadata = new ArrayList<>();

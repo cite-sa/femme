@@ -22,7 +22,8 @@ public class MongoMetadataIndexDatastoreClient {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataIndexDatastoreClient.class);
 
-	private static final String DATABASE_HOST = "localhost:27017";
+	private static final String DATABASE_HOST = "localhost";
+	private static final int DATABASE_PORT = 27017;
 	private static final String DATABASE_NAME = "metadata-schema-db";
 	private static final String TRANSFORMED_METADATA_COLLECTION_NAME = "metadata";
 	private static final String METADATA_SCHEMAS_COLLECTION_NAME = "metadataSchemas";
@@ -34,16 +35,16 @@ public class MongoMetadataIndexDatastoreClient {
 	private MongoCollection<MetadataSchema> schemasCollection;
 
 	public MongoMetadataIndexDatastoreClient() {
-		this(MongoMetadataIndexDatastoreClient.DATABASE_HOST);
+		this(MongoMetadataIndexDatastoreClient.DATABASE_HOST, MongoMetadataIndexDatastoreClient.DATABASE_PORT, MongoMetadataIndexDatastoreClient.DATABASE_NAME);
 	}
 
-	public MongoMetadataIndexDatastoreClient(String dbHost) {
-		this(dbHost, false);
+	public MongoMetadataIndexDatastoreClient(String host, int port, String name) {
+		this(host, port,  name, false);
 	}
 
-	public MongoMetadataIndexDatastoreClient(String dbHost, boolean metadataIndexStorage) {
-		client = new MongoClient(dbHost);
-		database = client.getDatabase(MongoMetadataIndexDatastoreClient.DATABASE_NAME);
+	public MongoMetadataIndexDatastoreClient(String host, int port, String name, boolean metadataIndexStorage) {
+		client = new MongoClient(host, port);
+		database = client.getDatabase(name);
 
 		List<CodecProvider> codecProviders = new ArrayList<>();
 		codecProviders.add(new MetadataSchemaCodecProvider());
@@ -86,7 +87,7 @@ public class MongoMetadataIndexDatastoreClient {
 		if (metadataCollection != null) {
 			metadataCollection.createIndex(Indexes.ascending("metadatumId"), uniqueIndex);
 		}
-		schemasCollection.createIndex(Indexes.ascending("schema.path", "hash"), uniqueIndex);
+		schemasCollection.createIndex(Indexes.ascending("checksum"), uniqueIndex);
 	}
 
 }

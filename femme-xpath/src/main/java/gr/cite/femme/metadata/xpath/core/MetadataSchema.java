@@ -14,14 +14,14 @@ public class MetadataSchema {
 
     public MetadataSchema(MetadataSchemaAnalysis metadataSchemaAnalysis) throws HashGenerationException {
         this.schema = metadataSchemaAnalysis.getSchema();
-        this.hash = metadataSchemaAnalysis.hash();
+        this.checksum = metadataSchemaAnalysis.getChecksum();
     }
 
     private String id;
 
     private Set<JSONPath> schema;
 
-    private String hash;
+    private String checksum;
 
     public String getId() {
         return id;
@@ -39,11 +39,11 @@ public class MetadataSchema {
         this.schema = schema;
     }
 
-    public String getHash() {
-        return hash;
+    public String getChecksum() {
+        return checksum;
     }
 
-    public void setHash(String hash) {
-        this.hash = hash;
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
     }
 }

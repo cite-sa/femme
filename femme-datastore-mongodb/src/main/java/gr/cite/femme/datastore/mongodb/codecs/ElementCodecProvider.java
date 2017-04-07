@@ -13,9 +13,10 @@ public class ElementCodecProvider implements CodecProvider {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
-		if (clazz == Element.class || clazz == DataElement.class || clazz == Collection.class || clazz == DataElementMongo.class) {
+		if (clazz.equals(Element.class) || clazz.equals(DataElement.class) || clazz.equals(Collection.class) || clazz.equals(DataElementMongo.class)) {
 			return (Codec<T>) new ElementCodec(registry);
+		} else {
+			return null;
 		}
-		return null;
 	}
 }

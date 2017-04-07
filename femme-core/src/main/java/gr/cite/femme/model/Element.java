@@ -10,23 +10,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonInclude(Include.NON_EMPTY)
 public class Element {
 
-	@JsonProperty
+	@JsonProperty("id")
 	private String id;
 	
-	@JsonProperty
+	@JsonProperty("name")
 	private String name;
 	
-	@JsonProperty
+	@JsonProperty("endpoint")
 	private String endpoint;
 
-	@JsonProperty
+	@JsonProperty("metadata")
 	private List<Metadatum> metadata;
 
-	@JsonProperty
+	@JsonProperty("systemicMetadata")
 	private SystemicMetadata systemicMetadata;
-	
-	private Status status;
-	
+
 	public Element() {
 		this.metadata = new ArrayList<>();
 		this.systemicMetadata = new SystemicMetadata();
@@ -102,14 +100,6 @@ public class Element {
 
 	public void setSystemicMetadata(SystemicMetadata systemicMetadata) {
 		this.systemicMetadata = systemicMetadata;
-	}
-
-	public Status getStatus() {
-		return status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
 	}
 
 	@Override

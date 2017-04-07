@@ -1,6 +1,7 @@
 package gr.cite.earthserver.wcs.utils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ public final class WCSFemmeMapper {
 		
 
 		/*collectionBuilder.metadatum(fromWCSMetadata(response, GET_CAPABILITIES));*/
-		collection.setMetadata(Arrays.asList(WCSFemmeMapper.fromWCSMetadata(response, GET_CAPABILITIES)));
+		collection.setMetadata(Collections.singletonList(WCSFemmeMapper.fromWCSMetadata(response, GET_CAPABILITIES)));
 
 		/*return collectionBuilder.build();*/
 		return collection;
@@ -97,7 +98,7 @@ public final class WCSFemmeMapper {
 
 		List<Server> servers = null;
 		if (dataElement.getCollections() != null) {
-			servers = dataElement.getCollections().stream().map(collection -> WCSFemmeMapper.collectionToServer(collection))
+			servers = dataElement.getCollections().stream().map(WCSFemmeMapper::collectionToServer)
 					.collect(Collectors.toList());
 		}
 		coverage.setServers(servers);
@@ -105,8 +106,8 @@ public final class WCSFemmeMapper {
 		String describeCoverage = "";
 		if (dataElement.getMetadata() != null && dataElement.getMetadata().size() > 0) {
 			describeCoverage = dataElement.getMetadata().stream()
-					.filter(metadatum -> metadatum != null ? WCSFemmeMapper.DESCRIBE_COVERAGE.equals(metadatum.getName()) : false)
-					.findFirst().get().getValue();
+					.filter(metadatum -> metadatum != null && WCSFemmeMapper.DESCRIBE_COVERAGE.equals(metadatum.getName()))
+					.findFirst().orElse(null).getValue();
 		}
 		coverage.setMetadata(describeCoverage);
 
@@ -122,8 +123,8 @@ public final class WCSFemmeMapper {
 			String describeCoverage = "";
 			if (collection.getMetadata() != null && collection.getMetadata().size() > 0) {
 				describeCoverage = collection.getMetadata().stream()
-						.filter(metadatum -> metadatum != null ? WCSFemmeMapper.GET_CAPABILITIES.equals(metadatum.getName()) : false)
-						.findFirst().get().getValue();
+						.filter(metadatum -> metadatum != null && WCSFemmeMapper.GET_CAPABILITIES.equals(metadatum.getName()))
+						.findFirst().orElse(null).getValue();
 			}
 			server.setMetadata(describeCoverage);
 

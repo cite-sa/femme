@@ -23,7 +23,6 @@ public class JsonDocument {
 	private static final Logger logger = LoggerFactory.getLogger(JsonDocument.class);
 	
 	private JsonNode rootNode;
-
 	public JsonNode getRootNode() {
 		return rootNode;
 	}
@@ -32,17 +31,6 @@ public class JsonDocument {
 		this.rootNode = rootNode;
 	}
 
-	/*@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("{");
-		builder.append("\"" + rootNode.getName() + "\"");
-		builder.append(":");
-		builder.append(rootNode.toString());
-		builder.append("}");
-		
-		return builder.toString();
-	}*/
 	@Override
 	public String toString() {
 		String json = null;
@@ -54,21 +42,21 @@ public class JsonDocument {
 		}
 		return json;
 	}
-	
 }
 
 class JsonDocumentSerializer extends JsonSerializer<JsonDocument> {
-
 	@Override
-	public void serialize(JsonDocument jsonDoc, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-			throws IOException, JsonProcessingException {
-		
+	public void serialize(JsonDocument jsonDoc, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
 		jsonGenerator.writeStartObject();
-		
-		jsonGenerator.writeFieldName(jsonDoc.getRootNode().getName());
-		jsonGenerator.writeObject(jsonDoc.getRootNode());
-		
+
+		if (jsonDoc != null) {
+			if (jsonDoc.getRootNode() != null) {
+				if (jsonDoc.getRootNode().getName() != null) {
+					jsonGenerator.writeFieldName(jsonDoc.getRootNode().getName());
+				}
+				jsonGenerator.writeObject(jsonDoc.getRootNode());
+			}
+		}
 		jsonGenerator.writeEndObject();
 	}
-	
 }

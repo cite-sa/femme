@@ -4,9 +4,6 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import com.mongodb.client.gridfs.GridFSBucket;
-
-import gr.cite.femme.datastore.mongodb.metadata.MetadataGridFS;
 import gr.cite.femme.model.Metadatum;
 
 public class MetadatumCodecProvider implements CodecProvider {

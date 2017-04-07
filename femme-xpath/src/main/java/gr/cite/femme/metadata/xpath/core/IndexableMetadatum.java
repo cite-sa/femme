@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 @JsonSerialize(using = CustomIndexableMetadatumSerializer.class)
@@ -37,6 +38,10 @@ public class IndexableMetadatum {
 
     @JsonProperty("value")
     private String value;
+
+    private Instant created;
+
+    private Instant modified;
 
     public String getId() {
         return id;
@@ -84,6 +89,22 @@ public class IndexableMetadatum {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public Instant getCreated() {
+        return created;
+    }
+
+    public void setCreated(Instant created) {
+        this.created = created;
+    }
+
+    public Instant getModified() {
+        return modified;
+    }
+
+    public void setModified(Instant modified) {
+        this.modified = modified;
     }
 }
 

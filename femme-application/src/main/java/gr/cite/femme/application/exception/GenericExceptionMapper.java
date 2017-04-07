@@ -30,7 +30,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	}
 
 	private Integer getHttpStatus(Throwable exception) {
-		if(exception instanceof WebApplicationException) {
+		if (exception instanceof WebApplicationException) {
 			return ((WebApplicationException) exception).getResponse().getStatus();
 		} else {
 			return Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();

@@ -15,7 +15,7 @@ public class MetadataSchemaCodec implements CollectibleCodec<MetadataSchema> {
 
     private static final String ID_KEY = "_id";
     private static final String METADATA_SCHEMA_SCHEMA_KEY = "schema";
-    private static final String METADATA_SCHEMA_HASH_KEY = "hash";
+    private static final String METADATA_SCHEMA_HASH_KEY = "checksum";
     private static final String METADATA_SCHEMA_PATH_KEY = "path";
     private static final String METADATA_SCHEMA_PATH_ARRAY_KEY = "array";
 
@@ -37,8 +37,8 @@ public class MetadataSchemaCodec implements CollectibleCodec<MetadataSchema> {
             }
             writer.writeEndArray();
         }
-        if (value.getHash() != null) {
-            writer.writeString(MetadataSchemaCodec.METADATA_SCHEMA_HASH_KEY, value.getHash());
+        if (value.getChecksum() != null) {
+            writer.writeString(MetadataSchemaCodec.METADATA_SCHEMA_HASH_KEY, value.getChecksum());
         }
         writer.writeEndDocument();
     }
@@ -77,7 +77,7 @@ public class MetadataSchemaCodec implements CollectibleCodec<MetadataSchema> {
         MetadataSchema metadataSchema = new MetadataSchema();
         metadataSchema.setId(id);
         metadataSchema.setSchema(schema);
-        metadataSchema.setHash(hash);
+        metadataSchema.setChecksum(hash);
         return metadataSchema;
     }
 

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -15,6 +16,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import gr.cite.femme.Femme;
+import gr.cite.femme.exceptions.FemmeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,15 +37,23 @@ import gr.cite.femme.query.api.Query;
 public class FemmeAdminResource {
 	
 	private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.class);
-	
+	private static final String COLLECTIONS_PATH = "collections";
+	private static final String DATA_ELEMENTS_PATH = "dataElements";
+
 	@Context
 	private UriInfo uriInfo;
-	
-	private Datastore<Criterion, Query<Criterion>> datastore;
+
+	//private Datastore datastore;
+	private Femme femme;
+
+	/*@Inject
+	public FemmeAdminResource(Datastore datastore) {
+		this.datastore = datastore;
+	}*/
 
 	@Inject
-	public FemmeAdminResource(Datastore<Criterion, Query<Criterion>> datastore) {
-		this.datastore = datastore;
+	public FemmeAdminResource(Femme femme) {
+		this.femme = femme;
 	}
 
 	@GET
@@ -52,85 +63,134 @@ public class FemmeAdminResource {
 	}
 	
 	@POST
-	@Path("collections")
+	@Path(FemmeAdminResource.COLLECTIONS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response insert(Collection collection) {
-		String id = null;
-		String location = null;
+		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<String> entity = new FemmeResponseEntity<String>();
+		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
 		
 		try {
 			if (collection.getName() == null) {
 				collection.setName(UUID.randomUUID().toString());
 			}
-			id = datastore.insert(collection);
-			location = uriInfo.getBaseUri() + "collections/" + id;
-			entity.setHref(location);
-			entity.setBody(id);
+			//this.datastore.insert(collection);
+			this.femme.insert(collection);
+			location = this.uriInfo.getBaseUriBuilder().path(FemmeResource.class).path(FemmeAdminResource.COLLECTIONS_PATH).path(collection.getId()).build();
+			entity.setHref(location.toString());
+			entity.setBody(collection.getId());
 			
-			femmeResponse.setStatus(201).setMessage("Collection " + id + " successfully inserted").setEntity(entity);
-			logger.info("Collection " + id + " successfully inserted");
-		} catch (DatastoreException e) {
+			femmeResponse.setStatus(201).setMessage("Collection " + collection.getId() + " successfully inserted").setEntity(entity);
+			logger.info("Collection " + collection.getId() + " successfully inserted");
+		} catch (FemmeException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());
 			return Response.serverError().entity(femmeResponse).build();
 		}
-		
-		return Response.created(URI.create(location)).entity(femmeResponse).build();
+		return Response.created(location).entity(femmeResponse).build();
 	}
-	
+
 	@POST
-	@Path("dataElements")
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response insert(DataElement dataElement) {
-		String id = null;
-		String location = null;
+		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<String> entity = new FemmeResponseEntity<String>();
+		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
 		
 		try {
-			id = datastore.insert(dataElement);
-			location = uriInfo.getBaseUri() + "dataElements/" + id;
-			entity.setHref(location);
-			entity.setBody(id);
+			//this.datastore.insert(dataElement);
+			this.femme.insert(dataElement);
+			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
+			entity.setHref(location.toString());
+			entity.setBody(dataElement.getId());
 			
-			femmeResponse.setStatus(201).setMessage("DataElement " + id + " successfully inserted").setEntity(entity);
-			logger.info("DataElement " + id + " successfully inserted");
-		} catch (DatastoreException e) {
+			femmeResponse.setStatus(201).setMessage("DataElement " + dataElement.getId() + " successfully inserted").setEntity(entity);
+			logger.info("DataElement " + dataElement.getId() + " successfully inserted");
+		} catch (FemmeException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());
 			return Response.serverError().entity(femmeResponse).build();
 		}
-
-		return Response.created(URI.create(location)).entity(femmeResponse).build();
+		return Response.created(location).entity(femmeResponse).build();
 	}
 
 	@POST
-	@Path("collections/{collectionId}/dataElements")
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addToCollection(@PathParam("collectionId") String collectionId, DataElement dataElement) {
-		String location = null;
-		DataElement insertedDataElement = null;
+		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<String> entity = new FemmeResponseEntity<String>();
+		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
 		
 		try {
-			insertedDataElement = datastore.addToCollection(dataElement, collectionId);
-			location = uriInfo.getBaseUri() + "collections/" + collectionId + "/dataElements/" + insertedDataElement.getId();
-			entity.setHref(location);
-			entity.setBody(insertedDataElement.getId());
+			//this.datastore.addToCollection(dataElement, collectionId);
+			this.femme.addToCollection(dataElement, collectionId);
+			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
+			entity.setHref(location.toString());
+			entity.setBody(dataElement.getId());
 			
-			femmeResponse.setStatus(201).setMessage("DataElement " + insertedDataElement.getId() + " successfully inserted in collection " + collectionId)
-				.setEntity(entity);
-			logger.info("DataElement " + insertedDataElement.getId() + " successfully inserted in Collection " + collectionId);
+			femmeResponse.setStatus(201)
+					.setMessage("DataElement " + dataElement.getId() + " successfully inserted in collection " + collectionId)
+					.setEntity(entity);
+			logger.info("DataElement " + dataElement.getId() + " successfully inserted in Collection " + collectionId);
+		} catch (FemmeException e) {
+			logger.error(e.getMessage(), e);
+			femmeResponse.setStatus(500).setMessage(e.getMessage());
+			return Response.serverError().entity(femmeResponse).build();
+		}
+		return Response.created(location).entity(femmeResponse).build();
+	}
+
+	@POST
+	@Path("index")
+	public Response reIndex() {
+		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
+		try {
+			this.femme.reIndex();
+			femmeResponse.setStatus(200).setMessage("Reindexing successfully completed");
+			logger.info("Reindexing successfully completed");
+		} catch (FemmeException e) {
+			logger.error(e.getMessage(), e);
+			femmeResponse.setStatus(500).setMessage(e.getMessage());
+			return Response.serverError().entity(femmeResponse).build();
+		}
+		return Response.ok().entity(femmeResponse).build();
+	}
+
+	/*@DELETE
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}")
+	public Response deleteCollection(@PathParam("collectionId") String collectionId) {
+		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
+
+		try {
+			this.datastore.delete(collectionId, Collection.class);
+
+			femmeResponse.setStatus(200).setMessage("Collection " + collectionId + " successfully deleted");
+			logger.info("Collection " + collectionId + " successfully deleted");
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());
 			return Response.serverError().entity(femmeResponse).build();
 		}
-
-		return Response.created(URI.create(location)).entity(femmeResponse).build();
+		return Response.ok().entity(femmeResponse).build();
 	}
-	
+
+	@DELETE
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}")
+	public Response deleteDataElement(@PathParam("dataElementId") String dataElementId) {
+		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
+
+		try {
+			this.datastore.delete(dataElementId, DataElement.class);
+
+			femmeResponse.setStatus(200).setMessage("DataElement " + dataElementId + " successfully deleted");
+			logger.info("Collection " + dataElementId + " successfully deleted");
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			femmeResponse.setStatus(500).setMessage(e.getMessage());
+			return Response.serverError().entity(femmeResponse).build();
+		}
+		return Response.ok().entity(femmeResponse).build();
+	}*/
 }

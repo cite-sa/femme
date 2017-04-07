@@ -6,12 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gr.cite.femme.model.Status;
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
+import org.bson.codecs.Codec;
 import org.bson.codecs.CollectibleCodec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
@@ -26,14 +30,8 @@ import gr.cite.femme.model.Element;
 /*import gr.cite.femme.model.DateTime;*/
 import gr.cite.femme.model.SystemicMetadata;
 
-public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>{
-	/*private static final String SYSTEMIC_METADATA_ID_KEY = "_id";
-	private static final String SYSTEMIC_METADATA_CREATED_KEY = "created";
-	private static final String SYSTEMIC_METADATA_MODIFIED_KEY = "modified";
-	private static final String SYSTEMIC_METADATA_TIMESTAMP_KEY = "timestamp";
-	private static final String SYSTEMIC_METADATA_OFFSET_ID_KEY = "offsetId";
-	private static final String SYSTEMIC_METADATA_ZONE_ID_KEY = "zoneId";*/
-	
+public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
+	static private final ObjectMapper mapper = new ObjectMapper();
 	private CodecRegistry codecRegistry;
 	
 	public SystemicMetadataCodec(CodecRegistry codecRegistry) {
@@ -44,35 +42,38 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	public void encode(BsonWriter writer, SystemicMetadata value, EncoderContext encoderContext) {
 		writer.writeStartDocument();
 		
-		/*if (encoderContext.isEncodingCollectibleDocument()) {*/
-		if (!documentHasId(value)) {
+		/*if (!documentHasId(value)) {
 			generateIdIfAbsentFromDocument(value);
 		}
 		if (value.getId() != null) {
 			writer.writeObjectId(FieldNames.ID, new ObjectId(value.getId()));			
-		}
+		}*/
 		if (value.getCreated() != null) {
 			writer.writeDateTime(FieldNames.CREATED, value.getCreated().toEpochMilli());
 		}
 		if (value.getModified() != null) {
 			writer.writeDateTime(FieldNames.MODIFIED, value.getModified().toEpochMilli());
 		}
+		if (value.getStatus() != null) {
+			writer.writeInt32(FieldNames.STATUS, value.getStatus().getStatusCode());
+		}
 		if (value.getOther() != null && value.getOther().size() > 0) {
 			writer.writeName("other");
 			writer.writeStartDocument();
 
-//	        writer.writeObjectId(FieldNames.ID, new ObjectId());
-
 	        for (final Map.Entry<String, Object> entry : value.getOther().entrySet()) {
         		writer.writeName(entry.getKey());
-        		encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse((String)entry.getValue()));
-	        }
+				try {
+					encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(mapper.writeValueAsString(entry.getValue())));
+					//encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(entry.getValue()));
+
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
+			}
 	        writer.writeEndDocument();
 		}
-		
-		
-		
-		/*}*/
+
 		writer.writeEndDocument();
 	}
 	
@@ -88,10 +89,12 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 	public Class<SystemicMetadata> getEncoderClass() {
 		return SystemicMetadata.class;
 	}
+
 	@Override
 	public SystemicMetadata decode(BsonReader reader, DecoderContext decoderContext) {
-		String id = null;
+		//String id = null;
 		Instant created = null, modified = null;
+		Status status = null;
 		Map<String, Object> other = null;
 		
 		reader.readStartDocument();
@@ -99,13 +102,15 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
         while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
             String fieldName = reader.readName();
 		
-			if (fieldName.equals(FieldNames.ID)) {
+			/*if (fieldName.equals(FieldNames.ID)) {
 	        	id = reader.readObjectId().toString();
-	        } else if (fieldName.equals(FieldNames.CREATED)) {
+	        } else */if (fieldName.equals(FieldNames.CREATED)) {
 	        	created = Instant.ofEpochMilli(reader.readDateTime());
 	        } else if (fieldName.equals(FieldNames.MODIFIED)) {
 	        	modified = Instant.ofEpochMilli(reader.readDateTime());
-	        } else if (fieldName.equals("other")) {
+	        } else if (fieldName.equals(FieldNames.STATUS)) {
+				status = Status.getEnum(reader.readInt32());
+			} else if (fieldName.equals("other")) {
 	        	other = new HashMap<>();
 	        	reader.readStartDocument();
 	        	while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -124,8 +129,15 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
         }
 		
 		reader.readEndDocument();
-		
-		return new SystemicMetadata(id, created, modified, other);
+
+        SystemicMetadata systemicMetadata = new SystemicMetadata();
+        systemicMetadata.setCreated(created);
+		systemicMetadata.setModified(modified);
+		systemicMetadata.setStatus(status);
+		systemicMetadata.setOther(other);
+
+		//return new SystemicMetadata(id, created, modified, status, other);
+		return systemicMetadata;
 	}
 	
 	/*private DateTime decodeZonedDateTime(BsonReader reader) {
@@ -141,24 +153,26 @@ public class SystemicMetadataCodec implements CollectibleCodec<SystemicMetadata>
 		return new DateTime(ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of(zoneId)));
 	}*/
 	
-	@Override
+	/*@Override
 	public SystemicMetadata generateIdIfAbsentFromDocument(SystemicMetadata systemicMetadata) {
-		if (!documentHasId(systemicMetadata)) {
+		*//*if (!documentHasId(systemicMetadata)) {
 			systemicMetadata.setId(new ObjectId().toString());
 		}
-		return systemicMetadata;
+		return systemicMetadata;*//*
+		return null;
 	}
 	@Override
 	public boolean documentHasId(SystemicMetadata systemicMetadata) {
-		return systemicMetadata.getId() != null;
+		*//*return systemicMetadata.getId() != null;*//*
+		return false;
 	}
 	@Override
-	public BsonValue getDocumentId(SystemicMetadata systemicMetadata)
-	{
-	    if (!documentHasId(systemicMetadata))
+	public BsonValue getDocumentId(SystemicMetadata systemicMetadata) {
+	    *//*if (!documentHasId(systemicMetadata))
 	    {
 	        throw new IllegalStateException("The systemic metadata do not contain an _id");
 	    }
-	    return new BsonString(systemicMetadata.getId());
-	}
+	    return new BsonString(systemicMetadata.getId());*//*
+		return null;
+	}*/
 }

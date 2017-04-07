@@ -1,9 +1,12 @@
 package gr.cite.femme.metadata.xpath.mongodb;
 
+import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import org.bson.Document;
@@ -29,8 +32,8 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 		this.schemasCollection = mongoClient.getSchemasCollection();
 	}
 
-	public MongoMetadataSchemaIndexDatastore(String dbHost) {
-		this.mongoClient = new MongoMetadataIndexDatastoreClient(dbHost);
+	public MongoMetadataSchemaIndexDatastore(String host, int port, String name) {
+		this.mongoClient = new MongoMetadataIndexDatastoreClient(host, port, name);
 		this.schemasCollection = mongoClient.getSchemasCollection();
 	}
 
@@ -39,14 +42,23 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 	}
 
 	@Override
-	public void indexSchema(MetadataSchema schema) {
-		MetadataSchema existingSchema = schemasCollection.find(Filters.eq("hash", schema.getHash())).limit(1).first();
+	public void index(MetadataSchema schema) {
+		MetadataSchema existingSchema = schemasCollection.find(Filters.eq("checksum", schema.getChecksum())).limit(1).first();
 		if (existingSchema == null) {
 			schemasCollection.insertOne(schema);
 		} else {
 			schema.setId(existingSchema.getId());
 		}
 	}
+
+	/*public List<String> findSuperSchemas(MetadataSchema metadataSchema) {
+		metadataSchema.getSchema().removeIf(jsonPath -> !jsonPath.isArray());
+		findArrayMetadataIndexPathsAndGroupById().forEach(metadataSchemaWithArrays -> {
+
+		});
+
+		return null;
+	}*/
 
 	@Override
 	public List<MetadataSchema> findMetadataIndexPath(String regex) {
@@ -77,6 +89,20 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 		return metadataSchemas;
 	}
 
+	//@Override
+	public List<MetadataSchema> findArrayMetadataIndexPathsAndGroupById() {
+		List<MetadataSchema> metadataSchemas = new ArrayList<>();
+
+		this.schemasCollection.aggregate(Arrays.asList(
+				Aggregates.match(new Document().append("schema.array", true)),
+				Aggregates.unwind("$schema"),
+				Aggregates.match(new Document().append("schema.array", true)),
+				Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
+		)).into(metadataSchemas);
+
+		return metadataSchemas;
+	}
+
 	@Override
 	public List<MetadataSchema> findArrayMetadataIndexPaths(String id) {
 		List<MetadataSchema> metadataSchemas = new ArrayList<>();
@@ -85,11 +111,12 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 				Aggregates.match(Filters.and(Filters.eq("_id", new ObjectId(id)), new Document().append("schema.array", true))),
 				Aggregates.unwind("$schema"),
 				Aggregates.match(new Document().append("schema.array", true)),
-				Aggregates.group(null, Accumulators.addToSet("schema", "$schema"))
+				Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
 		)).into(metadataSchemas);
 
 		return metadataSchemas;
 	}
+
 }
 
 

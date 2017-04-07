@@ -31,37 +31,35 @@ public class XmlParser {
 		while (streamReader.hasNext()) {
 			streamReader.next();
 			switch (streamReader.getEventType()) {
-			case XMLStreamReader.START_ELEMENT:
-				jsonNode = xmlElementToJsonNode(streamReader, jsonNode);
-				break;
-			case XMLStreamReader.END_ELEMENT:
-				jsonNode = jsonNode.getParent();
-				break;
-			case XMLStreamReader.ATTRIBUTE:
-				System.out.println("ATTRIBUTE");
-				break;
-			case XMLStreamReader.CDATA:
-				System.out.println("CDATA");
-				break;
-			case XMLStreamReader.NAMESPACE:
-				System.out.println("NAMESPACE");
-				break;
-			case XMLStreamReader.CHARACTERS:
-
-				String text = streamReader.getText().trim();
-				if (StringUtils.isBlank(text)) {
+				case XMLStreamReader.START_ELEMENT:
+					jsonNode = xmlElementToJsonNode(streamReader, jsonNode);
 					break;
-				} else {
-					jsonNode.setText(text);
-				}
-
-				break;
-			case XMLStreamReader.END_DOCUMENT:
-				logger.debug("XML document parsing completed.");
-				break;				
-			default:
-				logger.error("Invalid event type.");
-				break;
+				case XMLStreamReader.END_ELEMENT:
+					jsonNode = jsonNode.getParent();
+					break;
+				case XMLStreamReader.ATTRIBUTE:
+					System.out.println("ATTRIBUTE");
+					break;
+				case XMLStreamReader.CDATA:
+					System.out.println("CDATA");
+					break;
+				case XMLStreamReader.NAMESPACE:
+					System.out.println("NAMESPACE");
+					break;
+				case XMLStreamReader.CHARACTERS:
+					String text = streamReader.getText().trim();
+					if (StringUtils.isBlank(text)) {
+						break;
+					} else {
+						jsonNode.setText(text);
+					}
+					break;
+				case XMLStreamReader.END_DOCUMENT:
+					logger.debug("XML document parsing completed.");
+					break;
+				default:
+					logger.error("Invalid event type.");
+					break;
 			}
 		}
 		return jsonDoc;
@@ -98,7 +96,6 @@ public class XmlParser {
 					attributeNameBuilder.append(":");
 				}
 				String attributeName = attributeNameBuilder.append(streamReader.getAttributeLocalName(i)).toString();
-				
 				attributes.put(attributeName, streamReader.getAttributeValue(i));
 			}
 		}

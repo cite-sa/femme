@@ -7,11 +7,14 @@ import gr.cite.femme.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.metadata.xpath.datastores.api.MetadataIndexDatastore;
 import gr.cite.femme.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore;
+import gr.cite.femme.metadata.xpath.elasticsearch.ElasticReindexingProcess;
 import gr.cite.femme.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.metadata.xpath.elasticsearch.utils.Tree;
 import gr.cite.femme.exceptions.MetadataIndexException;
 import gr.cite.femme.metadata.xpath.grammar.XPathLexer;
 import gr.cite.femme.metadata.xpath.grammar.XPathParser;
+import gr.cite.femme.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore;
 import gr.cite.femme.metadata.xpath.parser.visitors.MongoXPathVisitor;
 import gr.cite.femme.model.Metadatum;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -23,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -34,15 +38,30 @@ public class MetadataXPath {
 
     private MetadataIndexDatastore metadataIndexDatastore;
     private MetadataSchemaIndexDatastore metadataSchemaIndexDatastore;
+    private ReIndexingProcess reIndexingProcess;
+
+    private boolean reIndexingInProgress = false;
+    //private ReIndexingProcess reIndexer;
+
+    public MetadataXPath() {
+        this.metadataSchemaIndexDatastore = new MongoMetadataSchemaIndexDatastore();
+        try {
+            this.metadataIndexDatastore = new ElasticMetadataIndexDatastore(this.metadataSchemaIndexDatastore);
+        } catch (UnknownHostException | MetadataIndexException e) {
+            logger.error("Metadata index datastore initialization failed", e);
+        }
+        this.reIndexingProcess = this.metadataIndexDatastore.retrieveReIndexer(this.metadataSchemaIndexDatastore);
+    }
 
     public MetadataXPath(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, MetadataIndexDatastore metadataIndexDatastore) {
         this.metadataSchemaIndexDatastore = metadataSchemaIndexDatastore;
         this.metadataIndexDatastore = metadataIndexDatastore;
+        this.reIndexingProcess = this.metadataIndexDatastore.retrieveReIndexer(this.metadataSchemaIndexDatastore);
     }
 
     public void close() throws IOException {
-        metadataIndexDatastore.close();
-        metadataSchemaIndexDatastore.close();
+        this.metadataIndexDatastore.close();
+        this.metadataSchemaIndexDatastore.close();
     }
 
     public void index(Metadatum metadatum) throws UnsupportedOperationException, MetadataIndexException {
@@ -50,7 +69,7 @@ public class MetadataXPath {
         if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
             metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
         } else {
-            throw new UnsupportedOperationException("Metadata indexing is not yet supported for media type " + metadatum.getContentType().toString());
+            throw new UnsupportedOperationException("Metadata indexing is not yet supported for media type " + metadatum.getContentType());
         }
 
         /*List<MaterializedPathsNode> nodes = PathMaterializer.materialize(metadatum.getId(), metadatumJson);
@@ -62,8 +81,7 @@ public class MetadataXPath {
         } catch (HashGenerationException | IOException e) {
             throw new MetadataIndexException("Metadata schema analysis failed", e);
         }
-
-        metadataSchemaIndexDatastore.indexSchema(metadataSchema);
+        this.metadataSchemaIndexDatastore.index(metadataSchema);
 
         IndexableMetadatum indexableMetadatum = new IndexableMetadatum();
         indexableMetadatum.setMetadataSchemaId(metadataSchema.getId());
@@ -71,7 +89,31 @@ public class MetadataXPath {
         indexableMetadatum.setElementId(metadatum.getElementId());
         indexableMetadatum.setOriginalContentType(metadatum.getContentType());
         indexableMetadatum.setValue(metadatumJson);
-        metadataIndexDatastore.indexMetadatum(indexableMetadatum, metadataSchema);
+        indexableMetadatum.setCreated(metadatum.getSystemicMetadata().getCreated());
+        indexableMetadatum.setModified(metadatum.getSystemicMetadata().getModified());
+
+        this.metadataIndexDatastore.index(indexableMetadatum, metadataSchema);
+        if (this.reIndexingProcess.reIndexingInProgress()) {
+            this.reIndexingProcess.index(metadatum);
+        }
+    }
+
+    public ReIndexingProcess beginReIndexing() throws MetadataIndexException {
+        if (!this.reIndexingProcess.reIndexingInProgress()) {
+            this.reIndexingProcess.begin();
+
+            return this.reIndexingProcess;
+        } else {
+            throw new MetadataIndexException("Reindexing already in progress");
+        }
+    }
+
+    public void endReIndexing() throws MetadataIndexException {
+        if (this.reIndexingProcess.reIndexingInProgress()) {
+            this.reIndexingProcess.end();
+        } else {
+            throw new MetadataIndexException("No reindexing in progress");
+        }
     }
 
     public List<Metadatum> xPath(String xPath) throws MetadataIndexException {

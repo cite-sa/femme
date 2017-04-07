@@ -11,21 +11,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class Collection extends Element {
 	
 	@JsonProperty
-	List<DataElement> dataElements;
+	private List<DataElement> dataElements;
 	
 	public Collection() {
 		super();
 		dataElements = new ArrayList<>();
 	}
-	
-	/*public Collection(String id, String name, String endpoint, List<Metadatum> metadata, SystemicMetadata systemicMetadata, List<DataElement> dataElements) {
-		super(id, name, endpoint, metadata, systemicMetadata);
-		if (dataElements != null) {
-			this.dataElements = dataElements;
-		} else {
-			this.dataElements = new ArrayList<>();
-		}
-	}*/
 
 	public List<DataElement> getDataElements() {
 		return dataElements;

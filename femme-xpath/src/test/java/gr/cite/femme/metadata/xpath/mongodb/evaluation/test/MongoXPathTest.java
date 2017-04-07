@@ -46,7 +46,7 @@ public class MongoXPathTest {
 	private MongoMetadataAndSchemaIndexDatastore xPathDatastore;
 
 	@Before
-	public void initXPathClient() throws UnknownHostException {
+	public void initXPathClient() throws UnknownHostException, MetadataIndexException {
 		/*xPathDatastore = new MongoMetadataAndSchemaIndexDatastore();*/
 
 		MetadataSchemaIndexDatastore schemaIndexDatastore = new MongoMetadataSchemaIndexDatastore();

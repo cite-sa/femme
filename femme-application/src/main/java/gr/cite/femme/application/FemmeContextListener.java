@@ -15,7 +15,7 @@ import gr.cite.femme.query.api.Query;
 public class FemmeContextListener implements ServletContextListener {
 
 	/*@Autowired*/
-	private Datastore<Criterion, Query<Criterion>> mongoDatastore;
+	private Datastore mongoDatastore;
 	
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {

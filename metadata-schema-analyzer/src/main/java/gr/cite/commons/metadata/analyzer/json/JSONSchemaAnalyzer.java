@@ -108,9 +108,9 @@ public class JSONSchemaAnalyzer {
         //System.out.println(schemaAnalysis);
         schemaAnalysis.getSchema().forEach(System.out::println);
         /*String hashResult;
-        hashResult = schemaAnalysis.hash();
+        hashResult = schemaAnalysis.getChecksum();
         System.out.println(hashResult);
-        hashResult = schemaAnalysis.hash();
+        hashResult = schemaAnalysis.getChecksum();
         System.out.println(hashResult);*/
 
     }

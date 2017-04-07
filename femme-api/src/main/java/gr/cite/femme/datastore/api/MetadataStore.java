@@ -12,6 +12,12 @@ public interface MetadataStore {
 	public void close();
 
 	public void insert(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
+
+	public void update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
+
+	public void index(Metadatum metadatum) throws MetadataIndexException;
+
+	public void reIndexAll() throws MetadataIndexException, MetadataStoreException;
 	
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
 	
@@ -26,5 +32,7 @@ public interface MetadataStore {
 	public void delete(Metadatum metadatum) throws MetadataStoreException;
 	
 	public void deleteAll(String elementId) throws MetadataStoreException;
+
+	public String generateMetadatumId();
 
 }

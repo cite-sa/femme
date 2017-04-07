@@ -1,22 +1,35 @@
 package gr.cite.femme.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.Instant;
 
 @JsonInclude(Include.NON_EMPTY)
 public class Metadatum {
 
+	@JsonProperty("id")
 	private String id;
-	
+
+	@JsonProperty("elementId")
 	private String elementId;
-	
+
+	@JsonProperty("name")
 	private String name;
 
+	@JsonProperty("value")
 	private String value;
-	
+
+	@JsonProperty("contentType")
 	private String contentType;
-	
-	private Status status;
+
+	@JsonProperty("systemicMetadata")
+	private SystemicMetadata systemicMetadata;
+
+	@JsonIgnore
+	private String checksum;
 	
 	/*private List<MetadatumXPathCache> xPathCache;*/
 	
@@ -85,15 +98,23 @@ public class Metadatum {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
-	
-	public Status getStatus() {
-		return status;
+
+	public SystemicMetadata getSystemicMetadata() {
+		return systemicMetadata;
 	}
 
-	public void setStatus(Status status) {
-		this.status = status;
+	public void setSystemicMetadata(SystemicMetadata systemicMetadata) {
+		this.systemicMetadata = systemicMetadata;
 	}
-	
+
+	public String getChecksum() {
+		return checksum;
+	}
+
+	public void setChecksum(String checksum) {
+		this.checksum = checksum;
+	}
+
 	/*public List<MetadatumXPathCache> getXPathCache() {
 		return xPathCache;
 	}

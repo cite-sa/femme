@@ -1,10 +1,22 @@
-package gr.cite.femme.datastore.mongodb.metadata;
+package gr.cite.femme.metadatastore.mongodb;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.StampedLock;
 
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import gr.cite.femme.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.metadata.xpath.MetadataXPath;
 import gr.cite.femme.exceptions.MetadataIndexException;
+import gr.cite.femme.metadata.xpath.ReIndexingProcess;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,37 +27,41 @@ import gr.cite.femme.model.Element;
 import gr.cite.femme.model.Metadatum;
 
 public class MongoMetadataStore implements MetadataStore {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataStore.class);
-	
+
 //	private static final String METADATA_INDEX_HOST = "http://localhost:8083/femme-index-application/metadata-index";
-
 	private MongoMetadataStoreClient mongoMetadataStoreClient;
-	
 	private MetadataJsonCollection metadataMongoCollection;
-	
 	private MetadataGridFS metadataGridFS;
-
 	private MetadataXPath metadataXPath;
-	
+
+	private final StampedLock lock = new StampedLock();
+
 //	private MetadataIndexClient metadataIndexClient;
 	
 	/*private XPathCacheManager indexManager;*/
 	
 	public MongoMetadataStore() {
 		this.mongoMetadataStoreClient = new MongoMetadataStoreClient();
-		this.metadataGridFS = new MetadataGridFS(mongoMetadataStoreClient.getMetadataGridFS());
+		this.metadataGridFS = new MetadataGridFS(this.mongoMetadataStoreClient.getMetadataGridFSBucket(), this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection());
+		this.metadataXPath = new MetadataXPath();
 	}
 
-	public MongoMetadataStore(String host, String db, String bucketName) {
-		this.mongoMetadataStoreClient = new MongoMetadataStoreClient(host, db, bucketName);
-		this.metadataGridFS = new MetadataGridFS(mongoMetadataStoreClient.getMetadataGridFS());
+	public MongoMetadataStore(String host, int port, String name) {
+		this.mongoMetadataStoreClient = new MongoMetadataStoreClient(host, port, name);
+		this.metadataGridFS = new MetadataGridFS(this.mongoMetadataStoreClient.getMetadataGridFSBucket(), this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection());
+	}
+
+	public MongoMetadataStore(String host, int port, String name, String bucketName) {
+		this.mongoMetadataStoreClient = new MongoMetadataStoreClient(host, port, name, bucketName);
+		this.metadataGridFS = new MetadataGridFS(this.mongoMetadataStoreClient.getMetadataGridFSBucket(), this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection());
 	}
 	
-	public MongoMetadataStore(String host, String db, String bucketName, MetadataXPath metadataXPath) {
-		this.mongoMetadataStoreClient = new MongoMetadataStoreClient(host, db, bucketName);
+	public MongoMetadataStore(String host, int port, String name, String bucketName, MetadataXPath metadataXPath) {
+		this.mongoMetadataStoreClient = new MongoMetadataStoreClient(host, port, name, bucketName);
 //		this.metadataMongoCollection = new MetadataJsonCollection(mongoMetadataStoreClient.getMetadataJson());
-		this.metadataGridFS = new MetadataGridFS(mongoMetadataStoreClient.getMetadataGridFS());
+		this.metadataGridFS = new MetadataGridFS(this.mongoMetadataStoreClient.getMetadataGridFSBucket(), this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection());
 		this.metadataXPath = metadataXPath;
 		/*this.indexManager = indexManager;*/
 //		metadataIndexClient = new FemmeIndexClient(metadataIndexHost);
@@ -58,40 +74,74 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public void insert(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
-
-		getMetadataStore(metadatum).insert(metadatum);
-		if (isXPathable(metadatum)) {
-			metadataXPath.index(metadatum);
-		}
-
-		/*ExecutorService executor = Executors.newFixedThreadPool(2);
-		List<Future<String>> futures = new ArrayList<>();
-
-		Future<String> gridFsFuture = executor.submit(() -> {
-			getMetadataStore(metadatum).insert(metadatum);
-			return metadatum.getId();
-		});
-		Future<String> xPathFuture = null;
-		if (isXPathable(metadatum)) {
-			xPathFuture = executor.submit(() -> {
-				metadataXPath.index(metadatum);
-				return metadatum.getId();
-			});
-		}
-
-		// TODO rollback in case of error
+		long stamp = lock.readLock();
 		try {
-			gridFsFuture.get();
-			if (xPathFuture != null) {
-				xPathFuture.get();
-			}
-		} catch (Exception e) {
-			executor.shutdown();
-			logger.error(e.getMessage(), e);
-			throw new MetadataStoreException("Metadata storing or XPath indexing failed", e);
+			getMetadataStore(metadatum).insert(metadatum);
+			index(metadatum);
 		} finally {
-			executor.shutdown();
-		}*/
+			lock.unlockRead(stamp);
+		}
+	}
+
+	@Override
+	public void update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
+		this.metadataGridFS.update(metadatum);
+	}
+
+	@Override
+	public void index(Metadatum metadatum) throws MetadataIndexException {
+		if (isXPathable(metadatum)) {
+			this.metadataXPath.index(metadatum);
+		}
+	}
+
+	public void reIndexAll() throws MetadataIndexException, MetadataStoreException {
+		MongoCursor<Metadatum> snapshotCursor;
+		ReIndexingProcess reIndexer;
+
+		long stamp = lock.writeLock();
+		try {
+			Instant snapshotTimestamp = Instant.now();
+			snapshotCursor = metadataGridFS.findAllBeforeTimestamp(snapshotTimestamp);
+			reIndexer = this.metadataXPath.beginReIndexing();
+		} finally {
+			lock.unlockWrite(stamp);
+		}
+
+		List<Future<String>> futures = new ArrayList<>();
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		while (snapshotCursor.hasNext()) {
+			try {
+				final Metadatum metadatum = snapshotCursor.next();
+				futures.add(executor.submit(() -> {
+					try {
+						reIndexer.index(metadatum);
+					} catch (MetadataIndexException e) {
+						throw new RuntimeException(e);
+					}
+					return metadatum.getId();
+				}));
+			} catch (RuntimeException e) {
+				throw new MetadataIndexException(e);
+			}
+		}
+
+		for (Future<String> future: futures) {
+			try {
+				String metadatumId = future.get();
+				logger.info("Metadatum " + metadatumId + " successfully indexed");
+			} catch (InterruptedException | ExecutionException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+		executor.shutdown();
+
+		stamp = lock.writeLock();
+		try {
+			this.metadataXPath.endReIndexing();
+		} finally {
+			lock.unlockWrite(stamp);
+		}
 	}
 
 	@Override
@@ -108,8 +158,8 @@ public class MongoMetadataStore implements MetadataStore {
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		
-		//List<Metadatum> jsonMetadata = metadataMongoCollection.find(elementId, lazy);
-		List<Metadatum> otherMetadata = metadataGridFS.find(elementId, lazy);
+		//List<Metadatum> jsonMetadata = metadataMongoCollection.get(elementId, lazy);
+		List<Metadatum> otherMetadata = this.metadataGridFS.find(elementId, lazy);
 		
 		//metadata.addAll(jsonMetadata);
 		metadata.addAll(otherMetadata);
@@ -191,6 +241,11 @@ public class MongoMetadataStore implements MetadataStore {
 		
 	}
 
+	@Override
+	public String generateMetadatumId() {
+		return new ObjectId().toString();
+	}
+
 	private MongoMetadataCollection getMetadataStore(Metadatum metadatum) throws MetadataStoreException {
 		if (metadatum.getContentType() != null) {
 			if (metadatum.getContentType().toLowerCase().equals("json") || metadatum.getContentType().toLowerCase().contains("json")) {
@@ -205,18 +260,23 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 	
 	private boolean isIndexable(Metadatum metadatum) {
-		if (metadatum.getContentType() != null 
-				&&(metadatum.getContentType().toLowerCase().contains("xml") 
-						|| metadatum.getContentType().toLowerCase().contains("json"))) {
-			return true;
-		}
-		return false;
+		return metadatum.getContentType() != null
+				&& (metadatum.getContentType().toLowerCase().contains("xml")
+				|| metadatum.getContentType().toLowerCase().contains("json"));
 	}
 
 	private boolean isXPathable(Metadatum metadatum) {
-		if (metadatum.getContentType() != null &&(metadatum.getContentType().toLowerCase().contains("xml"))) {
-			return true;
-		}
-		return false;
+		return metadatum.getContentType() != null && (metadatum.getContentType().toLowerCase().contains("xml"));
+	}
+
+	public void testChangeStatus() throws MetadataStoreException {
+		//this.metadataGridFS.changeStatus("", Status.ACTIVE);
+		this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection().findOneAndUpdate(Filters.eq(FieldNames.ID, new ObjectId("58e51c629a319213d7cca57b")),
+				Updates.set("metadata.status", 20));
+	}
+
+	public static void main(String[] args) throws MetadataStoreException {
+		MongoMetadataStore store = new MongoMetadataStore();
+		store.testChangeStatus();
 	}
 }

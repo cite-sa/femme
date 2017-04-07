@@ -56,6 +56,22 @@ public class QueryMongo implements Query<CriterionMongo> {
 		query += "}";
 		return query;*/
 	}
+
+	@Override
+	public String toString() {
+		return build().toString();
+
+		/*String query = "{";
+		Iterator<CriterionMongo> criteriaIterator = criteria.iterator();
+		while (criteriaIterator.hasNext()) {
+			query += criteriaIterator.next().build();
+			if (criteriaIterator.hasNext()) {
+				query += ",";
+			}
+		}
+		query += "}";
+		return query;*/
+	}
 	
 	public static QueryMongo fromString(String queryJson) throws JsonParseException, JsonMappingException, IOException {
 		if (queryJson != null) {

@@ -43,8 +43,6 @@ public class WCSRequest {
 			BufferedImage image = null;
 			try {
 				image = ImageIO.read(webTarget.getUri().toURL());
-			} catch (MalformedURLException e) {
-				logger.error(e.getMessage(), e);
 			} catch (IOException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -62,8 +60,8 @@ public class WCSRequest {
 		
 
 		if (response.getStatus() >= 300) {
-			logger.error(endpoint + ":" + responseString);
-			throw new WCSRequestException(endpoint + ":" + responseString, response.getStatus());
+			/*logger.error(endpoint + ":" + responseString);*/
+			throw new WCSRequestException(endpoint + ": " + responseString, response.getStatus());
 		}
 
 		// TODO Content-type:

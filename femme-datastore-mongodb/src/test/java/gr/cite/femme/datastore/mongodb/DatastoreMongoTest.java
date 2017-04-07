@@ -99,12 +99,12 @@ public class DatastoreMongoTest {
 		
 		System.out.println(mongoQuery.build());
 		
-		List<DataElement> r = null;
-		r = mongo.<DataElement>find(query, DataElement.class).list();/*.xPath("//a[text()=\"test value 1\"]");*/
+		/*List<DataElement> r = null;
+		r = mongo.get(query, DataElement.class, this.metadataStore).list();*//*.xPath("//a[text()=\"test value 1\"]");*/
 		
 		List<Duration> totalDuration = new ArrayList<>();
 		/*or (int i = 0; i < 1; i ++) {
-			Instant start = Instant.now();
+			Instant begin = Instant.now();
 			
 			r = mongo.<DataElement>query(query, DataElement.class).limit(1).list()
 					.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
@@ -112,9 +112,9 @@ public class DatastoreMongoTest {
 			
 			Instant end = Instant.now();
 			
-			totalDuration.add(Duration.between(start, end));
+			totalDuration.add(Duration.between(begin, end));
 		}*/
-		/*Instant start = Instant.now();
+		/*Instant begin = Instant.now();
 		
 		r = mongo.<DataElement>query(query, DataElement.class).limit(1)
 				.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
@@ -122,12 +122,12 @@ public class DatastoreMongoTest {
 		
 		Instant end = Instant.now();
 		
-		System.out.println(Duration.between(start, end));*/
+		System.out.println(Duration.between(begin, end));*/
 		for (Duration duration: totalDuration) {
 			System.out.println("Total time: " + duration);
 		}
 		
-		System.out.println(r.size());
+		/*System.out.println(r.size());*/
 		
 		/*System.out.println(r);*/
 		
@@ -193,14 +193,14 @@ public class DatastoreMongoTest {
 	}
 	
 	/*@Test*/
-	public void insertDataElements() {
+	/*public void insertDataElements() {
 		List<DataElement> dataElements = createDemoDataElements();
 		try {
 			mongo.insert(dataElements);
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 		}
-	}
+	}*/
 	
 	/*@Test*/
 	/*public void removeDataElement() {

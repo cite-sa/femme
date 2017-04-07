@@ -1,8 +1,8 @@
-package gr.cite.femme.metadata.xpath.elasticsearch.utils;
+package gr.cite.femme.metadata.xpath.elasticsearch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.femme.metadata.xpath.core.IndexableMetadatum;
-import gr.cite.femme.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastoreClient;
+import gr.cite.femme.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -42,9 +42,9 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 				"\"size\":  1000" +
 			"}";
 		HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
-		this.indexResponse = client.get().performRequest(
+		this.indexResponse = this.client.get().performRequest(
 					"GET",
-					"/" + client.getIndexName() + "/_search?scroll=15s",
+					"/" + this.client.getIndexAlias() + "/_search?scroll=15s",
 					Collections.emptyMap(),
 					entity);
 		getResults();
@@ -59,7 +59,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 					"}";
 			HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
 			try {
-				this.indexResponse = client.get().performRequest(
+				this.indexResponse = this.client.get().performRequest(
 						"GET",
 						"/_search/scroll",
 						Collections.emptyMap(),
