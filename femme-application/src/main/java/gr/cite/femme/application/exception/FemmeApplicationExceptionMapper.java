@@ -5,8 +5,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import gr.cite.femme.dto.FemmeResponse;
-import gr.cite.femme.exceptions.DatastoreException;
+import gr.cite.femme.core.dto.FemmeResponse;
 
 @Provider
 public class FemmeApplicationExceptionMapper implements ExceptionMapper<FemmeApplicationException> {

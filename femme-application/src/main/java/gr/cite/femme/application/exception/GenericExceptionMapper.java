@@ -8,7 +8,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import gr.cite.femme.dto.FemmeResponse;
+import gr.cite.femme.core.dto.FemmeResponse;
 
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 

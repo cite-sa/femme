@@ -18,10 +18,10 @@ import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
-import gr.cite.femme.model.Element;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.model.Element;
+import gr.cite.femme.core.query.api.Criterion;
+import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 public class WCSAdapter implements WCSAdapterAPI {
@@ -35,20 +35,40 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public WCSAdapter(String femmeUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);
 	}
-	
+
+	@Override
+	public String beginImport(String endpoint) throws FemmeDatastoreException {
+		return this.femmeClient.beginImport(endpoint);
+	}
+
+	@Override
+	public void endImport(String importId) throws FemmeDatastoreException {
+		this.femmeClient.endImport(importId);
+	}
+
+	@Override
+	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException {
+		return this.femmeClient.importCollection(importId, WCSFemmeMapper.fromServer(endpoint, name, server));
+	}
+
+	@Override
+	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeDatastoreException {
+		return this.femmeClient.importInCollection(importId, WCSFemmeMapper.fromCoverage(coverage));
+	}
+
 	@Override
 	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException {
-		return femmeClient.insert(WCSFemmeMapper.fromServer(endpoint, name, server));
+		return this.femmeClient.insert(WCSFemmeMapper.fromServer(endpoint, name, server));
 	}
 
 	@Override
 	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeDatastoreException {
-		return femmeClient.insert(WCSFemmeMapper.fromCoverage(coverage));
+		return this.femmeClient.insert(WCSFemmeMapper.fromCoverage(coverage));
 	}
 	
 	@Override
 	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeDatastoreException {
-		return femmeClient.addToCollection(WCSFemmeMapper.fromCoverage(coverage), collectionId);
+		return this.femmeClient.addToCollection(WCSFemmeMapper.fromCoverage(coverage), collectionId);
 	}
 
 	
@@ -64,21 +84,21 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Server> getServers(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return femmeClient.getCollections(limit, offset, xPath).stream().map(WCSFemmeMapper::collectionToServer)
+		return this.femmeClient.getCollections(limit, offset, xPath).stream().map(WCSFemmeMapper::collectionToServer)
 			.collect(Collectors.toList());
 	}
 	
 	@Override
 	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return femmeClient.findCollections(query, options, xPath)
+		return this.femmeClient.findCollections(query, options, xPath)
 				.stream().map(WCSFemmeMapper::collectionToServer).collect(Collectors.toList());
 	}
 	
 	@Override
 	public Server getServer(String filterValue) throws FemmeDatastoreException, FemmeClientException {
-		Server server = WCSFemmeMapper.collectionToServer(femmeClient.getCollectionByName(filterValue));
+		Server server = WCSFemmeMapper.collectionToServer(this.femmeClient.getCollectionByName(filterValue));
 		if (server == null) {
-			server = WCSFemmeMapper.collectionToServer(femmeClient.getCollectionByEndpoint(filterValue));
+			server = WCSFemmeMapper.collectionToServer(this.femmeClient.getCollectionByEndpoint(filterValue));
 		}
 		return server;
 	}
@@ -96,17 +116,17 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<Coverage> getCoverages(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return femmeClient.getDataElements(limit, offset, xPath).stream().map(WCSFemmeMapper::dataElementToCoverage)
+		return this.femmeClient.getDataElements(limit, offset, xPath).stream().map(WCSFemmeMapper::dataElementToCoverage)
 			.collect(Collectors.toList());
 	}
 	
 	public Coverage getCoverageById(String id) throws FemmeDatastoreException {
-		return WCSFemmeMapper.dataElementToCoverage(femmeClient.getDataElementById(id));
+		return WCSFemmeMapper.dataElementToCoverage(this.femmeClient.getDataElementById(id));
 	}
 	
 	@Override
 	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		return femmeClient.findDataElements(query, options, xPath)
+		return this.femmeClient.findDataElements(query, options, xPath)
 				.stream().map(WCSFemmeMapper::dataElementToCoverage)
 				.collect(Collectors.toList());
 	}
@@ -115,27 +135,23 @@ public class WCSAdapter implements WCSAdapterAPI {
 	@Override
 	public List<String> getCoverageIds() throws FemmeDatastoreException, FemmeClientException {
 		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build();
-		return femmeClient.findDataElements(null, options, null)
+		return this.femmeClient.findDataElements(null, options, null)
 			.stream().map(Element::getId).collect(Collectors.toList());
 	}
 	
 	@Override
 	public List<String> getCoverageIdsInServer(List<String> filterValues) throws FemmeDatastoreException, FemmeClientException {
-		
 		return getCoverageIdsInServer(filterValues, null, null, null);
 	}
 
 	@Override
 	public List<String> getCoverageIdsInServer(List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
-		
 		if (filterValues != null) {
 			List<String> coverageIds = getCoverageIdsInServerByFilter("name", filterValues, limit, offset, xPath);
-			
 			
 			if (coverageIds.size() == 0) {
 				coverageIds = getCoverageIdsInServerByFilter("endpoint", filterValues, limit, offset, xPath);
 			}
-			
 			return coverageIds;
 		} else {
 			return null;
@@ -149,14 +165,14 @@ public class WCSAdapter implements WCSAdapterAPI {
 		
 		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).include(Sets.newHashSet("name")).build();
 				
-		return femmeClient.findDataElements(
+		return this.femmeClient.findDataElements(
 				QueryClient.query().addCriterion(CriterionBuilderClient.root().inAnyCollection(serverFilterCriteria).end()),
 				options, xPath)
 				.stream().map(Element::getName).collect(Collectors.toList());
 	}
 	
 	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeDatastoreException, FemmeClientException {
-		return femmeClient.getDataElementsByName(coverageId)
+		return this.femmeClient.getDataElementsByName(coverageId)
 				.stream().map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
 	}
 	
@@ -170,12 +186,10 @@ public class WCSAdapter implements WCSAdapterAPI {
 		
 		if (filterValue != null) {
 			List<Coverage> coverages = getCoveragesInServerByFilter("name", filterValue, limit, offset, xPath);
-			
-			
+
 			if (coverages.size() == 0) {
 				coverages = getCoveragesInServerByFilter("endpoint", filterValue, limit, offset, xPath);
 			}
-			
 			return coverages;
 		} else {
 			return null;
@@ -190,42 +204,29 @@ public class WCSAdapter implements WCSAdapterAPI {
 		
 		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).build();
 				
-		return femmeClient.findDataElements(
+		return this.femmeClient.findDataElements(
 				QueryClient.query().addCriterion(CriterionBuilderClient.root().inAnyCollection(serverFilterCriteria).end()),
 				options, xPath)
 				.stream().map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
 	}
 
 	@Override
-	public Coverage getCoverageByCoverageIdInServer(String key, String coverageId)
-			throws FemmeDatastoreException, FemmeClientException {
-		
-		CriterionClient collectionNameCriterion = CriterionBuilderClient.root().inAnyCollection(Collections
-				.singletonList(
-				CriterionBuilderClient.root().eq("name", key).end())).end();
-		
+	public Coverage getCoverageByCoverageIdInServer(String key, String coverageId) throws FemmeDatastoreException, FemmeClientException {
+		CriterionClient collectionNameCriterion = CriterionBuilderClient.root().inAnyCollection(Collections.singletonList(CriterionBuilderClient.root().eq("name", key).end())).end();
 		CriterionClient dataElementCriterion = CriterionBuilderClient.root().eq("name", coverageId).end();
 		
-		QueryClient query = null;
-		query = QueryClient.query().addCriterion(
-				CriterionBuilderClient.root().and(Arrays.asList(collectionNameCriterion, dataElementCriterion)).end());
-		
-		List<Coverage> coverages = null;
-		coverages = findCoverages(query, QueryOptionsMessenger.builder().limit(1).build(), null);
+		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().and(Arrays.asList(collectionNameCriterion, dataElementCriterion)).end());
+		List<Coverage> coverages = findCoverages(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		
 		if (coverages.size() == 0) {
-			CriterionClient collectionEndpointCriterion = CriterionBuilderClient.root().inAnyCollection(Collections
-					.singletonList(
-					CriterionBuilderClient.root().eq("endpoint", key).end())).end();
+			CriterionClient collectionEndpointCriterion = CriterionBuilderClient.root().inAnyCollection(
+					Collections.singletonList(CriterionBuilderClient.root().eq("endpoint", key).end())).end();
 			
-			query = QueryClient.query().addCriterion(
-					CriterionBuilderClient.root().and(Arrays.asList(collectionEndpointCriterion, dataElementCriterion)).end());
-			
+			query = QueryClient.query().addCriterion(CriterionBuilderClient.root().and(Arrays.asList(collectionEndpointCriterion, dataElementCriterion)).end());
 			coverages = findCoverages(query, QueryOptionsMessenger.builder().limit(1).build(), null);
 		}
-		
+
 		return coverages.size() > 0 ? coverages.get(0) : null;
-		
 	}
 	
 	/*@Override

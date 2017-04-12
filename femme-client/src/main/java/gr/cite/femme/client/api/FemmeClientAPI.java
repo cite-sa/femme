@@ -4,13 +4,21 @@ import java.util.List;
 
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
-import gr.cite.femme.model.Collection;
-import gr.cite.femme.model.DataElement;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.model.Collection;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.query.api.Criterion;
+import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 
 public interface FemmeClientAPI {
+
+	public String beginImport(String endpoint) throws FemmeDatastoreException;
+
+	public void endImport(String importId) throws FemmeDatastoreException;
+
+	public String importCollection(String importId, Collection collection) throws FemmeDatastoreException;
+
+	public String importInCollection(String importId, DataElement dataElement) throws FemmeDatastoreException;
 
 	public String insert(Collection collection) throws FemmeDatastoreException;
 

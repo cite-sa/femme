@@ -8,17 +8,26 @@ import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeDatastoreException;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.api.Criterion;
+import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 
 public interface WCSAdapterAPI {
-	
-	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException ;
 
-	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeDatastoreException ;
+	public String beginImport(String endpoint) throws FemmeDatastoreException;
+
+	public void endImport(String importId) throws FemmeDatastoreException;
+
+	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException;
+
+	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeDatastoreException;
+
 	
-	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeDatastoreException ;
+	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException;
+
+	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeDatastoreException;
+	
+	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeDatastoreException;
 	
 	
 	public List<Server> getServers() throws FemmeDatastoreException, FemmeClientException;
@@ -31,8 +40,7 @@ public interface WCSAdapterAPI {
 	
 	/*public Server getServerByAlias(String alias) throws FemmeDatastoreException, FemmeClientException;*/
 	
-	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath)
-			throws FemmeDatastoreException, FemmeClientException;
+	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException;
 	
 	
 	public List<Coverage> getCoverages() throws FemmeDatastoreException, FemmeClientException;
@@ -43,8 +51,7 @@ public interface WCSAdapterAPI {
 	
 	public Coverage getCoverageById(String id) throws FemmeDatastoreException, FemmeClientException;
 	
-	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath)
-			throws FemmeDatastoreException, FemmeClientException, FemmeClientException;
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException;
 	
 	
 	public List<String> getCoverageIds() throws FemmeDatastoreException, FemmeClientException;

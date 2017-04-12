@@ -5,13 +5,9 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-
-import gr.cite.commons.converter.XmlJsonConverter;
 import gr.cite.femme.index.mongodb.MongoMetadataIndex;
-import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.core.model.Metadatum;
+import org.bson.types.ObjectId;
 
 public class MongoMetadataIndexTest {
 	

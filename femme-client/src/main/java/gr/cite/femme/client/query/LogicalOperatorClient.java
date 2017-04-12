@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import gr.cite.femme.query.api.LogicalOperator;
+import gr.cite.femme.core.query.api.LogicalOperator;
 
 @JsonInclude(Include.NON_EMPTY)
 public class LogicalOperatorClient implements LogicalOperator<CriterionClient> {

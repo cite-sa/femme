@@ -12,7 +12,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
-import gr.cite.femme.index.core.MetadatumIndex;
+import gr.cite.femme.index.api.client.MetadatumIndex;
 
 public class MetadatumIndexCodec implements CollectibleCodec<MetadatumIndex> {
 	

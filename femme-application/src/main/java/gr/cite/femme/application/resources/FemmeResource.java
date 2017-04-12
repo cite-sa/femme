@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -16,49 +17,39 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import gr.cite.femme.Femme;
+import gr.cite.femme.engine.Femme;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import gr.cite.femme.application.exception.FemmeApplicationException;
-import gr.cite.femme.datastore.api.Datastore;
-import gr.cite.femme.datastore.mongodb.utils.FieldNames;
-import gr.cite.femme.dto.CollectionList;
-import gr.cite.femme.dto.DataElementList;
-import gr.cite.femme.dto.FemmeResponse;
-import gr.cite.femme.dto.FemmeResponseEntity;
-import gr.cite.femme.exceptions.DatastoreException;
-import gr.cite.femme.model.Collection;
-import gr.cite.femme.model.DataElement;
-import gr.cite.femme.query.mongodb.CriterionBuilderMongo;
-import gr.cite.femme.query.mongodb.CriterionMongo;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryExecutor;
-import gr.cite.femme.query.api.QueryOptionsMessenger;
-import gr.cite.femme.query.mongodb.QueryMongo;
+import gr.cite.femme.api.Datastore;
+import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.dto.CollectionList;
+import gr.cite.femme.core.dto.DataElementList;
+import gr.cite.femme.core.dto.FemmeResponse;
+import gr.cite.femme.core.dto.FemmeResponseEntity;
+import gr.cite.femme.core.exceptions.DatastoreException;
+import gr.cite.femme.core.model.Collection;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.mongodb.CriterionMongo;
+import gr.cite.femme.core.query.api.Criterion;
+import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.query.api.QueryExecutor;
+import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.engine.query.mongodb.QueryMongo;
 
 @Component
 @Path("")
 @Produces(MediaType.APPLICATION_JSON)
 public class FemmeResource {
-
 	private static final Logger logger = LoggerFactory.getLogger(FemmeResource.class);
 	
 	@Context
 	private UriInfo uriInfo;
-
-	private Datastore datastore;
 	private Femme femme;
-
-	/*@Inject
-	public FemmeResource(Datastore<Criterion, Query<Criterion>> datastore) {
-		this.datastore = datastore;
-	}*/
 
 	@Inject
 	public FemmeResource(Femme femme) {
@@ -94,11 +85,15 @@ public class FemmeResource {
 		try {
 			List<Collection> collections = queryExecutor.list();
 
+			String message;
 			if (collections.isEmpty()) {
-				logger.error("No collections found");
-				throw new FemmeApplicationException("No collections found for this query", Response.Status.NOT_FOUND.getStatusCode());
+				message = "No collections found";
+				logger.error(message);
+				throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 			}
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(collections.size() + " collections found").setEntity(entity.setBody(new CollectionList(collections)));
+			message = collections.size() + " collections found";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity.setBody(new CollectionList(collections)));
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -106,12 +101,11 @@ public class FemmeResource {
 		}
 		
 		return Response.ok().entity(femmeResponse).build();
-
 	}
 	
 	@GET
 	@Path("collections/{id}")
-	public Response getCollectionById(@PathParam("id") String id) throws FemmeApplicationException {
+	public Response getCollectionById(@NotNull @PathParam("id") String id) throws FemmeApplicationException {
 		FemmeResponse<Collection> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
 		
@@ -129,8 +123,8 @@ public class FemmeResource {
 			logger.error(e.getMessage(), e);
 			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
-		return Response.ok().entity(femmeResponse).build();
 
+		return Response.ok().entity(femmeResponse).build();
 	}
 	
 	@GET
@@ -144,7 +138,7 @@ public class FemmeResource {
 		FemmeResponseEntity<Long> entity = new FemmeResponseEntity<>();
 
 		// TODO Add XPath
-		long count = datastore.count(query, Collection.class);
+		long count = this.femme.count(query, Collection.class);
 		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(count + " collections found").setEntity(entity.setBody(count));
 		
 		return Response.status(femmeResponse.getStatus()).entity(femmeResponse).build();
@@ -181,22 +175,24 @@ public class FemmeResource {
 			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		}
 
+		String message;
 		if (dataElementList.getSize() == 0) {
-			logger.info("No data elements found");
-			throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
+			message = "No data elements found";
+			logger.info(message);
+			throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 		} else {
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
-					.setMessage(dataElementList.getSize() + " data elements found")
+			message = dataElementList.getSize() + " data elements found";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message)
 					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElementList));
 		}
 
 		return Response.ok().entity(femmeResponse).build();
-
 	}
 
 	@GET
 	@Path("dataElements/{id}")
-	public Response getDataElementById(@PathParam("id") String id) throws FemmeApplicationException {
+	public Response getDataElementById(@NotNull @PathParam("id") String id) throws FemmeApplicationException {
 
 		FemmeResponse<DataElement> femmeResponse = new FemmeResponse<>();
 
@@ -208,16 +204,17 @@ public class FemmeResource {
 
 			DataElement dataElement = this.femme.find(id, DataElement.class);
 
+			String message;
 			if (dataElement == null) {
-				logger.info("No DataElement with id " + id + " found");
-				throw new FemmeApplicationException("No data element with id " + id + " found", Response.Status.NOT_FOUND.getStatusCode());
+				message = "No DataElement with id " + id + " found";
+				logger.info(message);
+				throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 			}
 
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode())
-					.setMessage("Data element " + dataElement.getId() + " found")
+			message = "DataElement " + dataElement.getId() + " found";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message)
 					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElement));
-			logger.info("DataElement " + id + " found");
-
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
@@ -242,7 +239,7 @@ public class FemmeResource {
 		FemmeResponse<Long> femmeResponse = new FemmeResponse<>();
 
 		// TODO Add XPath
-		long count = datastore.count(query, DataElement.class);
+		long count = this.femme.count(query, DataElement.class);
 		femmeResponse.setStatus(Response.Status.OK.getStatusCode())
 				.setMessage(count +" data elements found")
 				.setEntity(new FemmeResponseEntity<Long>(uriInfo.getRequestUri().toString(), count));
@@ -300,7 +297,7 @@ public class FemmeResource {
 	@GET
 	@Path("collections/{collectionId}/dataElements")
 	public Response getDataElementsInCollection(
-			@PathParam("collectionId") String collectionId,
+			@NotNull @PathParam("collectionId") String collectionId,
 			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		return getDataElementsInCollectionWithFieldValue(FieldNames.ID, collectionId, options, xPath);
@@ -351,10 +348,10 @@ public class FemmeResource {
 	}
 	
 	@GET
-	@Path("collections/{collectionId}/dataElements/dataElementId")
+	@Path("collections/{collectionId}/dataElements/{dataElementId}")
 	public Response getDataElementsInCollection(
-			@PathParam("collectionId") String collectionId,
-			@PathParam("dataElementId") String dataElementId,
+			@NotNull @PathParam("collectionId") String collectionId,
+			@NotNull @PathParam("dataElementId") String dataElementId,
 			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
 

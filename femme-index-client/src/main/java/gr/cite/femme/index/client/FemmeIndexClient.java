@@ -7,8 +7,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 
-import gr.cite.femme.client.api.MetadataIndexClient;
-import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.index.api.client.MetadataIndexClient;
+import gr.cite.femme.core.model.Metadatum;
 
 public class FemmeIndexClient implements MetadataIndexClient {
 

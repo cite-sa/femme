@@ -11,7 +11,7 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 	<!-- <listener>
-		<listener-class>gr.cite.femme.application.FemmeContextListener</listener-class>
+		<listener-clFemmeContextListenerener</listener-class>
 	</listener> -->
 
 	<context-param>

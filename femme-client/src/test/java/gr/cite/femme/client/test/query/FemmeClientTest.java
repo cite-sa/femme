@@ -2,20 +2,14 @@ package gr.cite.femme.client.test.query;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.cite.femme.client.FemmeClient;
+import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.FemmeDatastoreException;
 import gr.cite.femme.client.query.CriterionBuilderClient;
-import gr.cite.femme.client.query.CriterionClient;
-import gr.cite.femme.client.query.QueryClient;
-import gr.cite.femme.model.Collection;
-import gr.cite.femme.model.DataElement;
+import gr.cite.femme.core.model.Collection;
 
 public class FemmeClientTest {
 	

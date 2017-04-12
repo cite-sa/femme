@@ -1,5 +1,6 @@
 package gr.cite.femme.index.mongodb;
 
+import gr.cite.femme.index.mongodb.codecs.MetadatumIndexCodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
@@ -7,9 +8,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-import gr.cite.femme.index.core.MetadatumIndex;
-import gr.cite.femme.index.mongodb.codecs.MetadatumIndexCodecProvider;
-import gr.cite.femme.model.Collection;
+import gr.cite.femme.index.api.client.MetadatumIndex;
 
 public class MetadataIndexMongoClient {
 

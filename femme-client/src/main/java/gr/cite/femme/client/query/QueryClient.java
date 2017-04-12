@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import gr.cite.femme.query.api.Query;
+import gr.cite.femme.core.query.api.Query;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryClient implements Query<CriterionClient> {

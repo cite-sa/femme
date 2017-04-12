@@ -12,6 +12,16 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import gr.cite.femme.client.query.CriterionClient;
+import gr.cite.femme.core.dto.ImportEndpoint;
+import gr.cite.femme.client.api.FemmeClientAPI;
+import gr.cite.femme.client.query.QueryClient;
+import gr.cite.femme.core.dto.CollectionList;
+import gr.cite.femme.core.dto.DataElementList;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.query.api.Criterion;
+import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
@@ -20,18 +30,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
-import gr.cite.femme.client.query.CriterionClient;
-import gr.cite.femme.client.query.QueryClient;
-import gr.cite.femme.dto.CollectionList;
-import gr.cite.femme.dto.DataElementList;
-import gr.cite.femme.dto.FemmeResponse;
-import gr.cite.femme.model.Collection;
-import gr.cite.femme.model.DataElement;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
-import gr.cite.femme.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.dto.FemmeResponse;
+import gr.cite.femme.core.model.Collection;
 
 public class FemmeClient implements FemmeClientAPI {
 	
@@ -56,10 +57,59 @@ public class FemmeClient implements FemmeClientAPI {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
 		webTarget = client.target(femmeUrl);
 	}
-	
+
+	@Override
+	public String beginImport(String endpoint) throws FemmeDatastoreException {
+		FemmeResponse<String> response = webTarget.path("importer").path("imports")
+				.request().post(Entity.entity(new ImportEndpoint(endpoint), MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+
+		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+			logger.error(response.getMessage());
+			throw new FemmeDatastoreException(response.getMessage());
+		}
+		logger.debug("Import " + response.getEntity().getBody() + " for endpoint " + endpoint + " has been successfully created");
+		return response.getEntity().getBody();
+	}
+
+	@Override
+	public void endImport(String importId) throws FemmeDatastoreException {
+		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).request().delete(new GenericType<FemmeResponse<String>>(){});
+
+		if (response.getStatus() != 200) {
+			logger.error(response.getMessage());
+			throw new FemmeDatastoreException(response.getMessage());
+		}
+		logger.debug(response.getMessage());
+	}
+
+	@Override
+	public String importCollection(String importId, Collection collection) throws FemmeDatastoreException {
+		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).path("collections")
+				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+
+		if (response.getStatus() != 201) {
+			logger.error(response.getMessage());
+			throw new FemmeDatastoreException(response.getMessage());
+		}
+		logger.debug("Collection " + response.getEntity().getHref() + " has been successfully inserted");
+		return response.getEntity().getBody();
+	}
+
+	@Override
+	public String importInCollection(String importId, DataElement dataElement) throws FemmeDatastoreException {
+		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).path("dataElements")
+				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+
+		if (response.getStatus() != 201) {
+			logger.error(response.getMessage());
+			throw new FemmeDatastoreException(response.getMessage());
+		}
+		logger.debug("DataElement " + response.getEntity().getHref() + " has been successfully inserted");
+		return response.getEntity().getBody();
+	}
+
 	@Override
 	public String insert(Collection collection) throws FemmeDatastoreException {
-
 		FemmeResponse<String> response = webTarget.path("admin").path("collections")
 				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
 		
@@ -70,7 +120,6 @@ public class FemmeClient implements FemmeClientAPI {
 		logger.debug("Collection " + response.getEntity().getHref() + " has been successfully inserted");
 		
 		return response.getEntity().getBody();
-
 	}
 	
 	@Override

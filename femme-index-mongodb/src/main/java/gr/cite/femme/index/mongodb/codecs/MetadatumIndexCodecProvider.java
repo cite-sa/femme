@@ -4,7 +4,7 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import gr.cite.femme.index.core.MetadatumIndex;
+import gr.cite.femme.index.api.client.MetadatumIndex;
 
 
 public class MetadatumIndexCodecProvider implements CodecProvider {

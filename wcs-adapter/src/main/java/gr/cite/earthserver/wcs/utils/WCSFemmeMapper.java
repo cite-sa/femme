@@ -1,6 +1,5 @@
 package gr.cite.earthserver.wcs.utils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,11 +15,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
-import gr.cite.femme.model.BBox;
-import gr.cite.femme.model.Collection;
-import gr.cite.femme.model.DataElement;
-import gr.cite.femme.model.Metadatum;
-import gr.cite.femme.utils.Pair;
+import gr.cite.femme.core.model.BBox;
+import gr.cite.femme.core.model.Collection;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.model.Metadatum;
+import gr.cite.femme.core.utils.Pair;
 
 public final class WCSFemmeMapper {
 	
@@ -59,10 +58,10 @@ public final class WCSFemmeMapper {
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
 		
 		try {
-			
 			Pair<String, String> bboxGeoJsonWithCRS = WCSParseUtils.getBoundingBoxJSON(response.getResponse());
 			
-			Map<String, Object> other = new HashMap<>();
+			//Map<String, Object> other = new HashMap<>();
+			Map<String, String> geo = new HashMap<>();
 			String bboxJson;
 			if (bboxGeoJsonWithCRS.getRight() != null) {
 				BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
@@ -72,9 +71,10 @@ public final class WCSFemmeMapper {
 				} catch (JsonProcessingException e) {
 					throw new ParseException(e.getMessage(), e);
 				}
-				other.put("bbox", bboxJson);
+				geo.put("bbox", bboxJson);
 			}
-			dataElement.getSystemicMetadata().setOther(other);
+			//dataElement.getSystemicMetadata().setOther(other);
+			dataElement.getSystemicMetadata().setGeo(geo);
 			
 		} catch(ParseException e) {
 			logger.error(e.getMessage());

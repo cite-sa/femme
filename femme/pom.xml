@@ -14,7 +14,7 @@
         <module>../femme-index-mongodb</module>
         <module>../femme-index-application</module>
         <module>../femme-index-client</module>
-        <module>../femme-datastore-mongodb</module>
+        <module>../femme-engine</module>
         <module>../femme-application</module>
         <module>../femme-client</module>
         <module>../wcs-adapter</module>

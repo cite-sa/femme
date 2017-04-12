@@ -1,7 +1,6 @@
 package gr.cite.earthserver.wcs.adapter.request;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 

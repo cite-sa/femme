@@ -2,14 +2,9 @@ package gr.cite.femme.application;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import gr.cite.femme.api.Datastore;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
-
-import gr.cite.femme.datastore.api.Datastore;
-import gr.cite.femme.query.api.Criterion;
-import gr.cite.femme.query.api.Query;
 
 /*@WebListener*/
 public class FemmeContextListener implements ServletContextListener {

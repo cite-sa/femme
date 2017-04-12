@@ -3,9 +3,9 @@ package gr.cite.femme.index.mongodb;
 import com.mongodb.client.MongoCollection;
 
 import gr.cite.commons.converter.XmlJsonConverter;
-import gr.cite.femme.client.api.MetadataIndexClient;
-import gr.cite.femme.index.core.MetadatumIndex;
-import gr.cite.femme.model.Metadatum;
+import gr.cite.femme.index.api.client.MetadataIndexClient;
+import gr.cite.femme.core.model.Metadatum;
+import gr.cite.femme.index.api.client.MetadatumIndex;
 
 public class MongoMetadataIndex implements MetadataIndexClient {
 	

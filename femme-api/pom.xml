@@ -5,12 +5,13 @@
 	<artifactId>femme-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+
 	<dependencies>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.21</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>gr.cite.femme</groupId>
 			<artifactId>femme-core</artifactId>

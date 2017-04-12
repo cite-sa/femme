@@ -8,12 +8,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import gr.cite.femme.index.api.client.MetadataIndexClient;
+import gr.cite.femme.core.model.Metadatum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import gr.cite.femme.client.api.MetadataIndexClient;
-import gr.cite.femme.model.Metadatum;
 
 @Component
 @Path("metadata-index")

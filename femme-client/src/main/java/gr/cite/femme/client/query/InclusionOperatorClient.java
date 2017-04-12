@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import gr.cite.femme.query.api.InclusionOperator;
+import gr.cite.femme.core.query.api.InclusionOperator;
 
 @JsonInclude(Include.NON_EMPTY)
 public class InclusionOperatorClient implements InclusionOperator<CriterionClient> {

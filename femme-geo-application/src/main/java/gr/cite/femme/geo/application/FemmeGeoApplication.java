@@ -2,10 +2,9 @@ package gr.cite.femme.geo.application;
 
 import javax.ws.rs.ApplicationPath;
 
+import gr.cite.femme.geo.resources.FemmeGeoResource;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import gr.cite.femme.resources.FemmeGeoResource;
 
 @ApplicationPath("restAPI")
 public class FemmeGeoApplication extends ResourceConfig {

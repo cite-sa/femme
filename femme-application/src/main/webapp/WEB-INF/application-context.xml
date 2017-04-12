@@ -1,35 +1,32 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:tx="http://www.springframework.org/schema/tx"	
 	xsi:schemaLocation="http://www.springframework.org/schema/beans	
 		http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/tx 
-		http://www.springframework.org/schema/tx/spring-tx.xsd
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-	<context:property-placeholder location="WEB-INF/datastore.properties.devel" />
+	<context:property-placeholder location="WEB-INF/femme.properties.devel" />
 
-	<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore" destroy-method="close">
+	<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore" destroy-method="close">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.schema.index.db.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.name}"/>
 	</bean>
 
-	<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore" destroy-method="close">
+	<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore" destroy-method="close">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.index.db.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.name}"/>
 		<constructor-arg ref="metadataSchemaIndexDatastore"/>
 	</bean>
 
-	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.metadata.xpath.MetadataXPath" destroy-method="close">
+	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.engine.metadata.xpath.MetadataXPath" destroy-method="close">
 		<constructor-arg ref="metadataSchemaIndexDatastore"/>
 		<constructor-arg ref="metadataIndexDatastore"/>
 	</bean>
 
-	<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">
+	<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.db.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
@@ -37,26 +34,27 @@
 		<constructor-arg ref="metadataXPath"/>
 	</bean>
 
-	<bean id="datastore" name="datastore" class="gr.cite.femme.datastore.mongodb.MongoDatastore" destroy-method="close">
+	<bean id="datastore" name="datastore" class="gr.cite.femme.engine.datastore.mongodb.MongoDatastore" destroy-method="close">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.datastore.db.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.name}"/>
-		<!--<constructor-arg value="${gr.cite.femme.datastore.mongodb.index.host}"/>-->
+		<!--<constructor-arg value="${gr.cite.femme.datastore.monginsertndex.host}"/>-->
 		<!--<constructor-arg ref="metadataStore"/>-->
 	</bean>
 
-	<bean id="femme" name="femme" class="gr.cite.femme.Femme">
+	<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
 		<constructor-arg ref="datastore"/>
 		<constructor-arg ref="metadataStore"/>
 	</bean>
-   
+
    <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
    		<constructor-arg ref="femme" />
    </bean>
-   <bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
+	<bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
    		<constructor-arg ref="femme" />
    </bean>
-	
+	<bean id="femmeImportResource" class="gr.cite.femme.application.resources.FemmeImportResource" />
+
 	<context:annotation-config/>
 	<context:component-scan base-package="gr.cite.femme.application"/>
 </beans>
