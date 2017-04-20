@@ -1,5 +1,6 @@
-package gr.cite.femme.engine.datastore.mongodb.codecs;
+package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
+import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
@@ -95,8 +96,14 @@ public class MetadatumJsonCodec implements CollectibleCodec<MetadatumJson> {
         }
 
         reader.readEndDocument();
+
+		MetadatumJson metadatumJson = new MetadatumJson();
+		metadatumJson.setId(id);
+		metadatumJson.setElementId(elementId);
+		metadatumJson.setName(name);
+		metadatumJson.setValue(value);metadatumJson.setContentType(contentType);
         
-        return new MetadatumJson(id, elementId, name, value, contentType);
+        return metadatumJson;
 	}
 
 	@Override

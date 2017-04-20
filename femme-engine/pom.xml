@@ -76,7 +76,7 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>-->
 		<dependency>
-			<groupId>gr.cite.femme.metadata.xpath</groupId>
+			<groupId>gr.cite.femme.metadata</groupId>
 			<artifactId>femme-xpath</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

@@ -16,7 +16,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 
 import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumXPathCacheCodecProvider;
-import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
+import gr.cite.femme.engine.metadatastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.engine.datastore.mongodb.codecs.SystemicMetadataCodecProvider;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.model.Collection;

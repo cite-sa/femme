@@ -1,4 +1,4 @@
-package gr.cite.femme.engine.datastore.mongodb.codecs;
+package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
 import gr.cite.femme.core.model.Metadatum;
 import org.bson.codecs.Codec;

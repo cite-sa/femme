@@ -61,7 +61,7 @@ public class QueryMongo implements Query<CriterionMongo> {
 		return build().toJson();
 	}
 	
-	public static QueryMongo fromString(String queryJson) throws JsonParseException, JsonMappingException, IOException {
+	public static QueryMongo fromString(String queryJson) throws IOException {
 		if (queryJson != null) {
 			final ObjectMapper mapper = new ObjectMapper();
 			return mapper.readValue(queryJson, QueryMongo.class);

@@ -53,5 +53,4 @@ public class FemmeApplicationException extends Exception {
 	public void setCode(Integer code) {
 		this.code = code;
 	}
-
 }

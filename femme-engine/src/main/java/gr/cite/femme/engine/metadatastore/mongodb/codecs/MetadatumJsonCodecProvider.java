@@ -1,5 +1,6 @@
-package gr.cite.femme.engine.datastore.mongodb.codecs;
+package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
+import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;

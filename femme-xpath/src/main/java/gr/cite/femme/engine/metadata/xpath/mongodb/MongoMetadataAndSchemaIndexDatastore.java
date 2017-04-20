@@ -115,6 +115,11 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
     }
 
     @Override
+    public void delete(String field, String value) throws MetadataIndexException {
+
+    }
+
+    @Override
     public ReIndexingProcess retrieveReIndexer(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore) {
         return null;
     }

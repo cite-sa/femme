@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -306,6 +307,7 @@ public class ElasticMetadataIndexDatastoreClient {
 	}
 
 	public void insert(String document, String indexName) throws MetadataIndexException {
+
 		try {
 			this.client.performRequest(
 					"POST",
@@ -318,7 +320,26 @@ public class ElasticMetadataIndexDatastoreClient {
 		}
 	}
 
-	public void delete(String id, String indexName) throws MetadataIndexException {
+	void deleteByQuery(Map<String, String> fieldsAndValues) throws MetadataIndexException {
+		String deleteQuery = "{" +
+				"\"query\":{" +
+					"\"bool\":{" +
+						"\"must\":" +
+							fieldsAndValues.entrySet().stream()
+									.map(fieldAndValue -> "{\"term\":{\"" + fieldAndValue.getKey() + "\":\"" + fieldAndValue.getValue() + "\"}}")
+									.collect(Collectors.joining(",", "[", "]")) +
+					"}" +
+				"}" +
+			"}";
 
+		try {
+			this.client.performRequest(
+					"POST",
+					"/" + this.indexAlias + "*/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_TYPE,
+					Collections.emptyMap(),
+					new NStringEntity(deleteQuery, ContentType.APPLICATION_JSON));
+		} catch (IOException e) {
+			throw new MetadataIndexException("Delete by query failed", e);
+		}
 	}
 }

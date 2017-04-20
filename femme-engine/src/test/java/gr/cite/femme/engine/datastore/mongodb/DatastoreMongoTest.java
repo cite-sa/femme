@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.exceptions.InvalidQueryOperation;
 import gr.cite.femme.core.model.DataElement;
@@ -218,8 +219,22 @@ public class DatastoreMongoTest {
 		}
 		
 		List<Metadatum> metadata = new ArrayList<>();
-		metadata.add(new Metadatum("dc", "<dc><a>test value 1</a></dc>", "xml"));
-		metadata.add(new Metadatum("test", "{testJson:{a:1, b:2}}", "json"));
+		Metadatum metadatum;
+
+		metadatum = new Metadatum();
+		metadatum.setName("dc");
+		metadatum.setValue("<dc><a>test value 1</a></dc>");
+		metadatum.setContentType("xml");
+
+		metadata.add(metadatum);
+
+		metadatum = new Metadatum();
+		metadatum.setName("test");
+		metadatum.setValue("{testJson:{a:1, b:2}}");
+		metadatum.setContentType("json");
+
+		metadata.add(metadatum);
+
 		dataElement.setMetadata(metadata);
 		
 		List<DataElement> embeddedDataElements = new ArrayList<>();
@@ -252,7 +267,11 @@ public class DatastoreMongoTest {
 		collection.setEndpoint("http://www.cite-sa/gr/");
 		
 		List<Metadatum> metadata = new ArrayList<>();
-		metadata.add(new Metadatum("dc", "<dc><a>test value</a></dc>", "xml"));
+		Metadatum metadatum = new Metadatum();
+		metadatum.setName("dc");
+		metadatum.setValue("<dc><a>test value</a></dc>");
+		metadatum.setContentType("xml");
+		metadata.add(metadatum);
 		collection.setMetadata(metadata);
 		
 		List<DataElement> dataElements = new ArrayList<>();

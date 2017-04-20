@@ -50,16 +50,6 @@
 			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>gr.cite.scarabaeus</groupId>
-			<artifactId>xml-utils</artifactId>
-			<version>1.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>gr.cite.femme</groupId>
-			<artifactId>femme-client</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
     		<groupId>org.geotools</groupId>
     		<artifactId>gt-main</artifactId>
     		<version>16.0</version>
@@ -79,6 +69,17 @@
 		    <groupId>org.geotools</groupId>
 		    <artifactId>gt-geojson</artifactId>
 		    <version>16.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>gr.cite.scarabaeus</groupId>
+			<artifactId>xml-utils</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>gr.cite.femme</groupId>
+			<artifactId>femme-client</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Test dependencies -->

@@ -14,9 +14,9 @@ public interface MetadataStore {
 
 	public void insert(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
 
-	public void update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
+	public Metadatum update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
 
-	public void update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException, MetadataIndexException;
+	/*public Metadatum update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException, MetadataIndexException;*/
 
 	public void index(Metadatum metadatum) throws MetadataIndexException;
 
@@ -38,7 +38,9 @@ public interface MetadataStore {
 	
 	public void deleteAll(String elementId) throws MetadataStoreException;
 
-	public void deactivate(String id) throws MetadataStoreException, MetadataIndexException;
+	public void deactivate(String metadatumId) throws MetadataStoreException, MetadataIndexException;
+
+	public void deactivateAll(String elementId) throws MetadataStoreException, MetadataIndexException;
 
 	public String generateMetadatumId();
 

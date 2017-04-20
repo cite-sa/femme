@@ -1,4 +1,4 @@
-package gr.cite.femme.engine.datastore.mongodb.codecs;
+package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.engine.metadatastore.mongodb.MetadataGridFSFile;
@@ -111,6 +111,10 @@ public class MetadataGridFSFileCodec implements CollectibleCodec<MetadataGridFSF
 		metadataGridFSFile.setChunkSize(chunkSize);
 		metadataGridFSFile.setUploadDate(uploadDate);
 		metadataGridFSFile.setMd5(md5);
+
+		if (metadata != null) {
+			metadata.setId(id);
+		}
 		metadataGridFSFile.setMetadata(metadata);
 
 		return metadataGridFSFile;

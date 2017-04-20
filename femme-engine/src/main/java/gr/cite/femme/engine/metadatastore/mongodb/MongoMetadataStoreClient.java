@@ -5,13 +5,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import gr.cite.femme.engine.datastore.mongodb.codecs.MetadataGridFSFileCodecProvider;
-import gr.cite.femme.engine.datastore.mongodb.codecs.MetadataGridFSFileMetadataCodecProvider;
+import gr.cite.femme.engine.metadatastore.mongodb.codecs.MetadataGridFSFileCodecProvider;
+import gr.cite.femme.engine.metadatastore.mongodb.codecs.MetadataGridFSFileMetadataCodecProvider;
 import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
-import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJsonCodecProvider;
+import gr.cite.femme.engine.metadatastore.mongodb.codecs.MetadatumJsonCodecProvider;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -45,21 +44,20 @@ public class MongoMetadataStoreClient {
 
 	public MongoMetadataStoreClient(String host, int port, String name, String bucketName) {
 		this.client = new MongoClient(host, port);
-		this.database = client.getDatabase(name);
+		this.database = this.client.getDatabase(name);
 		
 		CodecRegistry metadataJsonCodecRegistry = CodecRegistries
 				.fromRegistries(CodecRegistries.fromProviders(new MetadatumJsonCodecProvider()), MongoClient.getDefaultCodecRegistry());
+		this.metadataJson = this.database.getCollection(MongoMetadataStoreClient.METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(metadataJsonCodecRegistry);
+
+		this.metadataGridFSBucket = GridFSBuckets.create(this.database, bucketName);
 
 		CodecRegistry metadataGridFsFilesCodecRegistry = CodecRegistries
 				.fromRegistries(
 						CodecRegistries.fromProviders(new MetadataGridFSFileCodecProvider(), new MetadataGridFSFileMetadataCodecProvider()),
 						MongoClient.getDefaultCodecRegistry());
+		this.metadataGridFSFilesCollection = this.database.getCollection(bucketName + ".files", MetadataGridFSFile.class).withCodecRegistry(metadataGridFsFilesCodecRegistry);
 
-		this.metadataJson = database.getCollection(MongoMetadataStoreClient.METADATA_COLLECTION_NAME, MetadatumJson.class).withCodecRegistry(metadataJsonCodecRegistry);
-		this.metadataGridFSFilesCollection = database.getCollection(bucketName + ".files", MetadataGridFSFile.class)
-				.withCodecRegistry(metadataGridFsFilesCodecRegistry);
-		this.metadataGridFSBucket = GridFSBuckets.create(this.database, bucketName);
-		
 		createIndexes();
 	}
 

@@ -37,7 +37,7 @@ public class DataElementCodec extends ElementCodec<DataElement> {
 				name = reader.readString();
 			} else if (fieldName.equals(FieldNames.ENDPOINT)) {
 				endpoint = reader.readString();
-			} else if (fieldName.equals(FieldNames.METADATA)) {
+			}/* else if (fieldName.equals(FieldNames.METADATA)) {
 				metadata = new ArrayList<>();
 				reader.readStartArray();
 				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -46,7 +46,7 @@ public class DataElementCodec extends ElementCodec<DataElement> {
 					metadata.add(metadatum);
 				}
 				reader.readEndArray();
-			} else if (fieldName.equals(FieldNames.SYSTEMIC_METADATA)) {
+			}*/ else if (fieldName.equals(FieldNames.SYSTEMIC_METADATA)) {
 				if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
 					systemicMetadata = this.getCodecRegistry().get(SystemicMetadata.class).decode(reader, decoderContext);
 				}

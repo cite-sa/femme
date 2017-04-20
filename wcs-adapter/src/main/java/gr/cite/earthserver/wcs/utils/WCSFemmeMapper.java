@@ -22,15 +22,12 @@ import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.utils.Pair;
 
 public final class WCSFemmeMapper {
-	
 	private static final Logger logger = LoggerFactory.getLogger(WCSFemmeMapper.class);
-	
-	private static final String GET_CAPABILITIES = "GetCapabilities";
-
-	private static final String DESCRIBE_COVERAGE = "DescribeCoverage";
-	
 	private static final ObjectMapper mapper = new ObjectMapper();
-	
+
+	private static final String GET_CAPABILITIES = "GetCapabilities";
+	private static final String DESCRIBE_COVERAGE = "DescribeCoverage";
+
 	public static Collection fromServer(String endpoint, String name, WCSResponse response) throws ParseException {
 		/*Collection.Builder collectionBuilder = Collection.builder();*/
 		Collection collection = new Collection();
@@ -85,6 +82,7 @@ public final class WCSFemmeMapper {
 
 	public static Metadatum fromWCSMetadata(WCSResponse response, String name) {
 		Metadatum metadatum = new Metadatum();
+		metadatum.setEndpoint(response.getEndpoint());
 		metadatum.setName(name);
 		metadatum.setContentType(response.getContentType().toString());
 		metadatum.setValue(response.getResponse());

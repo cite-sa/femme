@@ -19,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
@@ -98,8 +100,16 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public void delete(String metadatumId) throws MetadataIndexException {
-		// TODO find elasticsearch document id
-		this.client.delete(metadatumId, "");
+		Map<String, String> metadatumIdAndValue = new HashMap<>();
+		metadatumIdAndValue.put("metadatumId", metadatumId);
+		this.client.deleteByQuery(metadatumIdAndValue);
+	}
+
+	@Override
+	public void delete(String field, String value) throws MetadataIndexException {
+		Map<String, String> metadatumIdAndValue = new HashMap<>();
+		metadatumIdAndValue.put(field, value);
+		this.client.deleteByQuery(metadatumIdAndValue);
 	}
 
 	@Override

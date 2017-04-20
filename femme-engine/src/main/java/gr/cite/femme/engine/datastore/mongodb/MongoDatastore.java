@@ -4,14 +4,19 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
+import gr.cite.femme.core.exceptions.MetadataStoreException;
+import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 import gr.cite.femme.engine.datastore.mongodb.bson.DataElementBson;
@@ -129,7 +134,7 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public <T extends Element> List<String> insert(List<T> elements) throws DatastoreException {
+	public List<String> insert(List<? extends Element> elements) throws DatastoreException {
 		if (elements != null && elements.size() > 0) {
 			elements.forEach(element -> {
 				Instant now = Instant.now();
@@ -301,13 +306,14 @@ public class MongoDatastore implements Datastore {
 	public DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException {
 		QueryMongo mongoQuery = (QueryMongo) query;
 		logger.debug("addToCollection criteria query: " + mongoQuery.build());
+		//find(query, Collection.class).first()
 		Collection collection = this.mongoClient.getCollections().find(mongoQuery.build()).limit(1).first();
 
 		if (collection != null) {
-			Collection dataElementCollection = new Collection();
+			/*Collection dataElementCollection = new Collection();
 			dataElementCollection.setId(collection.getId());
 			dataElementCollection.setName(collection.getName());
-			dataElementCollection.setEndpoint(collection.getEndpoint());
+			dataElementCollection.setEndpoint(collection.getEndpoint());*/
 			dataElement.setCollections(Collections.singletonList(collection));
 
 			insert(dataElement);
@@ -368,48 +374,75 @@ public class MongoDatastore implements Datastore {
 
 	@Override
 	public Element update(Element element) throws DatastoreException {
-		/*if (element instanceof Collection) {
-			id = updateCollection((Collection) element);
+		Element updated = null;
 
-		} else if (element instanceof DataElement){
-			id = updateDataElement((DataElement) element);
+		if (element.getId() != null) {
+			if (element.getSystemicMetadata() != null) {
+				element.getSystemicMetadata().setModified(Instant.now());
+			}
+
+			//Document forUpdate = Documentizer.toDocument(element);
+			updated = this.mongoClient.getCollection(element.getClass())
+					.findOneAndUpdate(
+							Filters.eq(FieldNames.ID, new ObjectId(element.getId())),
+							new Document().append("$set", element),
+							new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+					);
 		}
-		return id;*/
-
-		if (element.getSystemicMetadata() != null) {
-			element.getSystemicMetadata().setModified(Instant.now());
-		}/* else {
-			SystemicMetadata systemicMetadata = new SystemicMetadata();
-			Instant now = Instant.now();
-			systemicMetadata.setCreated(now);
-			systemicMetadata.setModified(now);
-
-			element.setSystemicMetadata(systemicMetadata);
-		}*/
-
-
-		Document forUpdate = Documentizer.toDocument(element);
-		return this.mongoClient.getCollection(element.getClass())
-				.findOneAndUpdate(
-						Filters.eq(FieldNames.ID, new ObjectId(element.getId())),
-						new Document().append("$set", element),
-						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-				);
+		return updated;
 	}
 
 	@Override
-	public <T extends Element> Element update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException {
-		//fieldsAndValues.put(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.MODIFIED, Instant.now());
-		/*Document updateDocument = new Document(fieldsAndValues);*/
-		List<Bson> updates = fieldsAndValues.entrySet().stream().map(update -> Updates.set(update.getKey(), update.getValue())).collect(Collectors.toList());
+	public Element update(String id, Map<String, Object> fieldsAndValues, Class<? extends Element> elementSubType) throws DatastoreException {
+		Element updated = null;
+		if (id != null) {
+			List<Bson> updates = fieldsAndValues.entrySet().stream().map(fieldAndValue -> {
+				Bson update;
+				if (FieldNames.METADATA.equals(fieldAndValue.getKey())) {
+					update = Updates.addToSet(fieldAndValue.getKey(), fieldAndValue.getValue());
+				} else {
+					update = Updates.set(fieldAndValue.getKey(), fieldAndValue.getValue());
+				}
+				return update;
+			}).collect(Collectors.toList());
+			updates.add(Updates.currentDate(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.MODIFIED));
+
+			updated = this.mongoClient.getCollection(elementSubType)
+				.findOneAndUpdate(
+						Filters.eq(FieldNames.ID, new ObjectId(id)),
+						Updates.combine(updates),
+						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+				);
+		}
+
+		return updated;
+	}
+
+	@Override
+	public Element deactivate(String id, Class<? extends Element> elementSubType) throws DatastoreException {
+		Map<String, Object> statusFieldAndValue = new HashMap<>();
+		statusFieldAndValue.put(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE);
+		return update(id, statusFieldAndValue, elementSubType);
+	}
+
+	@Override
+	public Element findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<? extends Element> elementSubType) {
+		Bson addUpdate = Updates.addEachToSet(FieldNames.METADATA, addMetadataIds.stream().map(metadatumId -> new Document(FieldNames.ID, new ObjectId(metadatumId))).collect(Collectors.toList()));
+		List<Bson> removeUpdates = removeMetadataIds.stream().map(metadatumId -> Updates.pullByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.ID, new ObjectId(metadatumId)))).collect(Collectors.toList());
+
+
+		List<Bson> updates = new ArrayList<>();
+		updates.add(addUpdate);
+		updates.addAll(removeUpdates);
+
 		updates.add(Updates.currentDate(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.MODIFIED));
 
 		return this.mongoClient.getCollection(elementSubType)
-			.findOneAndUpdate(
+				.findOneAndUpdate(
 					Filters.eq(FieldNames.ID, new ObjectId(id)),
 					Updates.combine(updates),
 					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-			);
+				);
 	}
 
 	/*@Override
@@ -494,19 +527,6 @@ public class MongoDatastore implements Datastore {
 		return toBeDeleted;
 		
 	}*/
-
-	/*@Override
-	public <T extends Element> Element query(String id, Class<T> elementSubtype) throws IllegalElementSubtype {
-		String subtype = elementSubtype.getSimpleName();
-		if (subtype.equals("DataElement")) {
-			return dataElements.query(new Document().append(FieldNames.ID, id)).limit(1).first();
-		} else if (subtype.equals("Collection")) {
-			return collections.query(new Document().append(FieldNames.ID, id)).limit(1).first();
-		} else {
-			throw new IllegalElementSubtype(subtype + ".class is not a valid element subtype.");
-		}
-
-	}*/
 	
 	@Override
 	public DataElement getDataElementByName(String name) throws DatastoreException {
@@ -519,26 +539,34 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public String generateElementId() {
-		return new ObjectId().toString();
-	}
-
-	@Override
-	public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException {
-		ObjectId elementId;
+	public <T extends Element> T get(String id, Class<T> elementSubtype,  QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
 		try {
-			elementId = new ObjectId(id);
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).options(options).first();
 		} catch (IllegalArgumentException e) {
-			throw new DatastoreException(e.getMessage(), e);
+			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id: [" + id + "]", e);
 		}
-		return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, elementId).end()), elementSubtype, metadataStore).options(options).first();
 	}
 
+	/*@Override
+	public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
+		try {
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype, metadataStore).options(options).first();
+		} catch (IllegalArgumentException e) {
+			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id: [" + id + "]", e);
+		}
+	}*/
+
 	@Override
+	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
+		QueryMongo queryMongo = (QueryMongo) query;
+		return new QueryOptionsBuilderMongo<T>().query(this, elementSubtype).find(queryMongo);
+	}
+
+	/*@Override
 	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype, MetadataStore metadataStore) {
 		QueryMongo queryMongo = (QueryMongo) query;
 		return new QueryOptionsBuilderMongo<T>().query(this, metadataStore, elementSubtype).find(queryMongo);
-	}
+	}*/
 
 	@Override
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
@@ -550,12 +578,14 @@ public class MongoDatastore implements Datastore {
 	public void remove(DataElement dataElement, Collection collection) throws DatastoreException {
 
 	}
-	
-	/*private <T extends Element> List<Metadatum> getMetadata(T element) throws DatastoreException {
-		try {
-			return this.metadataStore.get(element.getId(), false);
-		} catch (MetadataStoreException e) {
-			throw new DatastoreException("Error during metadatum retrieval", e);
-		}
-	}*/
+
+	@Override
+	public String generateId() {
+		return new ObjectId().toString();
+	}
+
+	@Override
+	public Object generateId(String id) {
+		return new ObjectId(id);
+	}
 }

@@ -14,6 +14,9 @@ public class Metadatum {
 	@JsonProperty("elementId")
 	private String elementId;
 
+	@JsonProperty("endpoint")
+	private String endpoint;
+
 	@JsonProperty("name")
 	private String name;
 
@@ -30,32 +33,7 @@ public class Metadatum {
 	private String checksum;
 	
 	/*private List<MetadatumXPathCache> xPathCache;*/
-	
-	public Metadatum() {
-		/*this.xPathCache = new ArrayList<>();*/
-	}
-	
-	public Metadatum(String name, String value, String contentType) {
-		this.name = name;
-		this.value = value;
-		this.contentType = contentType;
-		/*this.xPathCache = new ArrayList<>();*/
-	}
-	public Metadatum(String id, String name, String value, String contentType) {
-		this.id = id;
-		this.name = name;
-		this.value = value;
-		this.contentType = contentType;
-		/*this.xPathCache = new ArrayList<>();*/
-	}
-	public Metadatum(String id, String elementId, String name, String value, String contentType) {
-		this.id = id;
-		this.elementId = elementId;
-		this.name = name;
-		this.value = value;
-		this.contentType = contentType;
-		/*this.xPathCache = new ArrayList<>();*/
-	}
+
 	
 	public String getId() {
 		return id;
@@ -71,6 +49,14 @@ public class Metadatum {
 
 	public void setElementId(String elementId) {
 		this.elementId = elementId;
+	}
+
+	public String getEndpoint() {
+		return endpoint;
+	}
+
+	public void setEndpoint(String endpoint) {
+		this.endpoint = endpoint;
 	}
 
 	public String getName() {

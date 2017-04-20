@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,7 +20,6 @@ import com.mongodb.Function;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import gr.cite.commons.utils.hash.HashGeneratorUtils;
 import gr.cite.commons.utils.hash.HashGenerationException;
@@ -74,55 +74,21 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		this.upload(metadatum);
 	}
 
-	@Override
-	public void update(Metadatum metadatum) throws MetadataStoreException {
-		if (metadatum.getValue() != null) {
-			removeWhiteSpaceAndCalculateChecksum(metadatum);
-
-			MetadataGridFSFile metadataGridFSFile = this.gridFsFilesCollection
-					.find(Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())).limit(1).first();
-			if (metadataGridFSFile == null) {
-				insert(metadatum);
-			}
-		} else {
-			MetadataGridFSFile updatedMetadataGridFSFile = this.gridFsFilesCollection.findOneAndUpdate(
-					Filters.eq(Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId()))),
-					Updates.set(FieldNames.METADATA, metadatum),
-					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-			);
-			metadatum.setId(updatedMetadataGridFSFile.getId());
-		}
-	}
-
-	@Override
-	public void update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException {
-		List<Bson> updates = fieldsAndValues.entrySet().stream().map(update -> Updates.set(FieldNames.METADATA + "." + update.getKey(), update.getValue())).collect(Collectors.toList());
-		updates.add(Updates.currentDate(FieldNames.METADATA + "." + FieldNames.MODIFIED));
-
-		this.gridFsFilesCollection.findOneAndUpdate(Filters.eq(Filters.eq(FieldNames.ID, new ObjectId(id))), Updates.combine(updates));
-	}
-
-	@Override
-	public void updateStatus(String id, Status status) throws MetadataStoreException {
-		this.gridFsFilesCollection.findOneAndUpdate(Filters.eq(Filters.eq(FieldNames.ID, new ObjectId(id))),
-				Updates.set(FieldNames.METADATA + "." + FieldNames.STATUS, status.getStatusCode()));
-	}
-
 	private void upload(Metadatum metadatum) throws MetadataStoreException {
 		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
 
 		InputStream streamToUploadFrom = new ByteArrayInputStream(metadatum.getValue().getBytes(StandardCharsets.UTF_8));
 		GridFSUploadOptions options = new GridFSUploadOptions().metadata(new Document()
-					.append(FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()))
-					.append(FieldNames.NAME, metadatum.getName())
-					.append(FieldNames.CHECKSUM, metadatum.getChecksum())
-					.append(FieldNames.CONTENT_TYPE, metadatum.getContentType())
-					.append(FieldNames.STATUS, Status.ACTIVE.getStatusCode())
-					.append(FieldNames.CREATED, Date.from(metadatum.getSystemicMetadata().getCreated()))
-					.append(FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()))
-					.append(FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode())
-				);
-		
+				.append(FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()))
+				.append(FieldNames.ENDPOINT, metadatum.getEndpoint())
+				.append(FieldNames.NAME, metadatum.getName())
+				.append(FieldNames.CHECKSUM, metadatum.getChecksum())
+				.append(FieldNames.CONTENT_TYPE, metadatum.getContentType())
+				.append(FieldNames.CREATED, Date.from(metadatum.getSystemicMetadata().getCreated()))
+				.append(FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()))
+				.append(FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode())
+		);
+
 		ObjectId fileId;
 		try {
 			fileId = this.gridFSBucket.uploadFromStream(filename, streamToUploadFrom, options);
@@ -131,21 +97,141 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		}
 		metadatum.setId(fileId.toString());
 	}
+
+	@Override
+	public Metadatum update(Metadatum metadatum) throws MetadataStoreException {
+		Metadatum updatedMetadatum = null;
+		if (metadatum.getValue() != null) {
+			removeWhiteSpaceAndCalculateChecksum(metadatum);
+
+			if (existsByIdAndChecksum(metadatum)) {
+				updatedMetadatum = updateMetadata(metadatum);
+			} else if (existsById(metadatum)) {
+				//String oldMetadatumId = metadatum.getId();
+				insert(metadatum);
+
+				/*Metadatum oldMetadatum = new Metadatum();
+				metadatum.setId(oldMetadatumId);
+				delete(oldMetadatum);*/
+
+			} else if (existsByElementIdAndChecksum(metadatum)){
+				updatedMetadatum = updateMetadata(metadatum);
+				updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+			} else {
+				insert(metadatum);
+			}
+		} else {
+			updatedMetadatum = updateMetadata(metadatum);
+			updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+		}
+
+		return updatedMetadatum;
+	}
+
+	@Override
+	public void updateStatus(String id, Status status) throws MetadataStoreException {
+		Map<String, Object> statusFieldAndValue = new HashMap<>();
+		statusFieldAndValue.put(FieldNames.METADATA + "." + FieldNames.STATUS, status.getStatusCode());
+		update(id, statusFieldAndValue);
+	}
+
+	private Metadatum update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException {
+		MetadataGridFSFile updated = null;
+
+		if (id != null) {
+			List<Bson> updates = fieldsAndValues.entrySet().stream().map(update -> Updates.set(update.getKey(), update.getValue())).collect(Collectors.toList());
+			updates.add(Updates.currentDate(FieldNames.METADATA + "." + FieldNames.MODIFIED));
+
+			updated = this.gridFsFilesCollection.findOneAndUpdate(
+					Filters.eq(FieldNames.ID, new ObjectId(id)),
+					Updates.combine(updates),
+					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+		}
+
+		return updated != null ? updated.getMetadata() : null;
+	}
+
+	private Metadatum updateMetadata(Metadatum metadatum) throws MetadataStoreException {
+		return update(metadatum.getId(), MetadataGridFS.metadatumToFieldsMap(metadatum));
+	}
+
+	private boolean existsById(Metadatum metadatum) throws MetadataStoreException {
+		MetadataGridFSFile existing = null;
+		if (metadatum.getId() != null) {
+			existing = this.gridFsFilesCollection.find(
+					Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId()))).projection(Projections.include(FieldNames.ID)).limit(1).first();
+			if (existing != null) {
+				metadatum.setId(existing.getId());
+			}
+		}
+
+		return existing != null;
+	}
+
+	private boolean existsByChecksum(Metadatum metadatum) {
+		MetadataGridFSFile existing = null;
+
+		if (metadatum.getChecksum() != null) {
+			existing = this.gridFsFilesCollection.find(
+					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum()))
+					.projection(Projections.include(FieldNames.ID)).limit(1).first();
+			if (existing != null) {
+				metadatum.setId(existing.getId());
+			}
+		}
+
+		return existing != null;
+	}
+
+	private boolean existsByIdAndChecksum(Metadatum metadatum) {
+		MetadataGridFSFile existing = null;
+
+		if (metadatum.getId() != null && metadatum.getChecksum() != null) {
+			existing = this.gridFsFilesCollection.find(Filters.and(
+					Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId())),
+					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
+			)).projection(Projections.include(FieldNames.ID)).limit(1).first();
+
+			if (existing != null) {
+				metadatum.setId(existing.getId());
+			}
+		}
+
+		return existing != null;
+	}
+
+	private boolean existsByElementIdAndChecksum(Metadatum metadatum) {
+		MetadataGridFSFile existing = null;
+
+		if (metadatum.getElementId() != null && metadatum.getChecksum() != null) {
+			existing = this.gridFsFilesCollection.find(Filters.and(
+					Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId())),
+					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
+			)).projection(Projections.include(FieldNames.ID)).limit(1).first();
+
+			if (existing != null) {
+				metadatum.setId(existing.getId());
+			}
+		}
+
+		return existing != null;
+	}
 	
 	@Override
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
 		return download(metadatum.getId());
 	}
 	
-	private Metadatum download(String fileId) throws MetadataStoreException {
+	private Metadatum download(String id) throws MetadataStoreException {
 		OutputStream metadatumStream = new ByteArrayOutputStream();
 		try {
-			gridFSBucket.downloadToStream(new ObjectId(fileId), metadatumStream);
+			this.gridFSBucket.downloadToStream(new ObjectId(id), metadatumStream);
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("Metadatum retrieval failed. File id: " + fileId, e);
+			throw new MetadataStoreException("Metadatum payload retrieval failed. id: [" + id + "]", e);
 		}
 		
 		Metadatum metadatum = new Metadatum();
+		metadatum.setId(id);
 		metadatum.setValue(metadatumStream.toString());
 		
 		return metadatum;
@@ -183,11 +269,31 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		try {
-			this.gridFSBucket.find(Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
+			this.gridFsFilesCollection.find(Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
+					.map(metadataGridFSFile -> {
+						Metadatum metadatum = metadataGridFSFile.getMetadata();
+						if (!lazy) {
+							try {
+								metadatum.setValue(download(metadataGridFSFile.getId()).getValue());
+							} catch (MetadataStoreException e) {
+								throw new RuntimeException(e.getMessage(), e);
+							}
+						}
+						return metadatum;
+					}).into(metadata);
+		} catch (RuntimeException e) {
+			throw new MetadataStoreException("Metadata retrieval failed. Element id: [" + elementId + "]" , e);
+		}
+
+
+		/*List<Metadatum> metadata = new ArrayList<>();
+		try {
+			this.gridFSBucket.get(Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
 					.map(gridFsFileToMetadatumTransformation(lazy)).into(metadata);
 		} catch (RuntimeException e) {
 			throw new MetadataStoreException(e.getMessage(), e);
-		}
+		}*/
+
 		return metadata;
 	}
 	
@@ -384,25 +490,33 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		return metadatumInfo;
 	}
 	
-	public boolean exists(Metadatum metadatum) {
-		return this.gridFSBucket.find(buildMetadataFromDocument(metadatum)).filter(Projections.include("_id")).limit(1) != null;
-	}
+	/*public boolean exists(Metadatum metadatum) {
+		return this.gridFSBucket.get(buildMetadataFromDocument(metadatum)).filter(Projections.include("_id")).limit(1).first != null;
+	}*/
 	
 	@Override
-	public void delete(Metadatum metadatum) {
-		gridFSBucket.delete(new ObjectId(metadatum.getId()));
+	public void delete(String metadatumId) {
+		this.gridFSBucket.delete(new ObjectId(metadatumId));
 	}
 	
 	@Override
 	public void deleteAll(String elementId) throws MetadataStoreException {
-		try (MongoCursor<GridFSFile> cursor = this.gridFSBucket.find(
-				Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
-				.iterator()) {
+		Map<String, Object> elementIdFilter = new HashMap<>();
+		elementIdFilter.put(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId));
+		deleteAll(elementIdFilter);
+	}
+
+	@Override
+	public void deleteAll(Map<String, Object> fieldsAndValues) throws MetadataStoreException {
+		Bson filterQuery = Filters.and(fieldsAndValues.entrySet().stream()
+				.map(fieldAndValue -> Filters.eq(fieldAndValue.getKey(), fieldAndValue.getValue())).toArray(Bson[]::new));
+
+		try (MongoCursor<MetadataGridFSFile> cursor = this.gridFsFilesCollection.find(filterQuery).projection(Projections.include(FieldNames.ID)).iterator()) {
 			while (cursor.hasNext()) {
-				this.gridFSBucket.delete(cursor.next().getObjectId());
+				this.gridFSBucket.delete(new ObjectId(cursor.next().getId()));
 			}
 		} catch (MongoGridFSException e) {
-			throw new MetadataStoreException("Error while deleting metadatum from GridFS", e);
+			throw new MetadataStoreException("Metadatum deletion from GridFS failed", e);
 		}
 	}
 
@@ -445,6 +559,50 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			}
 			return metadatum;
 		};
+	}
+
+	private static Map<String, Object> metadatumToFieldsMap(Metadatum metadatum) {
+		Map<String, Object> fieldsMap = new HashMap<>();
+		if (metadatum.getElementId() != null) {
+			fieldsMap.put(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()));
+		}
+		if (metadatum.getName() != null) {
+			fieldsMap.put(FieldNames.METADATA + "." + FieldNames.NAME, metadatum.getName());
+		}
+		if (metadatum.getContentType() != null) {
+			fieldsMap.put(FieldNames.METADATA + "." + FieldNames.CONTENT_TYPE, metadatum.getContentType());
+		}
+		if (metadatum.getSystemicMetadata() != null) {
+			if (metadatum.getSystemicMetadata().getModified() != null) {
+				fieldsMap.put(FieldNames.METADATA + "." + FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()));
+			}
+			if (metadatum.getSystemicMetadata().getStatus() != null){
+				fieldsMap.put(FieldNames.METADATA + "." + FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode());
+			}
+		}
+		return fieldsMap;
+	}
+
+	private static Document metadatumToMetadataDocument(Metadatum metadatum) {
+		Document metadataDocument = new Document();
+		if (metadatum.getElementId() != null) {
+			metadataDocument.append(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()));
+		}
+		if (metadatum.getName() != null) {
+			metadataDocument.append(FieldNames.METADATA + "." + FieldNames.NAME, new ObjectId(metadatum.getName()));
+		}
+		if (metadatum.getContentType() != null) {
+			metadataDocument.append(FieldNames.METADATA + "." + FieldNames.CONTENT_TYPE, metadatum.getContentType());
+		}
+		if (metadatum.getSystemicMetadata() != null) {
+			if (metadatum.getSystemicMetadata().getModified() != null) {
+				metadataDocument.append(FieldNames.METADATA + "." + FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()));
+			}
+			if (metadatum.getSystemicMetadata().getStatus() != null){
+				metadataDocument.append(FieldNames.METADATA + "." + FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode());
+			}
+		}
+		return metadataDocument;
 	}
 	
 	private Document buildMetadataFromDocument(Metadatum metadatum) {

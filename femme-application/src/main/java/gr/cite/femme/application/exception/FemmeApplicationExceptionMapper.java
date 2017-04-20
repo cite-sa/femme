@@ -7,22 +7,29 @@ import javax.ws.rs.ext.Provider;
 
 import gr.cite.femme.core.dto.FemmeResponse;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 @Provider
 public class FemmeApplicationExceptionMapper implements ExceptionMapper<FemmeApplicationException> {
 
 	@Override
 	public Response toResponse(FemmeApplicationException exception) {
-		Response.ResponseBuilder responseBuilder = Response.status(exception.getStatus());
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 		
 		femmeResponse.setStatus(exception.getStatus());
 		femmeResponse.setMessage(exception.getMessage());
-		
-		if (exception.getCode() != null) {
-			femmeResponse.setCode(exception.getCode());
+
+		/*StringWriter errorStackTrace = new StringWriter();
+		exception.printStackTrace(new PrintWriter(errorStackTrace));
+		femmeResponse.setDeveloperMessage(errorStackTrace.toString());*/
+		if (exception.getCause() != null) {
+			femmeResponse.setDeveloperMessage(exception.getCause().getMessage());
 		}
-		
-		return responseBuilder.entity(femmeResponse).type(MediaType.APPLICATION_JSON).build();
+
+		femmeResponse.setCode(exception.getCode());
+
+		return Response.status(femmeResponse.getStatus()).entity(femmeResponse).type(MediaType.APPLICATION_JSON).build();
 	}
 
 }

@@ -17,7 +17,7 @@ public final class FieldNames {
 	
 	
 	public static final String METADATA_FILENAME = "filename";
-	public static final String METADATA_FILE_ID = "fileId";
+	//public static final String METADATA_FILE_ID = "fileId";
 	public static final String METADATA_ELEMENT_ID = "elementId";
 	public static final String METADATA_ELEMENT_ID_EMBEDDED = FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT + "." + FieldNames.METADATA_ELEMENT_ID;
 	public static final String CONTENT_TYPE = "contentType";

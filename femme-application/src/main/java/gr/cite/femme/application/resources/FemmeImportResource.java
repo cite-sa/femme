@@ -3,6 +3,7 @@ package gr.cite.femme.application.resources;
 import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.commons.utils.hash.HashGeneratorUtils;
 import gr.cite.femme.application.exception.FemmeApplicationException;
+import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.engine.Femme;
@@ -49,7 +50,6 @@ import java.util.stream.Collectors;
 @Path("importer")
 @Produces(MediaType.APPLICATION_JSON)
 public class FemmeImportResource {
-
 	private static final Logger logger = LoggerFactory.getLogger(FemmeImportResource.class);
 	private static final String IMPORTS_PATH = "imports";
 
@@ -72,7 +72,7 @@ public class FemmeImportResource {
 	}
 
 	@GET
-	@Path("imports/{id}")
+	@Path(FemmeImportResource.IMPORTS_PATH + "/{id}")
 	public Response getImport(@PathParam("id") String id) {
 		FemmeResponse<Import> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Import> entity = new FemmeResponseEntity<>();
@@ -141,7 +141,7 @@ public class FemmeImportResource {
 							.getId())).end()
 					)).end()), DataElement.class).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).list();
 			existingImport.setExistingDataElements(existingDataElements.stream().map(DataElement::getId).collect(Collectors.toList()));
-		} catch (DatastoreException e) {
+		} catch (DatastoreException | MetadataStoreException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 

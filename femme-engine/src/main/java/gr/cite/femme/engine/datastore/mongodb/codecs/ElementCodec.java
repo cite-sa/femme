@@ -79,7 +79,7 @@ public abstract class ElementCodec<T extends Element> implements CollectibleCode
 				writer.writeEndArray();
 			}
 		}
-		if (value.getMetadata() != null && value.getMetadata().size() > 0) {
+		/*if (value.getMetadata() != null && value.getMetadata().size() > 0) {
 			writer.writeStartArray(FieldNames.METADATA);
 			for (Metadatum metadatum : value.getMetadata()) {
 				if (value.getId() != null) {
@@ -88,7 +88,7 @@ public abstract class ElementCodec<T extends Element> implements CollectibleCode
 				encoderContext.encodeWithChildContext(codecRegistry.get(Metadatum.class), writer, metadatum);
 			}
 			writer.writeEndArray();
-		}
+		}*/
 		if (value.getSystemicMetadata() != null) {
 			writer.writeName(FieldNames.SYSTEMIC_METADATA);
 			encoderContext.encodeWithChildContext(codecRegistry.get(SystemicMetadata.class), writer, value.getSystemicMetadata());

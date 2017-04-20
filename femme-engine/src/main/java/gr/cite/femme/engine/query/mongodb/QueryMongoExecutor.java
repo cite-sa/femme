@@ -3,23 +3,16 @@ package gr.cite.femme.engine.query.mongodb;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import gr.cite.femme.api.MetadataStore;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.core.model.Element;
-import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.query.api.Criterion;
 import gr.cite.femme.core.query.api.Query;
 import gr.cite.femme.core.query.api.QueryOptionsMessenger;
@@ -29,10 +22,8 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.MongoQueryException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Projections;
 
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
@@ -40,40 +31,55 @@ import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.model.Collection;
 
 public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
-
 	private static final Logger logger = LoggerFactory.getLogger(QueryMongoExecutor.class);
-	
+
 	private MongoDatastore datastore;
-	private MetadataStore metadataStore;
+	//private MetadataStore metadataStore;
 	private MongoCollection<T> collection;
 	private Document queryDocument;
 	private QueryOptionsMessenger options;
 	private FindIterable<T> results;
-	private boolean loadMetadata = true;
+	private boolean lazyMetadata = false;
 	private Instant totalQueryDuration;
 
 
-	public QueryMongoExecutor(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
+	public QueryMongoExecutor(MongoDatastore datastore, Class<T> elementSubtype) {
 		this.datastore = datastore;
 		this.collection = this.datastore.getCollection(elementSubtype);
-		/*if (elementSubtype == DataElement.class) {
-			this.collection = (MongoCollection<T>) datastore.getDataElements();
-		} else if (elementSubtype == Collection.class) {
-			this.collection = (MongoCollection<T>) datastore.getCollections();
-		}*/
-		this.metadataStore = metadataStore;
 	}
-	
+
+	/*public QueryMongoExecutor(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
+		this.datastore = datastore;
+		this.collection = this.datastore.getCollection(elementSubtype);
+		this.metadataStore = metadataStore;
+	}*/
+
+	protected boolean isLazyMetadata() {
+		return lazyMetadata;
+	}
+
+	protected void setLazyMetadata(boolean lazyMetadata) {
+		this.lazyMetadata = lazyMetadata;
+	}
+
+	public Document getQueryDocument() {
+		return queryDocument;
+	}
+
+	public void setQueryDocument(Document queryDocument) {
+		this.queryDocument = queryDocument;
+	}
+
 	public QueryExecutor<T> options(QueryOptionsMessenger options) {
 		this.options = options;
 
 		if (options != null) {
 			if (options.getInclude() != null && !options.getInclude().contains("metadata")) {
-				loadMetadata = false;
+				lazyMetadata = false;
 			}
 			if (options.getExclude() != null && options.getExclude().contains("metadata")) {
 				options.getExclude().remove("metadata");
-				loadMetadata = false;
+				lazyMetadata = true;
 			}
 			if (results != null) {
 				if (options.getLimit() != null) {
@@ -104,7 +110,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	}
 
 	@Override
-	public <U extends Criterion> QueryExecutor<T> find(Query<U> query) {
+	public QueryExecutor<T> find(Query<? extends Criterion> query) {
 		totalQueryDuration = Instant.now();
 		if (query != null) {
 			this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
@@ -113,32 +119,24 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		return this;
 	}
 
-	@Override
-	public QueryExecutor<T> xPath(String xPath) throws DatastoreException {
+	/*@Override
+	public QueryExecutor<T> xPath(String xPath, MetadataStore metadataStore) throws DatastoreException, MetadataStoreException {
 		if (xPath != null && !xPath.trim().equals("")) {
 			List<Metadatum> metadataXPathResults;
-			try {
-				Duration xPathQueryDuration;
-				Instant xPathQueryStart = Instant.now();
 
-				metadataXPathResults = this.metadataStore.xPath(xPath);
+			Duration xPathQueryDuration;
+			Instant xPathQueryStart = Instant.now();
 
-				Instant xPathQueryEnd = Instant.now();
-				xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
-				logger.info("XPath query duration: " + xPathQueryDuration.toMillis() + "ms");
-			} catch (MetadataStoreException e) {
-				throw new DatastoreException("Error on XPath", e);
-			}
+			metadataXPathResults = this.metadataStore.xPath(xPath);
 
-			/*Document retrieveXPathSatisfyElementsQuery = new Document()
-					.append(FieldNames.METADATA + "." + FieldNames.ID,
-						new Document().append("$in",
-								metadataXPathResults.stream().filter(metadatum -> metadatum.getId() != null)
-										.map(metadatum -> new ObjectId(metadatum.getId())).collect(Collectors.toList())));*/
+			Instant xPathQueryEnd = Instant.now();
+			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
+			logger.info("XPath query duration: " + xPathQueryDuration.toMillis() + "ms");
+
 			Document retrieveXPathSatisfyElementsQuery = new Document()
 					.append(FieldNames.ID,
 						new Document().append("$in",
-								metadataXPathResults.stream()/*.filter(metadatum -> metadatum.getId() != null)*/
+								metadataXPathResults.stream()*//*.filter(metadatum -> metadatum.getId() != null)*//*
 										.map(metadatum -> new ObjectId(metadatum.getElementId()))
 										.distinct().collect(Collectors.toList())));
 			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
@@ -152,23 +150,22 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 						));
 		}
 		return this;
-	}
+	}*/
 
 	@Override
-	public List<T> list() throws DatastoreException {
+	public List<T> list() throws DatastoreException, MetadataStoreException {
 		List<T> elements = new ArrayList<>();
 
-		this.results = this.queryDocument == null ? collection.find() /*: collection.find(this.queryDocument);*/
+		this.results = this.queryDocument == null ? collection.find()
 		: collection.find(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument));
 		options(options);
 
-		if (loadMetadata) {
+		/*if (lazyMetadata) {
 			MongoCursor<T> cursor;
-			try {				
+			try {
 				cursor = this.results.iterator();
 			} catch (MongoQueryException e) {
-				logger.error(e.getMessage(), e);
-				throw new DatastoreException(e.getMessage(), e);
+				throw new DatastoreException("Query failed: [" + (this.queryDocument == null ? "find all" : this.queryDocument.toJson()) + "]", e);
 			}
 
 			ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -187,33 +184,26 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 					try {
 						elements.add(future.get());
 					} catch (InterruptedException | ExecutionException e) {
-						cursor.close();
 						logger.error(e.getMessage(), e);
-						throw new DatastoreException(e.getMessage(), e);
 					}
 				}
 				cursor.close();
 			}
-		} else {
+		} else {*/
 			results.into(elements);
-		}
+		//}
 		logger.info("Total query duration: " + Duration.between(totalQueryDuration, Instant.now()).toMillis() + "ms");
 		return elements;
 	}
 
 	@Override
-	public T first() throws DatastoreException {
+	public T first() throws DatastoreException, MetadataStoreException {
 		results = this.queryDocument == null ? collection.find().limit(1) : collection.find(this.queryDocument).limit(1);
 		options(options);
 		T element = results.first();
-		if (element != null && loadMetadata) {
-			try {
-				element.setMetadata(this.metadataStore.find(element.getId()));
-			} catch (MetadataStoreException e) {
-				logger.error(e.getMessage(), e);
-				throw new DatastoreException(e.getMessage(), e);
-			}
-		}
+		/*if (element != null && lazyMetadata) {
+			element.setMetadata(this.metadataStore.find(element.getId()));
+		}*/
 		return element;
 	}
 
@@ -222,14 +212,14 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		if (query != null) {
 			Document queryDocument = query.build();
 			Document inclusionOperatorDocument = findInclusionOperator(queryDocument);
-			
+
 			if (inclusionOperatorDocument != null) {
 				List<Collection> collections = new ArrayList<>();
-				
+
 				//System.out.println(inclusionOperatorDocument.get("$in_any_collection"));
-				
+
 				//List<Document> docs = postProcessIdField((Object)inclusionOperatorDocument.get("$in_any_collection"));
-				
+
 				//System.out.println(docs);
 
 				datastore.getCollections().find(new Document("$or", inclusionOperatorDocument.get("$in_any_collection")))
@@ -237,18 +227,18 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 					.into(collections);
 				inclusionOperatorDocument.remove("$in_any_collection");
 				System.out.println(queryDocument);
-				
+
 				List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
-				
+
 				inclusionOperatorDocument.append(FieldNames.DATA_ELEMENT_COLLECTION_ID, new Document("$in", collectionIds));
 			}
-			
+
 			return queryDocument;
 		} else {
 			return new Document();
 		}
 	}
-	
+
 	private List<Document> postProcessIdField(Object document) {
 		List<Document> docs = new ArrayList<>();
 		if (document.getClass().getSimpleName().contains("List")) {
@@ -257,17 +247,17 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				String id = (String)(idDoc.get("$eq"));
 				idDoc.remove("$eq");
 				idDoc.append("$eq", new ObjectId(id));
-				
+
 				docs.add(doc);
 			}
 		}
 		return docs;
 	}
-	
+
 	private Document findInclusionOperator(Object document) {
 		Document inclusion = null;
 		String className = document.getClass().getSimpleName();
-		
+
 		if (className.equals("Document")) {
 			for (Entry<String, Object> doc : ((Document) document).entrySet()) {
 				if (doc.getKey().equals("$in_any_collection")) {

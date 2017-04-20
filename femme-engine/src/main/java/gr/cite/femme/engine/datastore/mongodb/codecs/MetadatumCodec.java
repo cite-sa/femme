@@ -14,6 +14,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 
+@Deprecated
 public class MetadatumCodec implements CollectibleCodec<Metadatum> {
 	private CodecRegistry codecRegistry;
 

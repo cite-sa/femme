@@ -2,6 +2,7 @@ package gr.cite.femme.engine.metadatastore.mongodb;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -9,10 +10,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.StampedLock;
+import java.util.stream.Collectors;
 
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import gr.cite.femme.core.exceptions.FemmeException;
+import gr.cite.femme.core.model.Status;
+import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.api.MetadataStore;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
@@ -21,6 +26,7 @@ import gr.cite.femme.engine.metadata.xpath.MetadataXPath;
 import gr.cite.femme.engine.metadata.xpath.ReIndexingProcess;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
+import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataAndSchemaIndexDatastore;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class MongoMetadataStore implements MetadataStore {
-
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataStore.class);
 
 //	private static final String METADATA_INDEX_HOST = "http://localhost:8083/femme-index-application/metadata-index";
@@ -86,14 +91,19 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
-		this.metadataGridFS.update(metadatum);
+	public Metadatum update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
+		Metadatum updatedMetadatum = this.metadataGridFS.update(metadatum);
+		if (updatedMetadatum == null) {
+			index(metadatum);
+		}
+
+		return updatedMetadatum;
 	}
 
-	@Override
-	public void update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException, MetadataIndexException {
-		this.metadataGridFS.update(id, fieldsAndValues);
-	}
+	/*@Override
+	public Metadatum update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException, MetadataIndexException {
+		return this.metadataGridFS.update(id, fieldsAndValues);
+	}*/
 
 	@Override
 	public void index(Metadatum metadatum) throws MetadataIndexException {
@@ -243,7 +253,7 @@ public class MongoMetadataStore implements MetadataStore {
 	
 	@Override
 	public void delete(Metadatum metadatum) throws MetadataStoreException {
-		getMetadataStore(metadatum).delete(metadatum);
+		getMetadataStore(metadatum).delete(metadatum.getId());
 	}
 	
 	@Override
@@ -254,8 +264,16 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void deactivate(String id) throws MetadataStoreException, MetadataIndexException {
+	public void deactivate(String metadatumId) throws MetadataStoreException, MetadataIndexException {
+		this.metadataGridFS.updateStatus(metadatumId, Status.INACTIVE);
+	}
 
+	@Override
+	public void deactivateAll(String elementId) throws MetadataStoreException, MetadataIndexException {
+		List<Metadatum> metadata = this.metadataGridFS.find(elementId, true);
+		for (Metadatum metadatum: metadata) {
+			this.metadataGridFS.updateStatus(metadatum.getId(), Status.INACTIVE);
+		}
 	}
 
 	@Override
@@ -284,16 +302,5 @@ public class MongoMetadataStore implements MetadataStore {
 
 	private boolean isXPathable(Metadatum metadatum) {
 		return metadatum.getContentType() != null && (metadatum.getContentType().toLowerCase().contains("xml"));
-	}
-
-	public void testChangeStatus() throws MetadataStoreException {
-		//this.metadataGridFS.changeStatus("", Status.ACTIVE);
-		this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection().findOneAndUpdate(Filters.eq(FieldNames.ID, new ObjectId("58e51c629a319213d7cca57b")),
-				Updates.set("metadata.status", 20));
-	}
-
-	public static void main(String[] args) throws MetadataStoreException {
-		MongoMetadataStore store = new MongoMetadataStore();
-		store.testChangeStatus();
 	}
 }

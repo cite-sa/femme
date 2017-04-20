@@ -1,4 +1,4 @@
-package gr.cite.femme.engine.datastore.mongodb.codecs;
+package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.model.Metadatum;
@@ -30,6 +30,9 @@ public class MetadataGridFSFileMetadataCodec implements Codec<Metadatum> {
 		if (value.getElementId() != null) {
 			writer.writeObjectId(FieldNames.METADATA_ELEMENT_ID, new ObjectId(value.getElementId()));
 		}
+		if (value.getEndpoint() != null) {
+			writer.writeString(FieldNames.ENDPOINT, value.getEndpoint());
+		}
 		if (value.getName() != null) {
 			writer.writeString(FieldNames.NAME, value.getName());
 		}
@@ -59,7 +62,7 @@ public class MetadataGridFSFileMetadataCodec implements Codec<Metadatum> {
 
 	@Override
 	public Metadatum decode(BsonReader reader, DecoderContext decoderContext) {
-		String elementId = null, name = null, checksum = null, contentType = null;
+		String elementId = null, endpoint = null, name = null, checksum = null, contentType = null;
 		Status status = null;
 		Instant created = null, modified = null;
 
@@ -70,18 +73,20 @@ public class MetadataGridFSFileMetadataCodec implements Codec<Metadatum> {
 
 			if (fieldName.equals(FieldNames.METADATA_ELEMENT_ID)) {
 				elementId = reader.readObjectId().toString();
+			} else if (fieldName.equals(FieldNames.ENDPOINT)) {
+				endpoint = reader.readString();
 			} else if (fieldName.equals(FieldNames.NAME)) {
 				name = reader.readString();
 			} else if (fieldName.equals(FieldNames.CHECKSUM)) {
 				checksum = reader.readString();
 			} else if (fieldName.equals(FieldNames.CONTENT_TYPE)) {
 				contentType = reader.readString();
-			} else if (fieldName.equals(FieldNames.STATUS)) {
-				status = Status.getEnum(reader.readInt32());
 			} else if (fieldName.equals(FieldNames.CREATED)) {
 				created = Instant.ofEpochMilli(reader.readDateTime());
 			}  else if (fieldName.equals(FieldNames.MODIFIED)) {
 				modified = Instant.ofEpochMilli(reader.readDateTime());
+			} else if (fieldName.equals(FieldNames.STATUS)) {
+				status = Status.getEnum(reader.readInt32());
 			}
 		}
 
@@ -89,9 +94,11 @@ public class MetadataGridFSFileMetadataCodec implements Codec<Metadatum> {
 
 		Metadatum metadata = new Metadatum();
 		metadata.setElementId(elementId);
+
 		metadata.setName(name);
 		metadata.setChecksum(checksum);
 		metadata.setContentType(contentType);
+		metadata.setEndpoint(endpoint);
 
 		SystemicMetadata systemicMetadata = new SystemicMetadata();
 		systemicMetadata.setStatus(status);

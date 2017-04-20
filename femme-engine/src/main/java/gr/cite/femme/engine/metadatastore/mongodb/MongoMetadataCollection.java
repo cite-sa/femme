@@ -13,15 +13,13 @@ public interface MongoMetadataCollection {
 	
 	public void insert(Metadatum metadatum) throws MetadataStoreException;
 
-	public void update(Metadatum metadatum) throws MetadataStoreException;
+	public Metadatum update(Metadatum metadatum) throws MetadataStoreException;
 
-	public void update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException;
+	//public Metadatum update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException;
 
 	public void updateStatus(String id, Status status) throws MetadataStoreException;
 
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
-
-	public MongoCursor<Metadatum> findAll(boolean lazy) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 
@@ -29,9 +27,13 @@ public interface MongoMetadataCollection {
 
 	public MongoCursor<Metadatum> findAllBeforeTimestamp(Instant timestamp) throws MetadataStoreException;
 
+	public MongoCursor<Metadatum> findAll(boolean lazy) throws MetadataStoreException;
+
 	public List<String> xPath(Metadatum metadatum, String xPath) throws MetadataStoreException;
 
-	public void delete(Metadatum metadatum);
+	public void delete(String metadatumId);
 	
 	public void deleteAll(String elementId) throws MetadataStoreException;
+
+	public void deleteAll(Map<String, Object> fieldsAndValues) throws MetadataStoreException;
 }

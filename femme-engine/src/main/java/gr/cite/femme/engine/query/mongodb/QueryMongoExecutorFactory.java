@@ -11,7 +11,7 @@ public class QueryMongoExecutorFactory<T extends Element> extends QueryExecutorF
 	@Override
 	public QueryExecutor<T> query(Datastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
 		if (datastore instanceof MongoDatastore) {
-			return new QueryMongoExecutor<>((MongoDatastore) datastore, metadataStore, elementSubtype);
+			return new QueryMongoExecutor<>((MongoDatastore) datastore, elementSubtype);
 		} else {
 			return null;
 		}

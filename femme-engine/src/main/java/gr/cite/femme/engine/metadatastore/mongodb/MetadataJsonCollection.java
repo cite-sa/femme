@@ -47,14 +47,14 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	}
 
 	@Override
-	public void update(Metadatum metadatum) throws MetadataStoreException {
-
+	public Metadatum update(Metadatum metadatum) throws MetadataStoreException {
+		return null;
 	}
 
-	@Override
+	/*@Override
 	public void update(String id, Map<String, Object> fieldsAndValues) throws MetadataStoreException {
 
-	}
+	}*/
 
 	@Override
 	public void updateStatus(String id, Status status) throws MetadataStoreException {
@@ -64,8 +64,13 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	@Override
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
 		MetadatumJson metadatumJson = metadataCollection.find(Filters.eq(FieldNames.ID, metadatum.getId())).limit(1).first();
-		return new Metadatum(metadatumJson.getId(), metadatumJson.getElementId(), metadatumJson.getName(),
-				metadatumJson.getValue(), metadatumJson.getContentType());
+		Metadatum retrievedMetadatum = new Metadatum();
+		metadatum.setId(metadatumJson.getId());
+		metadatum.setElementId(metadatumJson.getElementId());
+		metadatum.setName(metadatumJson.getName());
+		metadatum.setValue(metadatumJson.getValue());
+		metadatum.setContentType(metadatumJson.getContentType());
+		return retrievedMetadatum;
 	}
 
 	@Override
@@ -91,7 +96,7 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	}
 
 	@Override
-	public void delete(Metadatum metadatum) {
+	public void delete(String metadatumId) {
 		// TODO Auto-generated method stub
 
 	}
@@ -99,6 +104,11 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	@Override
 	public void deleteAll(String elementId) throws MetadataStoreException {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteAll(Map<String, Object> fieldsAndValues) throws MetadataStoreException {
 
 	}
 

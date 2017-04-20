@@ -23,10 +23,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 		exception.printStackTrace(new PrintWriter(errorStackTrace));
 		femmeResponse.setDeveloperMessage(errorStackTrace.toString());
 
-		return Response.status(femmeResponse.getStatus())
-				.entity(femmeResponse)
-				.type(MediaType.APPLICATION_JSON)
-				.build();
+		return Response.status(femmeResponse.getStatus()).entity(femmeResponse).type(MediaType.APPLICATION_JSON).build();
 	}
 
 	private Integer getHttpStatus(Throwable exception) {
