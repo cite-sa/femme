@@ -221,6 +221,48 @@ public class FemmeResource {
 	}
 
 	@GET
+	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/xpath")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response xPathInMemoryDataElements(
+			@QueryParam("query") QueryMongo query,
+			@QueryParam("options") QueryOptionsMessenger options,
+			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
+
+		if (query == null) {
+			logger.info("Query all DataElements");
+		} else {
+			logger.info("Query DataElements: " + query.build());
+		}
+
+		DataElementList dataElementList;
+		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
+		try {
+			QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPathInMemory(xPath).options(options);
+
+			List<DataElement> dataElements = queryExecutor.list();
+			dataElementList = new DataElementList(dataElements);
+
+		} catch (DatastoreException | MetadataStoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		}
+
+		String message;
+		if (dataElementList.getSize() == 0) {
+			message = "No data elements found";
+			logger.info(message);
+			throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
+		} else {
+			message = dataElementList.getSize() + " data elements found";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message)
+					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElementList));
+		}
+
+		return Response.ok().entity(femmeResponse).build();
+	}
+
+	@GET
 	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/{id}")
 	public Response getDataElementById(@NotNull @PathParam("id") String id) throws FemmeApplicationException {
 

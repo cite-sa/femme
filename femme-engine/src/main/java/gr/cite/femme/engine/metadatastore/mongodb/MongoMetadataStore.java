@@ -2,34 +2,30 @@ package gr.cite.femme.engine.metadatastore.mongodb;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.StampedLock;
-import java.util.stream.Collectors;
 
 import com.mongodb.client.MongoCursor;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import gr.cite.femme.core.exceptions.FemmeException;
 import gr.cite.femme.core.model.Status;
-import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.api.MetadataStore;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.engine.metadata.xpath.MetadataXPath;
 import gr.cite.femme.engine.metadata.xpath.ReIndexingProcess;
-import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
-import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataAndSchemaIndexDatastore;
+import gr.cite.commons.utils.xml.XMLConverter;
+import gr.cite.commons.utils.xml.XPathEvaluator;
+import gr.cite.commons.utils.xml.exceptions.XMLConversionException;
+import gr.cite.commons.utils.xml.exceptions.XPathEvaluationException;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.xpath.XPathFactoryConfigurationException;
 
 //import gr.cite.femme.client.api.MetadataIndexClient;
 
@@ -37,15 +33,12 @@ import org.slf4j.LoggerFactory;
 public class MongoMetadataStore implements MetadataStore {
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataStore.class);
 
-//	private static final String METADATA_INDEX_HOST = "http://localhost:8083/femme-index-application/metadata-index";
 	private MongoMetadataStoreClient mongoMetadataStoreClient;
 	private MetadataJsonCollection metadataMongoCollection;
 	private MetadataGridFS metadataGridFS;
 	private MetadataXPath metadataXPath;
 
 	private final StampedLock lock = new StampedLock();
-
-//	private MetadataIndexClient metadataIndexClient;
 	
 	/*private XPathCacheManager indexManager;*/
 	
@@ -191,30 +184,57 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public List<Metadatum> xPath(String xPath) throws MetadataStoreException {
+		return xPath(new ArrayList<>(), xPath);
+	}
+	@Override
+	public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataStoreException {
 		try {
-			return metadataXPath.xPath(xPath);
+			return this.metadataXPath.xPath(elementIds, xPath);
 		} catch (MetadataIndexException e) {
 			throw new MetadataStoreException(e.getMessage(), e);
 		}
 	}
 
+
 	@Override
+	public List<Metadatum> xPathInMemory(String xPath) throws MetadataStoreException {
+		return xPathInMemory(new ArrayList<>(), xPath);
+	}
+
+	@Override
+	public List<Metadatum> xPathInMemory(List<String> elementIds, String xPath) throws MetadataStoreException {
+		List<Metadatum> metadata = new ArrayList<>();
+		try (MongoCursor<Metadatum> metadataCursor = this.metadataGridFS.findAll(false)) {
+			while (metadataCursor.hasNext()) {
+				Metadatum metadatum = metadataCursor.next();
+				if (new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).size() > 0) {
+					metadata.add(metadatum);
+				}
+			}
+		} catch (XPathEvaluationException | XMLConversionException | XPathFactoryConfigurationException e) {
+			throw new MetadataStoreException("XPath in memory failed", e);
+		}
+
+		return metadata;
+	}
+
+	/*@Override
 	public <T extends Element> T xPath(T element, String xPath) throws MetadataStoreException {
 		boolean xPathSatisfied = false;
 		for (Metadatum metadatum: element.getMetadata()) {
-			/*if (getIndexedXPath(metadatum, xPath) != null) {
+			*//*if (getIndexedXPath(metadatum, xPath) != null) {
 				xPathSatisfied = true;
-			} else {*/
+			} else {*//*
 			List<String> xPathResult = getMetadataStore(metadatum).xPath(metadatum, xPath);
 			if (xPathResult.size() > 0) {
 				xPathSatisfied = true;
-				/*indexManager.checkAndCreateIndexOnXPath(metadatum, xPath, xPathResult, element);*/
+				*//*indexManager.checkAndCreateIndexOnXPath(metadatum, xPath, xPathResult, element);*//*
 			}
-			/*}*/
+			*//*}*//*
 		}
 		
 		return xPathSatisfied ? element : null;
-	}
+	}*/
 	
 	/*private MetadatumXPathCache getIndexedXPath(Metadatum metadatum, String xPath) {
 		if (metadatum.getXPathCache() != null) {

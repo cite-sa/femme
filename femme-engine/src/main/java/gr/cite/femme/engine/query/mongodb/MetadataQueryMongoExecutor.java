@@ -80,19 +80,61 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	}
 
 	@Override
-	public List<T> list() throws DatastoreException, MetadataStoreException {
-		try {
-			return super.list().parallelStream().map(element -> {
-				try {
-					element.setMetadata(this.metadataStore.find(element.getId(), super.isLazyMetadata()));
-					return element;
-				} catch (MetadataStoreException e) {
-					throw new RuntimeException(e.getMessage(), e);
-				}
-			}).collect(Collectors.toList());
-		} catch (RuntimeException e) {
-			throw new MetadataStoreException(e.getMessage(), e);
+	public MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
+		if (xPath != null && !xPath.trim().equals("")) {
+			List<Metadatum> metadataXPathResults;
+
+			Duration xPathQueryDuration;
+			Instant xPathQueryStart = Instant.now();
+
+			metadataXPathResults = this.metadataStore.xPathInMemory(xPath);
+
+			Instant xPathQueryEnd = Instant.now();
+			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
+			logger.info("XPath query duration: " + xPathQueryDuration.toMillis() + "ms");
+
+			Document retrieveXPathSatisfyElementsQuery = new Document()
+					.append(FieldNames.ID,
+							new Document().append("$in",
+									metadataXPathResults.stream()/*.filter(metadatum -> metadatum.getId() != null)*/
+											.map(metadatum -> new ObjectId(metadatum.getElementId()))
+											.distinct().collect(Collectors.toList())));
+			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
+
+			super.setQueryDocument(super.getQueryDocument() == null
+					? retrieveXPathSatisfyElementsQuery
+					: new Document().append("$and", Arrays.asList(
+						super.getQueryDocument(),
+						retrieveXPathSatisfyElementsQuery/*,
+						Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode())*/
+					)
+				));
 		}
+
+		return this;
+	}
+
+
+	@Override
+	public List<T> list() throws DatastoreException, MetadataStoreException {
+		List<T> elements;
+		elements = super.list();
+		if (!isLazyMetadata()) {
+			try {
+				elements = elements.stream().map(element -> {
+					try {
+						element.setMetadata(this.metadataStore.find(element.getId(), super.isLazyMetadata()));
+						return element;
+					} catch (MetadataStoreException e) {
+						throw new RuntimeException(e.getMessage(), e);
+					}
+				}).collect(Collectors.toList());
+			} catch (RuntimeException e) {
+				throw new MetadataStoreException(e.getMessage(), e);
+			}
+		}
+
+		return elements;
 	}
 
 	@Override

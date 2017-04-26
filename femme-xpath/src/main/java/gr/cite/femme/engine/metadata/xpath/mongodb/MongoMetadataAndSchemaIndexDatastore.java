@@ -1,9 +1,11 @@
+/*
 package gr.cite.femme.engine.metadata.xpath.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
@@ -18,6 +20,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +63,13 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
             schemasCollection.insertOne(schema);
         }
     }
+
+    */
+/*@Override
+    public MultivaluedMap<JSONPath, String> findMetadataIndexPath(String regex) {
+        return null;
+    }*//*
+
 
     @Override
     public List<MetadataSchema> findMetadataIndexPath(String regex) {
@@ -136,7 +146,8 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
         return results;
     }
 
-    /*public List<IndexableMetadatum> findMetadata(Bson query) {
+    */
+/*public List<IndexableMetadatum> findMetadata(Bson query) {
         List<IndexableMetadatum> metadata = new ArrayList<>();
         metadataCollection.find(query).into(metadata);
         return metadata;
@@ -153,5 +164,7 @@ public class MongoMetadataAndSchemaIndexDatastore implements MetadataSchemaIndex
 
         results.into(elements);
         return elements;
-    }*/
+    }*//*
+
 }
+*/

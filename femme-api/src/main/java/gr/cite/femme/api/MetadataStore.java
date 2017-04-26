@@ -32,7 +32,13 @@ public interface MetadataStore {
 
 	public List<Metadatum> xPath(String xPath) throws MetadataStoreException;
 
-	public <T extends Element> T xPath(T element, String xPath) throws MetadataStoreException;
+	public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataStoreException;
+
+	public List<Metadatum> xPathInMemory(String xPath) throws MetadataStoreException;
+
+		public List<Metadatum> xPathInMemory(List<String> elementIds, String xPath) throws MetadataStoreException;
+
+	//public <T extends Element> T xPath(T element, String xPath) throws MetadataStoreException;
 	
 	public void delete(Metadatum metadatum) throws MetadataStoreException;
 	

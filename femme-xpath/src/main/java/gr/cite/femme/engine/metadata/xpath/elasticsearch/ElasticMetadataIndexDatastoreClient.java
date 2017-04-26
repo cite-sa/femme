@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +28,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class ElasticMetadataIndexDatastoreClient {
-
 	private static final Logger logger = LoggerFactory.getLogger(ElasticMetadataIndexDatastoreClient.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	
 	private static final String ELASTICSEARCH_HOST_NAME = "localhost";
 	private static final int ELASTICSEARCH_PORT = 9200;
 	private static final String ELASTICSEARCH_INDEX_ALIAS = "metadataindex";
-	//private static final String ELASTICSEARCH_TYPE_PREFIX = "metadataschema_";
-	private static final String ELASTICSEARCH_TYPE = "xpath";
+	private static final String ELASTICSEARCH_TYPE = "xml";
 
 	private RestClient client;
 	private String indexAlias;
@@ -82,6 +81,14 @@ public class ElasticMetadataIndexDatastoreClient {
 
 	public String getIndexAlias() {
 		return indexAlias;
+	}
+
+	public String getIndexPrefix(String metadataSchemaId) {
+		return this.indexAlias + metadataSchemaId;
+	}
+
+	public String getFullIndexName(String metadataSchemaId, String uniqueId) {
+		return this.indexAlias + metadataSchemaId + "_" + uniqueId;
 	}
 
 	public String createIndex() throws IOException {
@@ -170,6 +177,35 @@ public class ElasticMetadataIndexDatastoreClient {
 	void swapWithAliasOldIndices(Set<String> newIndices) throws MetadataIndexException {
 		List<String> oldIndices = getIndicesByAlias(this.indexAlias);
 		String indexSwapRequest = "{\"actions\":[" +
+				newIndices.stream().map(newIndex -> "\"" + newIndex + "\"")
+						.collect(Collectors.joining(",",
+						"{\"add\":{\"indices\": [",
+						"], \"alias\": \"" + this.indexAlias + "\"}}")) +
+				(newIndices.size() > 0 && oldIndices.size() > 0 ? "," : "") +
+				oldIndices.stream().map(oldIndex -> "{" +
+						"\"remove_index\":{" +
+							"\"index\":\"" + oldIndex + "\"" +
+						"}" +
+					"}").collect(Collectors.joining(",")) +
+				"]" +
+			"}";
+
+		logger.info("Swap request: " + indexSwapRequest);
+
+		HttpEntity entity = new NStringEntity(indexSwapRequest, ContentType.APPLICATION_JSON);
+		try {
+			this.client.performRequest("POST", "/_aliases", Collections.emptyMap(), entity);
+		} catch (IOException e) {
+			throw new MetadataIndexException("Indices swap failed: old indices: [" + String.join(",", oldIndices) + "], " +
+					"new indices: [" + String.join(",", newIndices) + "]", e);
+		}
+
+		this.indexAliasCreated.compareAndSet(false, true);
+	}
+
+	void swapWithAliasOldIndices(Set<String> oldIndices, Set<String> newIndices) throws MetadataIndexException {
+		//List<String> oldIndices = getIndicesByAlias(this.indexAlias);
+		String indexSwapRequest = "{\"actions\":[" +
 				"{\"add\": {" +
 					"\"indices\": [" +
 						newIndices.stream().map(newIndex -> "\"" + newIndex + "\"").collect(Collectors.joining(",")) +
@@ -239,16 +275,6 @@ public class ElasticMetadataIndexDatastoreClient {
 		}
 
 		return new ArrayList<>(indicesResponseMap.keySet());
-
-		/*List<String> indices = new ArrayList<>();
-		if (indicesResponseMap == null || indicesResponseMap.isEmpty()) {
-			throw new MetadataIndexException("No insert associated with insert alias " + indexAlias);
-		} else if (indicesResponseMap.size() > 1) {
-			throw new MetadataIndexException("Multiple indexes associated with insert alias " + indexAlias);
-		} else {
-			aliasIndexName = return new ArrayList<>(indicesResponseMap.keySet());
-		}
-		return aliasIndexName;*/
 	}
 
 	public String findIndex(String indexName) throws MetadataIndexException {

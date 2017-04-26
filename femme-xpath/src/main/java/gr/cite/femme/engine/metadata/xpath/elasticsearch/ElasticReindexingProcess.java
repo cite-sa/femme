@@ -24,6 +24,7 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private MetadataSchemaIndexDatastore metadataSchemaIndexDatastore;
+	private ElasticMetadataIndexDatastore elasticMetadataIndexDatastore;
 	private ElasticMetadataIndexDatastoreClient indexClient;
 
 	private UUID indexProcessId;
@@ -36,8 +37,9 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 
 	private LongAdder total = new LongAdder();
 
-	public ElasticReindexingProcess(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, ElasticMetadataIndexDatastoreClient indexClient) {
+	public ElasticReindexingProcess(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, ElasticMetadataIndexDatastore elasticMetadataIndexDatastore, ElasticMetadataIndexDatastoreClient indexClient) {
 		this.metadataSchemaIndexDatastore = metadataSchemaIndexDatastore;
+		this.elasticMetadataIndexDatastore = elasticMetadataIndexDatastore;
 		this.indexClient = indexClient;
 		this.reIndexingInProgress = false;
 	}
@@ -52,7 +54,15 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 
 	@Override
 	public synchronized void end() throws MetadataIndexException {
-		this.indexClient.swapWithAliasOldIndices(this.indices.get().stream().map(index -> index + "_" + this.indexProcessId).collect(Collectors.toSet()));
+		try {
+			this.indexClient.swapWithAliasOldIndices(this.indices.getIndicesInfo().entrySet().stream()
+					.map(entry -> this.indexClient.getFullIndexName(entry.getKey(), entry.getValue())).collect(Collectors.toSet()));
+			//this.indexClient.swapWithAliasOldIndices(this.elasticMetadataIndexDatastore.getIndices().getFullIndexNames(), this.indices.getFullIndexNames());
+		} finally {
+			this.endTime = Instant.now();
+			this.reIndexingInProgress = false;
+		}
+		this.elasticMetadataIndexDatastore.setIndices(this.indices);
 		this.endTime = Instant.now();
 		this.indices = null;
 		this.reIndexingInProgress = false;
@@ -98,16 +108,16 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 	}
 
 	private void index(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) throws MetadataIndexException {
-		String indexName = this.indexClient.getIndexAlias() + "_" + indexableMetadatum.getMetadataSchemaId();
-		String timestampedMetadataIndexName = indexName + "_" + this.indexProcessId;
-		if (this.indices.compareAndAdd(indexName)) {
-			this.indexClient.createIndex(timestampedMetadataIndexName);
-			this.indexClient.createMapping(metadataSchema, timestampedMetadataIndexName);
+		String metadataSchemaId = metadataSchema.getId();
+		String randomId = UUID.randomUUID().toString();
+		String uniqueMetadataIndexName;
+		if (this.indices.compareAndAdd(metadataSchemaId, randomId)) {
+			uniqueMetadataIndexName = this.indexClient.getFullIndexName(metadataSchemaId, randomId);
+			this.indexClient.createIndex(uniqueMetadataIndexName);
+			this.indexClient.createMapping(metadataSchema, uniqueMetadataIndexName);
+		} else {
+			uniqueMetadataIndexName = this.indexClient.getFullIndexName(metadataSchemaId, this.indices.getUniqueId(metadataSchemaId));
 		}
-
-		/*if (!this.indexClient.mappingExists(timestampedMetadataIndexName)) {
-			this.indexClient.createMapping(metadataSchema, this.indexName);
-		}*/
 
 		String indexableMetadatumSerialized;
 		try {
@@ -115,7 +125,7 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 		} catch (JsonProcessingException e) {
 			throw new MetadataIndexException("Metadatum serialization failed", e);
 		}
-		this.indexClient.insert(indexableMetadatumSerialized, timestampedMetadataIndexName);
+		this.indexClient.insert(indexableMetadatumSerialized, uniqueMetadataIndexName);
 
 	}
 }

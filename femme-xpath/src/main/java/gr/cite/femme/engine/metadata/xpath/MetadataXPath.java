@@ -134,7 +134,39 @@ public class MetadataXPath {
         logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
 
         start = Instant.now();
-        List<IndexableMetadatum> xPathResult = metadataIndexDatastore.query(queryTree);
+        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(queryTree);
+        end = Instant.now();
+        logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
+
+        start = Instant.now();
+        List<Metadatum> metadata = xPathResult.stream().map(indexableMetadatum -> {
+            Metadatum metadatum = new Metadatum();
+            metadatum.setId(indexableMetadatum.getMetadatumId());
+            metadatum.setElementId(indexableMetadatum.getElementId());
+            return metadatum;
+        }).collect(Collectors.toList());
+        end = Instant.now();
+        logger.info("IndexableMetadatum to Metadatum transformation duration: " + Duration.between(start, end).toMillis() + "ms");
+
+        return metadata;
+    }
+
+    public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataIndexException {
+        Instant start, end;
+
+        CharStream stream = CharStreams.fromString(xPath);
+        XPathLexer lexer = new XPathLexer(stream);
+        XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
+        ParseTree tree = parser.xpath();
+
+        start = Instant.now();
+        MongoXPathVisitor visitor = new MongoXPathVisitor(metadataSchemaIndexDatastore);
+        Tree<QueryNode> queryTree = visitor.visit(tree);
+        end = Instant.now();
+        logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
+
+        start = Instant.now();
+        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree);
         end = Instant.now();
         logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
 

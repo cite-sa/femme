@@ -1,5 +1,7 @@
 package gr.cite.femme.engine.metadata.xpath.elasticsearch.utils;
 
+import java.util.List;
+
 public class QueryNode {
 
 	public enum Operator {
@@ -41,12 +43,12 @@ public class QueryNode {
 	}
 
 	private StringBuilder nodePath = new StringBuilder();
-
 	private StringBuilder filterPath = new StringBuilder();
-
 	private Operator operator;
-
 	private String value;
+
+	private List<String> metadataSchemaIds;
+	private boolean isArray;
 
 	public QueryNode() {
 
@@ -86,5 +88,21 @@ public class QueryNode {
 
 	public void setValue(String value) {
 		this.value = value;
+	}
+
+	public List<String> getMetadataSchemaIds() {
+		return metadataSchemaIds;
+	}
+
+	public void setMetadataSchemaIds(List<String> metadataSchemaIds) {
+		this.metadataSchemaIds = metadataSchemaIds;
+	}
+
+	public boolean isArray() {
+		return isArray;
+	}
+
+	public void setArray(boolean array) {
+		isArray = array;
 	}
 }

@@ -1,6 +1,6 @@
 package gr.cite.femme.engine.metadata.xpath.mongodb.evaluation;
 
-import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataAndSchemaIndexDatastore;
+import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathLexer;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
 import org.antlr.v4.runtime.CharStream;
@@ -19,9 +19,9 @@ public class MongoXPathQuery {
 
     Logger logger = LoggerFactory.getLogger(MongoXPathQuery.class);
 
-    private MongoMetadataAndSchemaIndexDatastore xPathDatastore;
+    private MetadataIndexDatastore xPathDatastore;
 
-    public MongoXPathQuery(MongoMetadataAndSchemaIndexDatastore xPathDatastore) {
+    public MongoXPathQuery(MetadataIndexDatastore xPathDatastore) {
         this.xPathDatastore = xPathDatastore;
     }
 

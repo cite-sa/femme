@@ -24,7 +24,7 @@ public class MongoMetadataIndexDatastoreClient {
 
 	private static final String DATABASE_HOST = "localhost";
 	private static final int DATABASE_PORT = 27017;
-	private static final String DATABASE_NAME = "metadata-schema-db";
+	private static final String DATABASE_NAME = "metadata-schema-db-devel";
 	private static final String TRANSFORMED_METADATA_COLLECTION_NAME = "metadata";
 	private static final String METADATA_SCHEMAS_COLLECTION_NAME = "metadataSchemas";
 
@@ -89,5 +89,4 @@ public class MongoMetadataIndexDatastoreClient {
 		}
 		schemasCollection.createIndex(Indexes.ascending("checksum"), uniqueIndex);
 	}
-
 }

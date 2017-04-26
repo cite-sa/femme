@@ -7,7 +7,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <!--<module>../../../../../workspaces/earthserver/xml-utils</module>-->
+        <module>../xml-utils</module>
         <module>../femme-core</module>
         <module>../femme-api</module>
         <!--<module>../femme-index-api</module>

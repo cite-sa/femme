@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
@@ -34,17 +35,22 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		this.client = client;
 	}
 
-	public void query(String query, boolean payloadLazy) throws IOException {
+	public void query(String query, List<String> metadataSchemaIds, boolean payloadLazy) throws IOException {
 		String scrollQuery = "{" +
 				(payloadLazy ? "\"_source\": {\"excludes\": [ \"value\" ]}," : "") +
 				query + "," +
 				"\"sort\" : [\"_doc\"]," +
 				"\"size\":  1000" +
 			"}";
+
+		logger.debug("Scroll query: " + scrollQuery);
+		logger.debug("Scroll query URL: " + "/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s");
+
 		HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
 		this.indexResponse = this.client.get().performRequest(
 					"GET",
-					"/" + this.client.getIndexAlias() + "/_search?scroll=15s",
+					//"/" + this.client.getIndexAlias() + "/_search?scroll=15s",
+				"/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s",
 					Collections.emptyMap(),
 					entity);
 		getResults();

@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
 import gr.cite.femme.engine.metadata.xpath.MetadataXPath;
-import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataAndSchemaIndexDatastore;
+//import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataAndSchemaIndexDatastore;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore;
@@ -42,7 +42,7 @@ public class MongoXPathTest {
 	private static final String INVALID_EXPRESSION = "/server//coverage/@**[local-name()='test']";
 
 	private MetadataXPath xPath;
-	private MongoMetadataAndSchemaIndexDatastore xPathDatastore;
+	//private MongoMetadataAndSchemaIndexDatastore xPathDatastore;
 
 	@Before
 	public void initXPathClient() throws UnknownHostException, MetadataIndexException {

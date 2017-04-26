@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.QueryBuilder;
 import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
+import gr.cite.femme.core.utils.Pair;
 import gr.cite.femme.engine.metadata.xpath.ReIndexingProcess;
 import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
@@ -18,11 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
@@ -44,13 +41,21 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 	public ElasticMetadataIndexDatastore(MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException, MetadataIndexException {
 		this.client = new ElasticMetadataIndexDatastoreClient();
 		this.schemaIndexDatastore = schemaIndexDatastore;
-		this.indices = new Indices();
+		this.indices = new Indices(this.client.getIndicesByAlias(this.client.getIndexAlias()));
 	}
 
 	public ElasticMetadataIndexDatastore(String hostName, int port, String indexAlias, MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException, MetadataIndexException {
 		this.client = new ElasticMetadataIndexDatastoreClient(hostName, port, indexAlias);
 		this.schemaIndexDatastore = schemaIndexDatastore;
-		this.indices = new Indices();
+		this.indices = new Indices(this.client.getIndicesByAlias(this.client.getIndexAlias()));
+	}
+
+	synchronized Indices getIndices() {
+		return indices;
+	}
+
+	synchronized void setIndices(Indices indices) {
+		this.indices = indices;
 	}
 
 	@Override
@@ -59,20 +64,24 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 	}
 
 	public ReIndexingProcess retrieveReIndexer(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore) {
-		return new ElasticReindexingProcess(metadataSchemaIndexDatastore, this.client);
+		return new ElasticReindexingProcess(metadataSchemaIndexDatastore, this, this.client);
 	}
 
 	public void insert(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) throws MetadataIndexException {
-		String timestampedMetadataIndexName;
+		String uniqueMetadataIndexName;
+		String metadataSchemaId = metadataSchema.getId();
+		String randomId = UUID.randomUUID().toString();
 
-		String metadataIndexName = this.client.getIndexAlias() + "_" + metadataSchema.getId();
-		if (this.indices.compareAndAdd(metadataIndexName)) {
-			timestampedMetadataIndexName = metadataIndexName + "_" + UUID.randomUUID();
-			this.client.createIndex(timestampedMetadataIndexName);
-			this.client.createIndexAliasAssociation(timestampedMetadataIndexName);
-			this.client.createMapping(metadataSchema, timestampedMetadataIndexName);
-		} else {
-			timestampedMetadataIndexName = this.client.findIndex(metadataIndexName);
+		synchronized (this) {
+			if (this.indices.compareAndAdd(metadataSchemaId, randomId)) {
+				uniqueMetadataIndexName = this.client.getFullIndexName(metadataSchemaId, randomId);
+				this.client.createIndex(uniqueMetadataIndexName);
+				this.client.createMapping(metadataSchema, uniqueMetadataIndexName);
+				this.client.createIndexAliasAssociation(uniqueMetadataIndexName);
+			} else {
+				//uniqueMetadataIndexName = this.client.findIndex(metadataIndexName);
+				uniqueMetadataIndexName = this.client.getFullIndexName(metadataSchemaId, this.indices.getUniqueId(metadataSchemaId));
+			}
 		}
 
 		/*if (!this.client.indexExists(timestampedMetadataIndexName)) {
@@ -95,7 +104,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		} catch (JsonProcessingException e) {
 			throw new MetadataIndexException("Metadatum serialization failed", e);
 		}
-		this.client.insert(indexableMetadatumSerialized, timestampedMetadataIndexName);
+		this.client.insert(indexableMetadatumSerialized, uniqueMetadataIndexName);
 	}
 
 	@Override
@@ -119,52 +128,79 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public List<IndexableMetadatum> query(Tree<QueryNode> queryTree, boolean lazy) throws MetadataIndexException {
+		return query(new ArrayList<>(), queryTree, lazy);
+	}
+
+	@Override
+	public List<IndexableMetadatum> query(List<String> elementIds, Tree<QueryNode> queryTree) throws MetadataIndexException {
+		return query(elementIds, queryTree, true);
+	}
+
+	@Override
+	public List<IndexableMetadatum> query(List<String> elementIds, Tree<QueryNode> queryTree, boolean lazy) throws MetadataIndexException {
 		if (!this.client.isIndexAliasCreated()) {
 			return new ArrayList<>();
 		}
-		/*HttpEntity entity = new NStringEntity(buildElasticSearchQuery(queryTree, lazy), ContentType.APPLICATION_JSON);
-		Response indexResponse;
-		try {
-			 indexResponse = client.get().performRequest(
-					"POST",
-					"/" + client.getIndexAlias() + "/_search",
-					Collections.emptyMap(),
-					entity);
-		} catch (IOException e) {
-			throw new MetadataIndexException("Metadata insert query failed", e);
-		}
-
-		ElasticResponseContent response;
-		try {
-			response = mapper.readValue(IOUtils.toString(indexResponse.getEntity().getContent(),
-					Charset.defaultCharset()), ElasticResponseContent.class);
-		} catch (IOException e) {
-			throw new MetadataIndexException("ElasticSearch response serialization failed", e);
-		}
-
-		return response.getHits().getHits().stream().map(hit -> {
-			hit.getSource().setId(hit.getId());
-			return hit.getSource();
-		}).collect(Collectors.toList());*/
 
 		ElasticScrollQuery scrollQuery = new ElasticScrollQuery(this.client);
+		List<IndexableMetadatum> results = new ArrayList<>();
 		try {
-			logger.info("ElasticSearch query: " + buildElasticSearchQuery(queryTree, lazy));
-			scrollQuery.query(buildElasticSearchQuery(queryTree, lazy), true);
+			//logger.info("ElasticSearch query: " + buildElasticSearchQuery(queryTree, lazy));
+			//String searchQuery = buildElasticSearchQuery(queryTree, lazy);
+			List<ElasticSearchQuery> searchQueries = buildElasticSearchQuery(elementIds, queryTree, lazy);
+
+			for (ElasticSearchQuery searchQuery: searchQueries) {
+				for (Map.Entry<String, List<String>> searchQueryEntry: searchQuery.getIndicesPerQuery().entrySet()) {
+					scrollQuery.query(searchQueryEntry.getKey(), searchQueryEntry.getValue(), true);
+					while (scrollQuery.hasNext()) {
+						results.addAll(scrollQuery.next());
+					}
+				}
+			}
 		} catch (IOException e) {
 			throw new MetadataIndexException("ElasticSearch scroll query failed", e);
 		}
 
-		List<IndexableMetadatum> results = new ArrayList<>();
-		while (scrollQuery.hasNext()) {
-			results.addAll(scrollQuery.next());
-		}
+		logger.debug("Total metadadata found: " + results.size());
 
 		return results;
 	}
 
-	private String buildElasticSearchQuery(Tree<QueryNode> queryTree, boolean lazy) {
-		return buildShoulds(queryTree.getRoot()).stream().map(
+	private List<ElasticSearchQuery> buildElasticSearchQuery(List<String> elementIds, Tree<QueryNode> queryTree, boolean lazy) {
+		List<ElasticSearchQuery> finalQueries = new ArrayList<>();
+		List<ElasticSearchQuery> shoulds = buildShoulds(queryTree.getRoot());
+
+		String elementIdsFilter = !elementIds.isEmpty()
+			? "{" +
+				"\"terms\":{" +
+					"\"elementId\":[" + elementIds.stream().collect(Collectors.joining(",")) + "]" +
+					"}" +
+				"},"
+			: "";
+		shoulds.forEach(query -> {
+			ElasticSearchQuery finalQuery = new ElasticSearchQuery();
+			query.getIndicesPerQuery().forEach((key, value) -> {
+				finalQuery.addQuery("\"query\":{" +
+						"\"bool\":{" +
+							"\"filter\":[" +
+								elementIdsFilter +
+								"{" +
+									"\"bool\":{" +
+										"\"should\":[" +
+											key +
+										"]" +
+									"}" +
+								"}" +
+							"]" +
+						"}" +
+					"}", value);
+			});
+			finalQueries.add(finalQuery);
+		});
+
+		return finalQueries;
+
+		/*return shoulds.stream().map(
 				should -> should.stream().collect(Collectors.joining(
 					",",
 					"{\"bool\":{\"must\":[",
@@ -172,35 +208,169 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			).collect(Collectors.joining(
 				",",
 				"\"query\":{\"bool\":{\"filter\":{\"bool\":{\"should\":[",
-				"]}}}}"));
+				"]}}}}"));*/
 	}
 
-	private List<List<String>> buildShoulds(Node<QueryNode> node) {
-		List<List<String>> shoulds = new ArrayList<>();
-		buildShould(node, new ArrayList<>(), shoulds);
+	private List<ElasticSearchQuery> buildShoulds(Node<QueryNode> node) {
+		List<ElasticSearchQuery> shoulds = new ArrayList<>();
+		buildShould(node, shoulds);
 		return shoulds;
 	}
 
-	private void buildShould(Node<QueryNode> node, List<String> should, List<List<String>> shoulds) {
-		for (Node<QueryNode> child: node.getChildren()) {
-			QueryNode data = child.getData();
-			List<String> nodeShould = new ArrayList<>(should);
-			if (!"".equals(data.getFilterPath().toString()) || data.getValue() != null) {
-				nodeShould.add(buildTermOrNested(data));
+	private ElasticSearchQuery buildShould(Node<QueryNode> node, List<ElasticSearchQuery> shoulds) {
+		if (node.getChildren().size() > 0) {
+			for (Node<QueryNode> child : node.getChildren()) {
+				//List<ElasticSearchQuery> nodeShould = new ArrayList<>(should);
+				//ElasticSearchQuery childQuery = buildShould(child, new ArrayList<>(), shoulds);
+				ElasticSearchQuery childQuery = buildShould(child, shoulds);
+				// if (node.getData() != null && (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null)) {
+				if (childQuery != null) {
+					shoulds.add(childQuery);
+				}
+
+				/*QueryNode data = child.getData();
+				if (!data.getFilterPath().toString().trim().isEmpty() || data.getValue() != null) {
+					List<ElasticSearchQuery> subQueries = buildTermOrNested(data);
+					nodeShould.forEach();
+					subQueries
+					nodeShould.addAll(buildTermOrNested(data));
+				}*/
 			}
-			buildShould(child, nodeShould, shoulds);
+		} else {
+			//shoulds.add(should);
+
+			if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null) {
+				return buildTermOrNested(node.getData());
+			}
 		}
-		if (node.getChildren().size() == 0) {
-			shoulds.add(should);
-		}
+
+		return null;
 	}
 
-	private String buildTermOrNested(QueryNode node) {
+	private ElasticSearchQuery buildTermOrNested(QueryNode node) {
 		String subQuery;
-		List<String> nestedNodes = schemaIndexDatastore.findArrayMetadataIndexPaths().stream()
-				.map(schema ->  schema.getSchema().stream().map(JSONPath::getPath).collect(Collectors.toList()))
-				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath)).collect(Collectors.toList());
-		if (nestedNodes.size() > 0) {
+
+		//List<MetadataSchema> test = this.schemaIndexDatastore.findArrayMetadataIndexPathsByRegex("^" + node.getNodePath());
+
+		/*List<String> nestedNodes = this.schemaIndexDatastore.findArrayMetadataIndexPaths().stream()
+				.map(schema -> schema.getSchema().stream().map(JSONPath::getPath).collect(Collectors.toList()))
+				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath))
+				.sorted(Comparator.comparing(String::length)).collect(Collectors.toList());*/
+
+		List<String> nodeMetadataSchemaIds = new ArrayList<>(node.getMetadataSchemaIds());
+
+		Map<String, List<String>> map = new HashMap<>();
+		this.schemaIndexDatastore.findArrayMetadataIndexPaths().stream()
+				.filter(metadataSchema -> node.getMetadataSchemaIds().contains(metadataSchema.getId()))
+				.map(metadataSchema -> {
+					metadataSchema.getSchema().removeIf(path -> ! node.getNodePath().toString().startsWith(path.getPath()));
+
+					return new Pair<>(
+							metadataSchema.getId(),
+							metadataSchema.getSchema().stream()
+									.map(JSONPath::getPath).sorted(Comparator.comparing(String::length)).findFirst());
+				}).filter(pair -> pair.getRight().isPresent()).map(pair -> new Pair<>(pair.getLeft(), pair.getRight().get()))
+				.forEach(nestedPath -> {
+					nodeMetadataSchemaIds.removeIf(nodeMetadataSchemaId -> nodeMetadataSchemaId.equals(nestedPath.getLeft()));
+					if (map.containsKey(nestedPath.getRight())) {
+						map.get(nestedPath.getRight()).add(nestedPath.getLeft());
+					} else {
+						List<String> ids = new ArrayList<>();
+						ids.add(nestedPath.getLeft());
+						map.put(nestedPath.getRight(), ids);
+					}
+				});
+				/*.map(schema -> schema.getSchema().stream().map(JSONPath::getPath).collect(Collectors.toList()))
+				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath))
+				.sorted(Comparator.comparing(String::length)).collect(Collectors.toList());*/
+
+
+		//Map<String, List<String>> finalMap = new HashMap<>();
+		List<ElasticSearchQuery> result;
+		ElasticSearchQuery query = new ElasticSearchQuery();
+
+		map.forEach((key, value) -> {
+
+			//query.setIndices(entry.getValue());
+			query.addQuery(
+					"{" +
+							"\"nested\" : {" +
+							"\"path\": \"value." + key + "\"," +
+							"\"query\": {" +
+							"\"bool\": {" +
+							"\"must\": [" +
+							"{" +
+							"\"term\": {" +
+							"\"value." + node.getNodePath().toString() +
+							("".equals(node.getFilterPath().toString()) ? "" : ".") +
+							node.getFilterPath().toString() +
+							".keyword\"" + ":\"" +
+							node.getValue() + "\"" +
+							"}" +
+							"}" +
+							"]" +
+							"}" +
+							"}" +
+							"}" +
+							"}", value);
+
+			/*finalMap.put("{" +
+				"\"nested\" : {" +
+					"\"path\": \"value." + path + "\"," +
+					"\"query\": {" +
+						"\"bool\": {" +
+							"\"must\": [" +
+								"{" +
+									"\"term\": {" +
+										"\"value." + node.getNodePath().toString() +
+											("".equals(node.getFilterPath().toString()) ? "" : ".") +
+											node.getFilterPath().toString() +
+											".keyword\"" + ":\"" +
+												node.getValue() + "\"" +
+										"}" +
+									"}" +
+								"]" +
+							"}" +
+						"}" +
+					"}" +
+				"}", ids)*/
+		});
+			//ElasticSearchQuery query = new ElasticSearchQuery();
+
+			//query.setIndices(node.getMetadataSchemaIds());
+		query.addQuery(
+				"{" +
+						"\"term\":{" +
+						"\"value." + node.getNodePath().toString() +
+						("".equals(node.getFilterPath().toString()) ? "" : ".") +
+						node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
+						"}" +
+						"}", nodeMetadataSchemaIds);
+
+			/*result = new ArrayList<>();
+			result.add(query);*/
+
+			/*finalMap.put(
+				"{" +
+					"\"term\":{" +
+						"\"value." + node.getNodePath().toString() +
+							("".equals(node.getFilterPath().toString()) ? "" : ".") +
+							node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
+						"}" +
+					"}", node.getMetadataSchemaIds());*/
+		//}
+
+		/*finalMap.entrySet().stream().map(entry -> {
+			ElasticSearchQuery query = new ElasticSearchQuery();
+			query.addQuery(entry.getKey());
+			query.setIndices(entry.getValue());
+			return query;
+		}).collect(Collectors.toList());*/
+
+		return query;
+
+
+		/*if (nestedNodes.size() > 0) {
 			subQuery = "{" +
 					"\"nested\" : {" +
 						"\"path\": \"value." + nestedNodes.get(0) + "\"," +
@@ -230,6 +400,6 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 					"}" +
 				"}";
 		}
-		return subQuery;
+		return subQuery;*/
 	}
 }

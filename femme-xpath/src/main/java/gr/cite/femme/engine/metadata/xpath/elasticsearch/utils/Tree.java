@@ -1,14 +1,18 @@
 package gr.cite.femme.engine.metadata.xpath.elasticsearch.utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Tree<T> {
 
 	private Node<T> root;
-
 	private int totalLevels;
+	private Set<String> metadataSchemaIds;
 
 	public Tree() {
 		this.root = new Node<>();
 		this.totalLevels = 1;
+		this.metadataSchemaIds = new HashSet<>();
 	}
 
 	public Node<T> getRoot() {
@@ -32,5 +36,11 @@ public class Tree<T> {
 		return levelNodes;
 	}*/
 
+	public Set<String> getMetadataSchemaIds() {
+		return metadataSchemaIds;
+	}
 
+	public void setMetadataSchemaIds(Set<String> metadataSchemaIds) {
+		this.metadataSchemaIds = metadataSchemaIds;
+	}
 }

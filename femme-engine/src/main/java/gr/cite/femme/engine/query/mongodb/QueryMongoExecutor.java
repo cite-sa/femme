@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
@@ -17,7 +18,9 @@ import gr.cite.femme.core.query.api.Criterion;
 import gr.cite.femme.core.query.api.Query;
 import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 import gr.cite.femme.core.query.api.QueryExecutor;
+import org.bson.BSON;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +57,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		this.metadataStore = metadataStore;
 	}*/
 
-	protected boolean isLazyMetadata() {
+	boolean isLazyMetadata() {
 		return lazyMetadata;
 	}
 
@@ -75,34 +78,35 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 		if (options != null) {
 			if (options.getInclude() != null && !options.getInclude().contains("metadata")) {
-				lazyMetadata = false;
+				this.lazyMetadata = true;
 			}
 			if (options.getExclude() != null && options.getExclude().contains("metadata")) {
 				options.getExclude().remove("metadata");
-				lazyMetadata = true;
+				this.lazyMetadata = true;
 			}
-			if (results != null) {
+			if (this.results != null) {
 				if (options.getLimit() != null) {
-					results.limit(options.getLimit());
+					this.results.limit(options.getLimit());
 				}
 				if (options.getOffset() != null) {
-					results.skip(options.getOffset());
+					this.results.skip(options.getOffset());
 				}
 				if (options.getAsc() != null) {
-					results.sort(Sorts.ascending(options.getAsc()));
+					this.results.sort(Sorts.ascending(options.getAsc()));
 				}
 				if (options.getDesc() != null) {
-					results.sort(Sorts.descending(options.getDesc()));
+					this.results.sort(Sorts.descending(options.getDesc()));
 				}
+
+				List<Bson> projections = new ArrayList<>();
 				if (options.getInclude() != null) {
-					results.projection(Projections.include(
-							options.getInclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).collect(Collectors.toList())
-					));
+					projections.addAll(options.getInclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).map(Projections::include).collect(Collectors.toList()));
 				}
 				if (options.getExclude() != null) {
-					results.projection(Projections.exclude(
-							options.getExclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).collect(Collectors.toList())
-					));
+					projections.addAll(options.getExclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).map(Projections::exclude).collect(Collectors.toList()));
+				}
+				if (options.getInclude() != null || options.getInclude() != null) {
+					this.results.projection(Projections.fields(projections));
 				}
 			}
 		}
@@ -156,8 +160,14 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	public List<T> list() throws DatastoreException, MetadataStoreException {
 		List<T> elements = new ArrayList<>();
 
-		this.results = this.queryDocument == null ? collection.find()
-		: collection.find(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument));
+		logger.debug("Total elements in memory XPath: " + (this.queryDocument == null ? this.collection.count()
+				: this.collection.count(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument))));
+
+		this.results = this.queryDocument == null ? this.collection.find()
+		: this.collection.find(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument));
+
+
+
 		options(options);
 
 		/*if (lazyMetadata) {
@@ -190,7 +200,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				cursor.close();
 			}
 		} else {*/
-			results.into(elements);
+		this.results.into(elements);
 		//}
 		logger.info("Total query duration: " + Duration.between(totalQueryDuration, Instant.now()).toMillis() + "ms");
 		return elements;
@@ -200,11 +210,11 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	public T first() throws DatastoreException, MetadataStoreException {
 		results = this.queryDocument == null ? collection.find().limit(1) : collection.find(this.queryDocument).limit(1);
 		options(options);
-		T element = results.first();
+		//T element = results.first();
 		/*if (element != null && lazyMetadata) {
 			element.setMetadata(this.metadataStore.find(element.getId()));
 		}*/
-		return element;
+		return results.first();
 	}
 
 

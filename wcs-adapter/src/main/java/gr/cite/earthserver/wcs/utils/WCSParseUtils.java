@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import gr.cite.femme.core.utils.Pair;
-import gr.cite.scarabaeus.utils.xml.XMLConverter;
-import gr.cite.scarabaeus.utils.xml.XPathEvaluator;
-import gr.cite.scarabaues.utils.xml.exceptions.XMLConversionException;
-import gr.cite.scarabaues.utils.xml.exceptions.XPathEvaluationException;
+import gr.cite.commons.utils.xml.XMLConverter;
+import gr.cite.commons.utils.xml.XPathEvaluator;
+import gr.cite.commons.utils.xml.exceptions.XMLConversionException;
+import gr.cite.commons.utils.xml.exceptions.XPathEvaluationException;
 
 public final class WCSParseUtils {
 
@@ -216,24 +216,11 @@ public final class WCSParseUtils {
 		    boundingBoxJSON = geomJSON.toString(geometry);
 			
 			
-		} catch (XPathFactoryConfigurationException e) {
-			throw new ParseException(e);
-		} catch (XMLConversionException e) {
-			throw new ParseException(e);
-		} catch (XPathEvaluationException e) {
-			throw new ParseException(e);
-		} catch (MalformedURLException e) {
-			throw new ParseException(e);
-		} catch (MismatchedDimensionException e) {
-			throw new ParseException(e);
-		} catch (NoSuchAuthorityCodeException e) {
-			throw new ParseException(e);
-		} catch (FactoryException e) {
-			throw new ParseException(e);
-		} catch (TransformException e) {
+		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException |
+				MalformedURLException | MismatchedDimensionException | FactoryException | TransformException e) {
 			throw new ParseException(e);
 		}
-		
+
 		return new Pair<>(defaultCrsName, boundingBoxJSON);
 	}
 	

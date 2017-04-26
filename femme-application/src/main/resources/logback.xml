@@ -66,11 +66,11 @@
 		<appender-ref ref="STDOUT" />
 		<!-- <appender-ref ref="FILE" /> -->
 	</logger>
-	<logger name="gr.cite.femme.engine.query" level="DEBUG" additivity="false">
+	<logger name="gr.cite.femme.engine.queries" level="DEBUG" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<!-- <appender-ref ref="FILE" /> -->
 	</logger>
-	<logger name="gr.cite.femme.engine.metadata.xpath" level="INFO" additivity="false">
+	<logger name="gr.cite.femme.engine.metadata.xpath" level="DEBUG" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<!-- <appender-ref ref="FILE" /> -->
 	</logger>
