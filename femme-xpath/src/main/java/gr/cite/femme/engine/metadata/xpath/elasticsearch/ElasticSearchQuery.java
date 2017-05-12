@@ -3,8 +3,10 @@ package gr.cite.femme.engine.metadata.xpath.elasticsearch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ElasticSearchQuery {
@@ -14,9 +16,12 @@ public class ElasticSearchQuery {
 	private List<String> indices;
 	private List<String> queries;
 
+	private Set<String> includes;
+
 	public ElasticSearchQuery() {
 		this.queries = new ArrayList<>();
 		this.indicesPerQuery = new HashMap<>();
+		this.includes = new HashSet<>();
 	}
 
 	public ElasticSearchQuery(List<String> indices, List<String> queries) {
@@ -60,6 +65,14 @@ public class ElasticSearchQuery {
 		} else {
 			this.indicesPerQuery.put(query, indices);
 		}
+	}
+
+	public Set<String> getIncludes() {
+		return includes;
+	}
+
+	public void setIncludes(Set<String> includes) {
+		this.includes = includes;
 	}
 
 	public String build() {

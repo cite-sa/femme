@@ -1,7 +1,5 @@
 package gr.cite.femme.engine.metadata.xpath.parser.visitors;
 
-import gr.cite.commons.metadata.analyzer.core.JSONPath;
-import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Node;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
@@ -9,9 +7,7 @@ import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathBaseVisitor;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
@@ -53,7 +49,6 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
 	@Override
 	public Tree<QueryNode> visitRelativeLocationPath(XPathParser.RelativeLocationPathContext ctx) {
-
 		for (int i = 0; i < ctx.getChildCount(); i ++) {
 			if ("/".equals(ctx.getChild(i).getText())) {
 				if (predicateMode) {
@@ -67,6 +62,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 				} else {
 					this.filterBuilder.getNodePath().append("\\.*");
 				}
+			} else if ("text()".equals(ctx.getChild(i).getText())) {
+				this.currentLevelNodes.forEach(node -> {
+					node.getData().getNodePath().append(".#text");
+					node.getData().setFilterPayload(true);
+				});
 			} else {
 				visit(ctx.getChild(i));
 
@@ -107,9 +107,15 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 								});
 						});
 
+					if (i == ctx.getChildCount() - 1) {
+						newLevelNodes.forEach(node -> {
+							node.getData().setFilterPayload(true);
+						});
+					}
 
 					this.currentLevelNodes = newLevelNodes;
 					this.filterBuilder = new QueryNode();
+
 				} else {
 					// TODO multiple filter paths (node1[node2//node3='value'])
 					System.out.println(this.filterBuilder.getFilterPath().toString());

@@ -19,7 +19,7 @@ import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.earthserver.wcs.utils.WCSParseUtils;
 import gr.cite.femme.client.FemmeClient;
-import gr.cite.femme.client.FemmeDatastoreException;
+import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import org.apache.commons.lang3.RandomUtils;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -60,7 +60,7 @@ public class FemmeApplicationTest {
 	}
 
 	@Test
-	public void importer() throws FemmeDatastoreException, WCSRequestException, ParseException {
+	public void importer() throws FemmeException, WCSRequestException, ParseException {
 		String endpoint = "http://earthserver.ecmwf.int/rasdaman/ows";
 		String name = "ECMWF";
 		WCSRequestBuilder wcsRequestBuilder = WCSRequest.newBuilder().endpoint(endpoint);

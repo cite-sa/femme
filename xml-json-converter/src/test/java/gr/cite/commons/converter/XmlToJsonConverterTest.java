@@ -3,12 +3,13 @@ package gr.cite.commons.converter;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
 
 public class XmlToJsonConverterTest {
 	@Test
-	public void convert() {
+	public void convert() throws XMLStreamException {
 		Client client = ClientBuilder.newClient();
 		//WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
 		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");

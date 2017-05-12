@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -66,7 +67,11 @@ public class MetadataXPath {
     public void index(Metadatum metadatum) throws UnsupportedOperationException, MetadataIndexException {
         String metadatumJson;
         if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
-            metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+            try {
+                metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+            } catch (XMLStreamException e) {
+                throw new MetadataIndexException(e.getMessage(), e);
+            }
         } else {
             throw new UnsupportedOperationException("Metadata indexing is not yet supported for media type " + metadatum.getContentType());
         }
@@ -166,7 +171,7 @@ public class MetadataXPath {
         logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
 
         start = Instant.now();
-        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree);
+        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree, false);
         end = Instant.now();
         logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
 
@@ -175,6 +180,8 @@ public class MetadataXPath {
             Metadatum metadatum = new Metadatum();
             metadatum.setId(indexableMetadatum.getMetadatumId());
             metadatum.setElementId(indexableMetadatum.getElementId());
+            metadatum.setContentType(indexableMetadatum.getOriginalContentType());
+            metadatum.setValue(indexableMetadatum.getValue());
             return metadatum;
         }).collect(Collectors.toList());
         end = Instant.now();

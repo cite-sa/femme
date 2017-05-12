@@ -13,7 +13,7 @@ import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeClientException;
-import gr.cite.femme.client.FemmeDatastoreException;
+import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.CriterionClient;
@@ -37,65 +37,65 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 
 	@Override
-	public String beginImport(String endpoint) throws FemmeDatastoreException {
+	public String beginImport(String endpoint) throws FemmeException {
 		return this.femmeClient.beginImport(endpoint);
 	}
 
 	@Override
-	public void endImport(String importId) throws FemmeDatastoreException {
+	public void endImport(String importId) throws FemmeException {
 		this.femmeClient.endImport(importId);
 	}
 
 	@Override
-	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException {
+	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeException {
 		return this.femmeClient.importCollection(importId, WCSFemmeMapper.fromServer(endpoint, name, server));
 	}
 
 	@Override
-	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeDatastoreException {
+	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeException {
 		return this.femmeClient.importInCollection(importId, WCSFemmeMapper.fromCoverage(coverage));
 	}
 
 	@Override
-	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeDatastoreException {
+	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeException {
 		return this.femmeClient.insert(WCSFemmeMapper.fromServer(endpoint, name, server));
 	}
 
 	@Override
-	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeDatastoreException {
+	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeException {
 		return this.femmeClient.insert(WCSFemmeMapper.fromCoverage(coverage));
 	}
 	
 	@Override
-	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeDatastoreException {
+	public String addCoverage(WCSResponse coverage, String collectionId) throws ParseException, FemmeException {
 		return this.femmeClient.addToCollection(WCSFemmeMapper.fromCoverage(coverage), collectionId);
 	}
 
 	
 	@Override
-	public List<Server> getServers() throws FemmeDatastoreException, FemmeClientException {
+	public List<Server> getServers() throws FemmeException, FemmeClientException {
 		return getServers(null, null);
 	}
 	
 	@Override
-	public List<Server> getServers(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<Server> getServers(Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		return getServers(limit, offset, null);
 	}
 	
 	@Override
-	public List<Server> getServers(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<Server> getServers(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		return this.femmeClient.getCollections(limit, offset, xPath).stream().map(WCSFemmeMapper::collectionToServer)
 			.collect(Collectors.toList());
 	}
 	
 	@Override
-	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<Server> findServers(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
 		return this.femmeClient.findCollections(query, options, xPath)
 				.stream().map(WCSFemmeMapper::collectionToServer).collect(Collectors.toList());
 	}
 	
 	@Override
-	public Server getServer(String filterValue) throws FemmeDatastoreException, FemmeClientException {
+	public Server getServer(String filterValue) throws FemmeException, FemmeClientException {
 		Server server = WCSFemmeMapper.collectionToServer(this.femmeClient.getCollectionByName(filterValue));
 		if (server == null) {
 			server = WCSFemmeMapper.collectionToServer(this.femmeClient.getCollectionByEndpoint(filterValue));
@@ -105,27 +105,27 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	
 	@Override
-	public List<Coverage> getCoverages() throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoverages() throws FemmeException, FemmeClientException {
 		return getCoverages(null, null);
 	}
 	
 	@Override
-	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		return getCoverages(limit, offset, null);
 	}
 	
 	@Override
-	public List<Coverage> getCoverages(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoverages(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		return this.femmeClient.getDataElements(limit, offset, xPath).stream().map(WCSFemmeMapper::dataElementToCoverage)
 			.collect(Collectors.toList());
 	}
 	
-	public Coverage getCoverageById(String id) throws FemmeDatastoreException {
+	public Coverage getCoverageById(String id) throws FemmeException {
 		return WCSFemmeMapper.dataElementToCoverage(this.femmeClient.getDataElementById(id));
 	}
 	
 	@Override
-	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
 		return this.femmeClient.findDataElements(query, options, xPath)
 				.stream().map(WCSFemmeMapper::dataElementToCoverage)
 				.collect(Collectors.toList());
@@ -133,19 +133,19 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	
 	@Override
-	public List<String> getCoverageIds() throws FemmeDatastoreException, FemmeClientException {
+	public List<String> getCoverageIds() throws FemmeException, FemmeClientException {
 		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build();
 		return this.femmeClient.findDataElements(null, options, null)
 			.stream().map(Element::getId).collect(Collectors.toList());
 	}
 	
 	@Override
-	public List<String> getCoverageIdsInServer(List<String> filterValues) throws FemmeDatastoreException, FemmeClientException {
+	public List<String> getCoverageIdsInServer(List<String> filterValues) throws FemmeException, FemmeClientException {
 		return getCoverageIdsInServer(filterValues, null, null, null);
 	}
 
 	@Override
-	public List<String> getCoverageIdsInServer(List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<String> getCoverageIdsInServer(List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		if (filterValues != null) {
 			List<String> coverageIds = getCoverageIdsInServerByFilter("name", filterValues, limit, offset, xPath);
 			
@@ -158,7 +158,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 		}
 	}
 	
-	private List<String> getCoverageIdsInServerByFilter(String filterKey, List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	private List<String> getCoverageIdsInServerByFilter(String filterKey, List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		List<CriterionClient> serverFilterCriteria = filterValues.stream()
 				.map(collectionFilterValue -> CriterionBuilderClient.root().eq(filterKey, collectionFilterValue).end())
 				.collect(Collectors.toList());
@@ -171,18 +171,18 @@ public class WCSAdapter implements WCSAdapterAPI {
 				.stream().map(Element::getName).collect(Collectors.toList());
 	}
 	
-	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoveragesByCoverageId(String coverageId) throws FemmeException, FemmeClientException {
 		return this.femmeClient.getDataElementsByName(coverageId)
 				.stream().map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
 	}
 	
 	@Override
-	public List<Coverage> getCoveragesInServer(List<String> filterValue) throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoveragesInServer(List<String> filterValue) throws FemmeException, FemmeClientException {
 		return getCoveragesInServer(filterValue, null, null, null);
 	}
 	
 	@Override
-	public List<Coverage> getCoveragesInServer(List<String> filterValue, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<Coverage> getCoveragesInServer(List<String> filterValue, Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		
 		if (filterValue != null) {
 			List<Coverage> coverages = getCoveragesInServerByFilter("name", filterValue, limit, offset, xPath);
@@ -197,7 +197,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 		
 	}
 	
-	private List<Coverage> getCoveragesInServerByFilter(String filterKey, List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	private List<Coverage> getCoveragesInServerByFilter(String filterKey, List<String> filterValues, Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		List<CriterionClient> serverFilterCriteria = filterValues.stream()
 				.map(collectionFilterValue -> CriterionBuilderClient.root().eq(filterKey, collectionFilterValue).end())
 				.collect(Collectors.toList());
@@ -211,7 +211,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 
 	@Override
-	public Coverage getCoverageByCoverageIdInServer(String key, String coverageId) throws FemmeDatastoreException, FemmeClientException {
+	public Coverage getCoverageByCoverageIdInServer(String key, String coverageId) throws FemmeException, FemmeClientException {
 		CriterionClient collectionNameCriterion = CriterionBuilderClient.root().inAnyCollection(Collections.singletonList(CriterionBuilderClient.root().eq("name", key).end())).end();
 		CriterionClient dataElementCriterion = CriterionBuilderClient.root().eq("name", coverageId).end();
 		
@@ -230,7 +230,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 	
 	/*@Override
-	public Coverage getCoverageByCoverageIdInServerByEndpoint(String serverEndpoint, String coverageId) throws FemmeDatastoreException, FemmeClientException {
+	public Coverage getCoverageByCoverageIdInServerByEndpoint(String serverEndpoint, String coverageId) throws FemmeException, FemmeClientException {
 		
 		CriterionClient collectionCriterion = CriterionBuilderClient.root().inAnyCollection(Arrays.asList(
 				CriterionBuilderClient.root().eq("endpoint", serverEndpoint).end())).end();
@@ -245,7 +245,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 
 	@Override
-	public Coverage getCoverageByCoverageIdInServerByAlias(String serverAlias, String coverageId) throws FemmeDatastoreException, FemmeClientException {
+	public Coverage getCoverageByCoverageIdInServerByAlias(String serverAlias, String coverageId) throws FemmeException, FemmeClientException {
 		
 		CriterionClient collectionCriterion = CriterionBuilderClient.root().inAnyCollection(Arrays.asList(
 				CriterionBuilderClient.root().eq("name", serverAlias).end())).end();

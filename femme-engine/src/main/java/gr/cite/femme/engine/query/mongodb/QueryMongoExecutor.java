@@ -160,13 +160,11 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	public List<T> list() throws DatastoreException, MetadataStoreException {
 		List<T> elements = new ArrayList<>();
 
-		logger.debug("Total elements in memory XPath: " + (this.queryDocument == null ? this.collection.count()
-				: this.collection.count(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument))));
+		/*logger.debug("Total elements in memory XPath: " + (this.queryDocument == null ? this.collection.count()
+				: this.collection.count(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument))));*/
 
 		this.results = this.queryDocument == null ? this.collection.find()
 		: this.collection.find(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument));
-
-
 
 		options(options);
 
@@ -203,6 +201,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		this.results.into(elements);
 		//}
 		logger.info("Total query duration: " + Duration.between(totalQueryDuration, Instant.now()).toMillis() + "ms");
+
 		return elements;
 	}
 

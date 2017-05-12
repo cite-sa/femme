@@ -4,6 +4,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.xml.stream.XMLStreamException;
 
 import gr.cite.femme.index.mongodb.MongoMetadataIndex;
 import gr.cite.femme.core.model.Metadatum;
@@ -19,7 +20,7 @@ public class MongoMetadataIndexTest {
 	}
 	
 //	@Test
-	public void indexMetadatum() {
+	public void indexMetadatum() throws XMLStreamException {
 		Client client = ClientBuilder.newClient();
 		 WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
 		 

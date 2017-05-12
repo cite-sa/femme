@@ -188,17 +188,14 @@ public class Femme {
 		}
 	}
 
-	public String addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException {
-		Collection collection;
-
-		collection = this.datastore.get(collectionId, Collection.class, null);
-
-		if (collection != null) {
-			dataElement.setCollections(Collections.singletonList(collection));
-			return insert(dataElement);
+	public String addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException, IllegalArgumentException {
+		Collection collection = this.datastore.get(collectionId, Collection.class, null);
+		if (collection == null) {
+			throw new DatastoreException("Collection doesn't exist: [" + collectionId + "]");
 		}
 
-		return null;
+		dataElement.setCollections(Collections.singletonList(collection));
+		return insert(dataElement);
 	}
 
 	public String addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException {

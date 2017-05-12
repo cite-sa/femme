@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -91,7 +92,7 @@ public class JSONSchemaAnalyzer {
                 ).collect(Collectors.toList()).size() == 0;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, XMLStreamException {
         Client client = ClientBuilder.newClient();
         WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
 

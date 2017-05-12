@@ -7,6 +7,8 @@ import gr.cite.femme.index.api.client.MetadataIndexClient;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.index.api.client.MetadatumIndex;
 
+import javax.xml.stream.XMLStreamException;
+
 public class MongoMetadataIndex implements MetadataIndexClient {
 	
 	MetadataIndexMongoClient mongoClient;
@@ -24,7 +26,7 @@ public class MongoMetadataIndex implements MetadataIndexClient {
 	}
 
 	@Override
-	public void index(Metadatum metadatum) {
+	public void index(Metadatum metadatum) throws XMLStreamException {
 		
 		MetadatumIndex metadatumIndex = new MetadatumIndex();
 		

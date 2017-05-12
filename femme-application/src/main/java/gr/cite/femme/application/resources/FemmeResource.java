@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -98,7 +99,7 @@ public class FemmeResource {
 			String message;
 			if (collections.isEmpty()) {
 				message = "No collections found";
-				logger.error(message);
+				logger.info(message);
 				throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 			}
 			message = collections.size() + " collections found";
@@ -314,7 +315,7 @@ public class FemmeResource {
 		long count = this.femme.count(query, DataElement.class);
 		femmeResponse.setStatus(Response.Status.OK.getStatusCode())
 				.setMessage(count +" data elements found")
-				.setEntity(new FemmeResponseEntity<Long>(uriInfo.getRequestUri().toString(), count));
+				.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), count));
 
 		return Response.ok().entity(femmeResponse).build();
 

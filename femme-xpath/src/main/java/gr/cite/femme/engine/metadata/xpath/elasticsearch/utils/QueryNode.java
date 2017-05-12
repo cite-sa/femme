@@ -49,6 +49,7 @@ public class QueryNode {
 
 	private List<String> metadataSchemaIds;
 	private boolean isArray;
+	private boolean filterPayload;
 
 	public QueryNode() {
 
@@ -104,5 +105,13 @@ public class QueryNode {
 
 	public void setArray(boolean array) {
 		isArray = array;
+	}
+
+	public boolean isFilterPayload() {
+		return filterPayload;
+	}
+
+	public void setFilterPayload(boolean filterPayload) {
+		this.filterPayload = filterPayload;
 	}
 }

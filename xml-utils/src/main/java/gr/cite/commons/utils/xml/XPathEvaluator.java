@@ -122,10 +122,7 @@ public class XPathEvaluator {
 			throw new XPathEvaluationException("Error during XPath evalution", e);
 		}
 		
-		return list.stream()
-				.map(input -> {return input.trim();})
-				.filter(input -> {return input.length() > 0;})
-				.collect(Collectors.toList());
+		return list.stream().map(String::trim).filter(input -> input.length() > 0).collect(Collectors.toList());
 	}
 
 	public List<Node> evaluateToNode(String expression) throws XPathEvaluationException {

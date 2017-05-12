@@ -2,8 +2,10 @@ package gr.cite.femme.client;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -59,120 +61,125 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	@Override
-	public String beginImport(String endpoint) throws FemmeDatastoreException {
-		FemmeResponse<String> response = webTarget.path("importer").path("imports")
-				.request().post(Entity.entity(new ImportEndpoint(endpoint), MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+	public String beginImport(String endpoint) throws FemmeException {
+		Response response = webTarget.path("importer").path("imports")
+				.request().post(Entity.entity(new ImportEndpoint(endpoint), MediaType.APPLICATION_JSON));
 
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
-		logger.debug("Import " + response.getEntity().getBody() + " for endpoint " + endpoint + " has been successfully created");
-		return response.getEntity().getBody();
+		logger.debug("Import " + femmeResponse.getEntity().getBody() + " for endpoint " + endpoint + " has been successfully created");
+		return femmeResponse.getEntity().getBody();
 	}
 
 	@Override
-	public void endImport(String importId) throws FemmeDatastoreException {
-		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).request().delete(new GenericType<FemmeResponse<String>>(){});
+	public void endImport(String importId) throws FemmeException {
+		Response response = webTarget.path("importer").path("imports").path(importId).request().delete();
 
-		if (response.getStatus() != 200) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
-		logger.debug(response.getMessage());
+		logger.debug(femmeResponse.getMessage());
 	}
 
 	@Override
-	public String importCollection(String importId, Collection collection) throws FemmeDatastoreException {
-		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).path("collections")
-				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+	public String importCollection(String importId, Collection collection) throws FemmeException {
+		Response response = webTarget.path("importer").path("imports").path(importId).path("collections")
+				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON));
 
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != 201) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
-		logger.debug("Collection " + response.getEntity().getHref() + " has been successfully inserted");
-		return response.getEntity().getBody();
+		logger.debug("Collection " + femmeResponse.getEntity().getHref() + " has been successfully inserted");
+		return femmeResponse.getEntity().getBody();
 	}
 
 	@Override
-	public String importInCollection(String importId, DataElement dataElement) throws FemmeDatastoreException {
-		FemmeResponse<String> response = webTarget.path("importer").path("imports").path(importId).path("dataElements")
-				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+	public String importInCollection(String importId, DataElement dataElement) throws FemmeException {
+		Response response = webTarget.path("importer").path("imports").path(importId).path("dataElements")
+				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
 
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != 201) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
-		logger.debug("DataElement " + response.getEntity().getHref() + " has been successfully inserted");
-		return response.getEntity().getBody();
+		logger.debug("DataElement " + femmeResponse.getEntity().getHref() + " has been successfully inserted");
+		return femmeResponse.getEntity().getBody();
 	}
 
 	@Override
-	public String insert(Collection collection) throws FemmeDatastoreException {
-		FemmeResponse<String> response = webTarget.path("admin").path("collections")
-				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
+	public String insert(Collection collection) throws FemmeException {
+		Response response = webTarget.path("admin").path("collections")
+				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON));
+
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
+		if (response.getStatus() != 201) {
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
+		}
+		logger.debug("Collection " + femmeResponse.getEntity().getHref() + " has been successfully inserted");
 		
-		if (response.getStatus() != 201) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
-		}
-		logger.debug("Collection " + response.getEntity().getHref() + " has been successfully inserted");
-		
-		return response.getEntity().getBody();
+		return femmeResponse.getEntity().getBody();
 	}
 	
 	@Override
-	public String insert(DataElement dataElement) throws FemmeDatastoreException {
+	public String insert(DataElement dataElement) throws FemmeException {
 		
-		FemmeResponse<String> response = webTarget.path("admin").path("dataElements")
-				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
-		
+		Response response = webTarget.path("admin").path("dataElements")
+				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
+
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != 201) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
-		logger.debug("DataElement " + response.getEntity().getHref() + " has been successfully inserted");
+		logger.debug("DataElement " + femmeResponse.getEntity().getHref() + " has been successfully inserted");
 		
-		return response.getEntity().getBody();
+		return femmeResponse.getEntity().getBody();
 	}
 
 	@Override
-	public String addToCollection(DataElement dataElement, String collectionId) throws FemmeDatastoreException {
-		
-		FemmeResponse<String> response = webTarget.path("admin")
+	public String addToCollection(DataElement dataElement, String collectionId) throws FemmeException {
+		Response response = webTarget.path("admin")
 				.path("collections").path(collectionId).path("dataElements")
-				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON), new GenericType<FemmeResponse<String>>(){});
-		
+				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
+
+		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != 201) {
-			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
-		logger.debug("DataElement " + response.getEntity().getHref() + " has been successfully inserted in collection " + collectionId);
+		logger.debug("DataElement " + femmeResponse.getEntity().getHref() + " has been successfully inserted in collection " + collectionId);
 		
-		return response.getEntity().getBody();
+		return femmeResponse.getEntity().getBody();
 	}
 	
 	
 	@Override
-	public List<Collection> getCollections() throws FemmeDatastoreException, FemmeClientException {
+	public List<Collection> getCollections() throws FemmeException, FemmeClientException {
 		return getCollections(null, null);
 	}
 
 	@Override
-	public List<Collection> getCollections(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<Collection> getCollections(Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		return getCollections(limit, offset, null);
 	}
 	
 	@Override
-	public List<Collection> getCollections(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<Collection> getCollections(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		return findCollections(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath);
 	}
 	
 	@Override
-	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsMessenger options, String xPath)
-			throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<Collection> findCollections(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
 		
 		String queryJson = null, optionsJson = null;
 		try {
@@ -183,51 +190,44 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeClientException(e.getMessage(), e);
 		}
 
-		/*FemmeResponse<CollectionList> response = null;*/
-		Response response = null;
-		FemmeResponse<CollectionList> femmeResponse = null;
-		response = webTarget.path("collections")
+		Response response = webTarget.path("collections")
 				.queryParam("query", UriComponent.encode(queryJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 				.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 				.queryParam("xpath", xPath)
-				.request().get(Response.class);
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<CollectionList>>(){});
+				.request().get();
+
+		FemmeResponse<CollectionList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<CollectionList>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return new ArrayList<>();
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody().getCollections();
 	}
 	
 	@Override
-	public Collection getCollectionById(String id) throws FemmeDatastoreException {
-		
-		Response response = null;
-		FemmeResponse<Collection> femmeResponse = null;
-
-		response = webTarget
+	public Collection getCollectionById(String id) throws FemmeException {
+		Response response = webTarget
 				.path("collections").path(id)
-				.request().get(Response.class);
-		
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<Collection>>(){});
+				.request().get();
+
+		FemmeResponse<Collection> femmeResponse = response.readEntity(new GenericType<FemmeResponse<Collection>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody();
-		
 	}
 	
 	@Override
-	public Collection getCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException {
+	public Collection getCollectionByEndpoint(String endpoint) throws FemmeException, FemmeClientException {
 		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("endpoint", endpoint).end());
 		
 		List<Collection> collections = findCollections(query, QueryOptionsMessenger.builder().limit(1).build(), null);
@@ -235,8 +235,7 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	@Override
-	public Collection getCollectionByName(String name) throws FemmeDatastoreException, FemmeClientException {
-		
+	public Collection getCollectionByName(String name) throws FemmeException, FemmeClientException {
 		QueryClient query = QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("name", name).end());
 		
 		List<Collection> collections = findCollections(query, QueryOptionsMessenger.builder().limit(1).build(), null);
@@ -245,23 +244,32 @@ public class FemmeClient implements FemmeClientAPI {
 	
 	
 	@Override
-	public List<DataElement> getDataElements() throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElements() throws FemmeException, FemmeClientException {
 		return getDataElements(null, null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElements(Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElements(Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		return getDataElements(limit, offset, null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath);
 	}
-	
+
+	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
+		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath, true);
+	}
+
 	@Override
-	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath)
-			throws FemmeDatastoreException, FemmeClientException {
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
+		return findDataElements(query, options, xPath, false);
+	}
+
+	@Override
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath, boolean inMemoryXPath)
+			throws FemmeException, FemmeClientException {
 		
 		String queryJson = null, optionsJson = null;
 		try {
@@ -272,22 +280,24 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeClientException(e.getMessage(), e);
 		}
 		
-		Response response = null;
-		FemmeResponse<DataElementList> femmeResponse = null;
+		//webTarget = webTarget.path("dataElements").path(inMemoryXPath ? "xpath" : "");
+		/*if (inMemoryXPath) {
+			webTarget = webTarget.path("xpath");
+		}*/
 
-		response = webTarget.path("dataElements")
+		Response response = webTarget.path("dataElements").path(inMemoryXPath ? "xpath" : "")
 				.queryParam("query", UriComponent.encode(queryJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 				.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 				.queryParam("xpath", xPath)
 				.request().get(Response.class);
-		
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+
+		FemmeResponse<DataElementList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return new ArrayList<>();
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody().getDataElements();
@@ -295,45 +305,39 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionById(String collectionId) throws FemmeDatastoreException, FemmeClientException {
-		//return getDataElementsInCollectionById(collectionId, null, null);
-		
-		Response response = null;
-		FemmeResponse<DataElementList> femmeResponse = null;
-		
-		response = webTarget
+	public List<DataElement> getDataElementsInCollectionById(String collectionId) throws FemmeException, FemmeClientException {
+		Response response = webTarget
 				.path("collections").path(collectionId)
 				.path("dataElements")
-				.request().get(Response.class);
-		
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+				.request().get();
+
+		FemmeResponse<DataElementList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody().getDataElements();
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionById(String collectionId, Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
-		
+	public List<DataElement> getDataElementsInCollectionById(String collectionId, Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		QueryClient collectionQuery = QueryClient.query().addCriterion(CriterionBuilderClient.root().inCollections(
-				Arrays.asList(CriterionBuilderClient.root().eq("_id", collectionId).end())).end());
+				Collections.singletonList(CriterionBuilderClient.root().eq("_id", collectionId).end())).end());
 		
 		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint) throws FemmeException, FemmeClientException {
 		return getDataElementsInCollectionByEndpoint(endpoint, null, null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint, Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint, Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		
 		CriterionClient collectionEndpointCriterion = CriterionBuilderClient.root().eq("endpoint", endpoint).end();
 		QueryClient collectionQuery = QueryClient.query().addCriterion(
@@ -346,7 +350,7 @@ public class FemmeClient implements FemmeClientAPI {
 		
 		if (response.getStatus() != 200) {
 			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			throw new FemmeException(response.getMessage());
 		}*/
 		
 		/*return response.getEntity().getBody().getDataElements();*/
@@ -354,23 +358,19 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 	
 	@Override
-	public DataElement getDataElementById(String id) throws FemmeDatastoreException {
-		
-		Response response = null;
-		FemmeResponse<DataElement> femmeResponse = null;
-		
-		response = webTarget
+	public DataElement getDataElementById(String id) throws FemmeException {
+		Response response = webTarget
 				.path("dataElements")
 				.path(id)
-				.request().get(Response.class);
-		
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
+				.request().get();
+
+		FemmeResponse<DataElement> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody();
@@ -378,17 +378,17 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	@Override
-	public List<DataElement> getDataElementsByName(String name) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElementsByName(String name) throws FemmeException, FemmeClientException {
 		return findDataElements(QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("name", name).end()), null, null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionByName(String name) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElementsInCollectionByName(String name) throws FemmeException, FemmeClientException {
 		return getDataElementsInCollectionByName(name, null, null);
 	}
 	
 	@Override
-	public List<DataElement> getDataElementsInCollectionByName(String name, Integer limit, Integer offset) throws FemmeDatastoreException, FemmeClientException {
+	public List<DataElement> getDataElementsInCollectionByName(String name, Integer limit, Integer offset) throws FemmeException, FemmeClientException {
 		
 		CriterionClient collectionNameCriterion = CriterionBuilderClient.root().eq("name", name).end();
 		QueryClient collectionQuery = QueryClient.query().addCriterion(
@@ -401,34 +401,29 @@ public class FemmeClient implements FemmeClientAPI {
 		
 		if (response.getStatus() != 200) {
 			logger.error(response.getMessage());
-			throw new FemmeDatastoreException(response.getMessage());
+			throw new FemmeException(response.getMessage());
 		}*/
 		
 		/*return response.getEntity().getBody().getDataElements();*/
 		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
-	public List<DataElement> getDataElementsByIdInCollectionById(String collectionid, String dataElementId) throws FemmeDatastoreException, FemmeClientException {
-		
-		Response response = null;
-		FemmeResponse<DataElementList> femmeResponse = null;
-		
-		response = webTarget
+	public List<DataElement> getDataElementsByIdInCollectionById(String collectionid, String dataElementId) throws FemmeException, FemmeClientException {
+		Response response = webTarget
 				.path("collections").path(collectionid)
 				.path("dataElements").path(dataElementId)
-				.request().get(Response.class);
-		
-		femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+				.request().get();
+
+		FemmeResponse<DataElementList>femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
 		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			logger.error(femmeResponse.getMessage());
-			throw new FemmeDatastoreException(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
 		return femmeResponse.getEntity().getBody().getDataElements();
-		
 	}
 	
 }

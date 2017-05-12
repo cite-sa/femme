@@ -78,16 +78,34 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		String filename = metadatum.getName() + "_" + UUID.randomUUID().toString();
 
 		InputStream streamToUploadFrom = new ByteArrayInputStream(metadatum.getValue().getBytes(StandardCharsets.UTF_8));
-		GridFSUploadOptions options = new GridFSUploadOptions().metadata(new Document()
-				.append(FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()))
-				.append(FieldNames.ENDPOINT, metadatum.getEndpoint())
-				.append(FieldNames.NAME, metadatum.getName())
-				.append(FieldNames.CHECKSUM, metadatum.getChecksum())
-				.append(FieldNames.CONTENT_TYPE, metadatum.getContentType())
-				.append(FieldNames.CREATED, Date.from(metadatum.getSystemicMetadata().getCreated()))
-				.append(FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()))
-				.append(FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode())
-		);
+		Document metadata = new Document();
+		if (metadatum.getElementId() != null) {
+			metadata.append(FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId()));
+		}
+		if (metadatum.getEndpoint() != null) {
+			metadata.append(FieldNames.ENDPOINT, metadatum.getEndpoint());
+		}
+		if (metadatum.getName() != null) {
+			metadata.append(FieldNames.NAME, metadatum.getName());
+		}
+		if (metadatum.getChecksum() != null) {
+			metadata.append(FieldNames.CHECKSUM, metadatum.getChecksum());
+		}
+		if (metadatum.getContentType() != null) {
+			metadata.append(FieldNames.CONTENT_TYPE, metadatum.getContentType());
+		}
+		if (metadatum.getSystemicMetadata() != null) {
+			if (metadatum.getSystemicMetadata().getCreated() != null) {
+				metadata.append(FieldNames.CREATED, Date.from(metadatum.getSystemicMetadata().getCreated()));
+			}
+			if (metadatum.getSystemicMetadata().getModified() != null) {
+				metadata.append(FieldNames.MODIFIED, Date.from(metadatum.getSystemicMetadata().getModified()));
+			}
+			if (metadatum.getSystemicMetadata().getStatus() != null) {
+				metadata.append(FieldNames.STATUS, metadatum.getSystemicMetadata().getStatus().getStatusCode());
+			}
+		}
+		GridFSUploadOptions options = new GridFSUploadOptions().metadata(metadata);
 
 		ObjectId fileId;
 		try {
@@ -217,9 +235,22 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		return existing != null;
 	}
 	
-	@Override
+	/*@Override
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
 		return download(metadatum.getId());
+	}
+*/
+	@Override
+	public Metadatum get(String id, boolean lazy) throws MetadataStoreException {
+		Metadatum metadatum = this.gridFsFilesCollection.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first().getMetadata();
+		if (!lazy) {
+			try {
+				metadatum.setValue(download(metadatum.getId()).getValue());
+			} catch (MetadataStoreException e) {
+				throw new RuntimeException(e.getMessage(), e);
+			}
+		}
+		return metadatum;
 	}
 	
 	private Metadatum download(String id) throws MetadataStoreException {

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.query.CriterionClient;
-import gr.cite.femme.client.FemmeDatastoreException;
+import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.core.model.Collection;
 
@@ -38,7 +38,7 @@ public class FemmeClientTest {
 	}
 
 //	@Test	
-	public void getCollectionById() throws FemmeDatastoreException {
+	public void getCollectionById() throws FemmeException {
 		Collection collection = client.getCollectionById("582493bdcd42310e58c7d49d");
 	}
 	

@@ -62,15 +62,8 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	}
 
 	@Override
-	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
-		MetadatumJson metadatumJson = metadataCollection.find(Filters.eq(FieldNames.ID, metadatum.getId())).limit(1).first();
-		Metadatum retrievedMetadatum = new Metadatum();
-		metadatum.setId(metadatumJson.getId());
-		metadatum.setElementId(metadatumJson.getElementId());
-		metadatum.setName(metadatumJson.getName());
-		metadatum.setValue(metadatumJson.getValue());
-		metadatum.setContentType(metadatumJson.getContentType());
-		return retrievedMetadatum;
+	public Metadatum get(String id, boolean lazy) throws MetadataStoreException {
+		return this.metadataCollection.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
 	}
 
 	@Override

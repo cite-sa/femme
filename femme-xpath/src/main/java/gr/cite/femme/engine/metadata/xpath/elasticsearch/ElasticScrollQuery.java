@@ -1,5 +1,6 @@
 package gr.cite.femme.engine.metadata.xpath.elasticsearch;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
@@ -14,11 +15,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 
@@ -35,10 +38,21 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		this.client = client;
 	}
 
-	public void query(String query, List<String> metadataSchemaIds, boolean payloadLazy) throws IOException {
+	public void query(String query, Set<String> originalIncludes, List<String> metadataSchemaIds, boolean payloadLazy) throws IOException {
+		Set<String> includes = originalIncludes.stream().map(include -> "\"value." + include + "\"").collect(Collectors.toSet());
+		if (includes.size() > 0) {
+			includes.addAll(Stream.of("metadataSchemaId", "metadatumId", "elementId", "originalContentType").map(include -> "\"" + include + "\"").collect(Collectors.toSet()));
+		} else {
+			payloadLazy = true;
+		}
+
 		String scrollQuery = "{" +
-				(payloadLazy ? "\"_source\": {\"excludes\": [ \"value\" ]}," : "") +
-				query + "," +
+				"\"_source\": {" +
+					(includes.size() > 0 ? "\"includes\":[" + includes.stream().collect(Collectors.joining(",")) + "]" : "") +
+					(includes.size() > 0 && payloadLazy ? "," : "") +
+					(payloadLazy ? "\"excludes\":[\"value\"]" : "") +
+				"}," +
+				(query != null ? query + "," : "") +
 				"\"sort\" : [\"_doc\"]," +
 				"\"size\":  1000" +
 			"}";
@@ -54,6 +68,26 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 					Collections.emptyMap(),
 					entity);
 		getResults();
+		for (IndexableMetadatum result: this.results) {
+			if (includes.size() > 0) {
+				result.setValue(ElasticScrollQuery.queryJsonTree(originalIncludes.iterator().next(), result.getValue(), originalIncludes.iterator().next().endsWith("#text")));
+			}
+		}
+	}
+
+	private static String queryJsonTree(String query, String json, boolean getText) throws IOException {
+		if (json != null) {
+			JsonNode root = mapper.readTree(json);
+			query = "/" + query.replace(".", "/");
+			JsonNode result = root.at(query);
+			if (getText) {
+				return result.textValue();
+			} else {
+				return result.toString();
+			}
+		} else {
+			return "";
+		}
 	}
 
 	@Override
@@ -105,6 +139,15 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 			hit.getSource().setId(hit.getId());
 			return hit.getSource();
 		}).collect(Collectors.toList());
+	}
+
+	public static void main(String[] args) throws IOException {
+		String res = ElasticScrollQuery.queryJsonTree(
+				"wcs:CoverageDescriptions.wcs:CoverageDescription.wcs:CoverageId",
+				"{\"wcs:CoverageDescriptions\":{\"wcs:CoverageDescription\":{\"wcs:CoverageId\":{\"#text\": \"ecfire_fire_weather_index\"}}}}",
+				false
+		);
+		System.out.println(res);
 	}
 }
 

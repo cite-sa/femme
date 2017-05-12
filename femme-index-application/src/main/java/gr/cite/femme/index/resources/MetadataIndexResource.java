@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.stream.XMLStreamException;
 
 import gr.cite.femme.index.api.client.MetadataIndexClient;
 import gr.cite.femme.core.model.Metadatum;
@@ -37,7 +38,7 @@ public class MetadataIndexResource {
 	@POST
 	@Path("index")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public void index(Metadatum metadatum) {
+	public void index(Metadatum metadatum) throws XMLStreamException {
 		indexClient.index(metadatum);
 	}
 	

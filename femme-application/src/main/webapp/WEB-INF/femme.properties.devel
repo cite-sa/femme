@@ -1,12 +1,10 @@
-#
-
 gr.cite.femme.datastore.db.host=localhost
 gr.cite.femme.datastore.db.port=27017
-gr.cite.femme.datastore.db.name=femme-db-devel1
+gr.cite.femme.datastore.db.name=femme-db-devel
 
 gr.cite.femme.datastore.metadata.db.host=localhost
 gr.cite.femme.datastore.metadata.db.port=27017
-gr.cite.femme.datastore.metadata.db.name=femme-db-devel1
+gr.cite.femme.datastore.metadata.db.name=femme-db-devel
 gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
 
 #gr.cite.femme.datastore.metadata.xpath.db.host=localhost\:27017
@@ -19,6 +17,6 @@ gr.cite.femme.datastore.metadata.index.db.name=metadataindex-devel
 
 gr.cite.femme.datastore.metadata.schema.index.db.host=localhost
 gr.cite.femme.datastore.metadata.schema.index.db.port=27017
-gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db-devel1
+gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db-devel
 
 #gr.cite.femme.datastore.mongodb.index.host=http://localhost:8083/femme-index-application/metadata-index

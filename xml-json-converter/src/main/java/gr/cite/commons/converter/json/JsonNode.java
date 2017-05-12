@@ -181,7 +181,10 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 			if (jsonNode.getNamespaces() == null && jsonNode.getAttributes() == null && jsonNode.getChildren() == null) {
 
 				if (jsonNode.getText() != null) {
-					jsonGenerator.writeString(jsonNode.getText());
+					//jsonGenerator.writeString(jsonNode.getText());
+					jsonGenerator.writeStartObject();
+					jsonGenerator.writeObjectField(JsonNodeSerializer.TEXT, jsonNode.getText());
+					jsonGenerator.writeEndObject();
 				} else {
 				/*jsonGenerator.writeStartObject();
 				jsonGenerator.writeEndObject();*/
@@ -196,7 +199,7 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 					jsonGenerator.writeObjectField(JsonNodeSerializer.ATTRIBUTES, jsonNode.getAttributes());
 				}
 				if (jsonNode.getChildren() != null) {
-					List<String> names = jsonNode.getChildren().stream().map(child ->  child.getName()).collect(Collectors.toList());
+					List<String> names = jsonNode.getChildren().stream().map(JsonNode::getName).collect(Collectors.toList());
 
 					Set<String> duplicates = names.stream()
 							.filter(childName -> Collections.frequency(names, childName) > 1)

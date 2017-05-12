@@ -12,18 +12,9 @@ public class XmlJsonConverter {
 	
 	private static final Logger logger = LoggerFactory.getLogger(XmlJsonConverter.class);
 			
-	public static String xmlToJson(String xml) {
+	public static String xmlToJson(String xml) throws XMLStreamException {
 		XmlParser xmlParser = new XmlParser();
-		JsonDocument jsonDoc = null;
-		
-		try {
-			jsonDoc = xmlParser.parseXml(xml);
-			
-		} catch (XMLStreamException e) {
-			logger.error(e.getMessage(), e);
-		}
-		
-		return jsonDoc.toString();
+		return xmlParser.parseXml(xml).toString();
 		
 	}
 

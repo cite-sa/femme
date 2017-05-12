@@ -19,7 +19,9 @@ public interface MongoMetadataCollection {
 
 	public void updateStatus(String id, Status status) throws MetadataStoreException;
 
-	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
+	//public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
+
+	public Metadatum get(String id, boolean lazy) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 

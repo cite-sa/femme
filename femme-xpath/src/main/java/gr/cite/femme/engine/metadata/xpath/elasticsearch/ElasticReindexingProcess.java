@@ -13,6 +13,7 @@ import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDat
 import gr.cite.femme.core.model.Metadatum;
 
 import javax.ws.rs.core.MediaType;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
@@ -77,7 +78,11 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 	public void index(Metadatum metadatum) throws UnsupportedOperationException, MetadataIndexException {
 		String metadatumJson;
 		if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
-			metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+			try {
+				metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+			} catch (XMLStreamException e) {
+				throw new MetadataIndexException(e.getMessage(), e);
+			}
 		} else {
 			throw new UnsupportedOperationException("Metadata indexing is not yet supported for media type " + metadatum.getContentType());
 		}

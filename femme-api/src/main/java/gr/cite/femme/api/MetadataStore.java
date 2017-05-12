@@ -25,6 +25,8 @@ public interface MetadataStore {
 	public void reIndexAll() throws MetadataIndexException, MetadataStoreException;
 	
 	public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
+
+	public Metadatum get(Metadatum metadatum, boolean lazy) throws MetadataStoreException;
 	
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 	
@@ -36,7 +38,7 @@ public interface MetadataStore {
 
 	public List<Metadatum> xPathInMemory(String xPath) throws MetadataStoreException;
 
-		public List<Metadatum> xPathInMemory(List<String> elementIds, String xPath) throws MetadataStoreException;
+	public List<Metadatum> xPathInMemory(List<String> elementIds, String xPath) throws MetadataStoreException;
 
 	//public <T extends Element> T xPath(T element, String xPath) throws MetadataStoreException;
 	

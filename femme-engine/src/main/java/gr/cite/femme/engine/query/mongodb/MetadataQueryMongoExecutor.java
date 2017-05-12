@@ -21,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExecutor<T> implements MetadataQueryExecutor<T> {
@@ -29,6 +31,8 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	private static final Logger logger = LoggerFactory.getLogger(MetadataQueryMongoExecutor.class);
 
 	private MetadataStore metadataStore;
+	//private Map<String, List<Metadatum>> metadataXPathResults = new HashMap<>();
+	private List<Metadatum> metadataXPathResults;
 
 	public MetadataQueryMongoExecutor(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
 		super(datastore, elementSubtype);
@@ -49,12 +53,12 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	@Override
 	public MetadataQueryExecutor<T> xPath(String xPath) throws DatastoreException, MetadataStoreException {
 		if (xPath != null && !xPath.trim().equals("")) {
-			List<Metadatum> metadataXPathResults;
+			//List<Metadatum> metadataXPathResults;
 
 			Duration xPathQueryDuration;
 			Instant xPathQueryStart = Instant.now();
 
-			metadataXPathResults = this.metadataStore.xPath(xPath);
+			this.metadataXPathResults = this.metadataStore.xPath(xPath);
 
 			Instant xPathQueryEnd = Instant.now();
 			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
@@ -82,12 +86,11 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	@Override
 	public MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
 		if (xPath != null && !xPath.trim().equals("")) {
-			List<Metadatum> metadataXPathResults;
 
 			Duration xPathQueryDuration;
 			Instant xPathQueryStart = Instant.now();
 
-			metadataXPathResults = this.metadataStore.xPathInMemory(xPath);
+			this.metadataXPathResults = this.metadataStore.xPathInMemory(xPath);
 
 			Instant xPathQueryEnd = Instant.now();
 			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
@@ -96,9 +99,10 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 			Document retrieveXPathSatisfyElementsQuery = new Document()
 					.append(FieldNames.ID,
 							new Document().append("$in",
-									metadataXPathResults.stream()/*.filter(metadatum -> metadatum.getId() != null)*/
+									this.metadataXPathResults.stream()
 											.map(metadatum -> new ObjectId(metadatum.getElementId()))
 											.distinct().collect(Collectors.toList())));
+									//this.metadataXPathResults.keySet().stream().map(ObjectId::new).collect(Collectors.toList())));
 			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
 
 			super.setQueryDocument(super.getQueryDocument() == null
@@ -114,7 +118,6 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 		return this;
 	}
 
-
 	@Override
 	public List<T> list() throws DatastoreException, MetadataStoreException {
 		List<T> elements;
@@ -122,12 +125,34 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 		if (!isLazyMetadata()) {
 			try {
 				elements = elements.stream().map(element -> {
-					try {
-						element.setMetadata(this.metadataStore.find(element.getId(), super.isLazyMetadata()));
-						return element;
-					} catch (MetadataStoreException e) {
-						throw new RuntimeException(e.getMessage(), e);
-					}
+					List<Metadatum> xPathResult = this.metadataXPathResults.stream()
+							.filter(metadatum -> metadatum.getElementId().equals(element.getId()))
+							.map(metadatum -> {
+								if (metadatum.getValue() == null) {
+									try {
+										return this.metadataStore.get(metadatum, false);
+									} catch (MetadataStoreException e) {
+										throw new RuntimeException(e.getMessage(), e);
+									}
+								} else {
+									//Metadatum metadatumInfo = this.metadataStore.get(metadatum, true);
+									Metadatum metadatumResponse = new Metadatum();
+									metadatumResponse.setId(metadatum.getId());
+									metadatumResponse.setValue(metadatum.getValue());
+									return metadatumResponse;
+								}
+							}).collect(Collectors.toList());;
+
+					if (this.metadataXPathResults.size() > 0) {
+						element.setMetadata(xPathResult);
+					}/* else {
+						try {
+							element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata()));
+						} catch (MetadataStoreException e) {
+							throw new RuntimeException(e.getMessage(), e);
+						}
+					}*/
+					return element;
 				}).collect(Collectors.toList());
 			} catch (RuntimeException e) {
 				throw new MetadataStoreException(e.getMessage(), e);

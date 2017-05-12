@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import gr.cite.femme.client.FemmeClientException;
-import gr.cite.femme.client.FemmeDatastoreException;
+import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.QueryClient;
@@ -54,7 +54,7 @@ public class FemmeGeoResource {
 					}
 				}
 			}
-		} catch (FemmeDatastoreException | FemmeClientException e) {
+		} catch (FemmeException | FemmeClientException e) {
 			throw new WebApplicationException(e.getMessage(), e);
 		}
 		return Response.ok(endpoints).build();
@@ -82,7 +82,7 @@ public class FemmeGeoResource {
 		
 		try {
 			dataElements = femmeClient.getDataElementsInCollectionById(endpointId);
-		} catch (FemmeDatastoreException | FemmeClientException e) {
+		} catch (FemmeException | FemmeClientException e) {
 			throw new WebApplicationException(e.getMessage(), e);
 		}
 		
@@ -108,7 +108,7 @@ public class FemmeGeoResource {
 				}
 			}
 			
-		} catch (FemmeDatastoreException e) {
+		} catch (FemmeException e) {
 			throw new WebApplicationException(e.getMessage(), e);
 		}
 		

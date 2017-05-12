@@ -20,6 +20,7 @@ public class Metadatum {
 	@JsonProperty("name")
 	private String name;
 
+	@JsonInclude(Include.NON_NULL)
 	@JsonProperty("value")
 	private String value;
 

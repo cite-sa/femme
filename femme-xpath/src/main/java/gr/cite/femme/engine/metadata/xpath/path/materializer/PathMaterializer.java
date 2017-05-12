@@ -7,6 +7,7 @@ import java.util.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.xml.stream.XMLStreamException;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -185,7 +186,7 @@ public class PathMaterializer {
 		return Arrays.asList(pathsNode.getId());
 	}
 	
-	public static void main(String[] args) throws JsonParseException, IOException {
+	public static void main(String[] args) throws JsonParseException, IOException, XMLStreamException {
 		Client client = ClientBuilder.newClient();
 		WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
 
