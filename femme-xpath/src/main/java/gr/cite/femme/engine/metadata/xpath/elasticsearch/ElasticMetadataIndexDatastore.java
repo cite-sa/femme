@@ -16,6 +16,7 @@ import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -156,7 +157,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 					}
 				}
 			}
-		} catch (IOException e) {
+		} catch (IOException | XMLStreamException e) {
 			throw new MetadataIndexException("ElasticSearch scroll query failed", e);
 		}
 
@@ -169,13 +170,16 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		List<ElasticSearchQuery> finalQueries = new ArrayList<>();
 		List<ElasticSearchQuery> shoulds = buildShoulds(queryTree.getRoot());
 
-		String elementIdsFilter = !elementIds.isEmpty()
+		String elementIdsFilter = elementIds.stream().map(elementId -> "\"" + elementId +"\"")
+				.collect(Collectors.joining(",", "{\"terms\":{\"elementId\":[", "]}},"));
+
+		/*String elementIdsFilter = !elementIds.isEmpty()
 			? "{" +
 				"\"terms\":{" +
-					"\"elementId\":[" + elementIds.stream().collect(Collectors.joining(",")) + "]" +
+					"\"elementId\":[" + elementIds.stream().map(elementId -> "\"" + elementId +"\"").collect(Collectors.joining(",")) + "]" +
 					"}" +
 				"},"
-			: "";
+			: "";*/
 		shoulds.forEach(query -> {
 			ElasticSearchQuery finalQuery = new ElasticSearchQuery();
 			finalQuery.getIncludes().addAll(query.getIncludes());
@@ -262,8 +266,10 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		}
 
 		if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null) {
-			return buildTermOrNested(node.getData());
-		} else if (node.getData().isFilterPayload()) {
+			ElasticSearchQuery query = buildTermOrNested(node.getData());
+			return query;
+		//} else if (node.getData().isFilterPayload()) {
+		} else if (node.isLeaf()) {
 			//includes.add(node.getData().getNodePath().toString());
 			ElasticSearchQuery query = new ElasticSearchQuery();
 			query.getIncludes().add(node.getData().getNodePath().toString());

@@ -1,6 +1,7 @@
 package gr.cite.femme.engine;
 
 import gr.cite.femme.core.query.api.MetadataQueryExecutor;
+import gr.cite.femme.core.query.api.MetadataQueryExecutorBuilder;
 import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.api.Datastore;
@@ -23,6 +24,7 @@ import gr.cite.femme.core.query.api.QueryExecutor;
 import gr.cite.femme.core.query.api.QueryOptionsMessenger;
 import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.engine.query.mongodb.CriterionMongo;
+import gr.cite.femme.engine.query.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.mongodb.QueryMongo;
 import gr.cite.femme.engine.query.mongodb.QueryOptionsBuilderMongo;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -189,9 +191,9 @@ public class Femme {
 	}
 
 	public String addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException, IllegalArgumentException {
-		Collection collection = this.datastore.get(collectionId, Collection.class, null);
+		Collection collection = this.datastore.get(collectionId, Collection.class);
 		if (collection == null) {
-			throw new DatastoreException("Collection doesn't exist: [" + collectionId + "]");
+			throw new DatastoreException("Collection doesn't exist [" + collectionId + "]");
 		}
 
 		dataElement.setCollections(Collections.singletonList(collection));
@@ -212,14 +214,29 @@ public class Femme {
 
 	public <T extends Element> T get(String id, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()), elementSubType).first();
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()), elementSubType).build().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
 	}
 
-	public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
+	public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
+		try {
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()), elementSubType).xPath(xPath).build().first();
+		} catch (IllegalArgumentException e) {
+			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
+		}
+	}
+
+	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
 		return new QueryOptionsBuilderMongo<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
+	}*/
+	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
+		return new QueryOptionsBuilderMongo<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
+	}*/
+
+	public <T extends Element> MetadataQueryExecutorBuilder<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
+		return new QueryExecutorFactory<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
 	}
 
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {

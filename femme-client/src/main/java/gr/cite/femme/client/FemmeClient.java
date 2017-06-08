@@ -3,7 +3,9 @@ package gr.cite.femme.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -258,6 +260,16 @@ public class FemmeClient implements FemmeClientAPI {
 		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath);
 	}
 
+	public List<DataElement> getDataElements(Integer limit, Integer offset, List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException {
+		return findDataElements(null,
+				QueryOptionsMessenger.builder()
+						.limit(limit).offset(offset)
+						.include(new HashSet<>(includes))
+						.exclude(new HashSet<>(excludes))
+						.build(),
+				xPath);
+	}
+
 	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
 		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath, true);
 	}
@@ -374,7 +386,26 @@ public class FemmeClient implements FemmeClientAPI {
 		}
 		
 		return femmeResponse.getEntity().getBody();
-		
+	}
+
+	@Override
+	public DataElement getDataElementById(String id, String xPath) throws FemmeException {
+		Response response = webTarget
+				.path("dataElements")
+				.path(id)
+				.queryParam("xpath", xPath)
+				.request().get();
+
+		FemmeResponse<DataElement> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
+		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+			logger.debug(femmeResponse.getMessage());
+			return null;
+		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
+		}
+
+		return femmeResponse.getEntity().getBody();
 	}
 
 	@Override

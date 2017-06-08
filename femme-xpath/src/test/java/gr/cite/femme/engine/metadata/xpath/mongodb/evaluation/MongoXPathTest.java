@@ -13,6 +13,7 @@ import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatas
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -29,9 +30,9 @@ public class MongoXPathTest {
 //	private static final String VALID_EXPRESSION = "//server/coverage";
 //	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription[@gml:id='hrl0000c067_07_if185l_trr3']";
 //	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:rangeType/swe:DataRecord/swe:field[@name='band_1']";
-//	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions[wcs:CoverageDescription/@gml:id='hrl0000c067_07_if185l_trr3']";
+	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription/@gml:id";
 //	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata[gmlcov:Extension/adding_target='MARS']";
-	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription/domainSet/RectifiedGrid/origin/Point[@gml:id='hrl0000c067_07_if185l_trr3-origin']/pos[.='-11827.9751 -526700.332']";
+//	private static final String VALID_EXPRESSION = "/wcs:CoverageDescriptions/wcs:CoverageDescription/domainSet/RectifiedGrid/origin/Point[@gml:id='hrl0000c067_07_if185l_trr3-origin']/pos[.='-11827.9751 -526700.332']";
 
 
 
@@ -128,7 +129,7 @@ public class MongoXPathTest {
 		materializedPaths.insertMany(nodes);
 	}*/
 
-	//@Test
+	@Test
 	public void valid() throws MetadataIndexException {
 		xPath.xPath(VALID_EXPRESSION);
 	}

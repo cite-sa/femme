@@ -62,7 +62,7 @@ public class XMLSchemaAnalyzer {
 
     private void xmlElementToJsonNode(XMLStreamReader streamReader) {
         LinkedHashMap<String, String> attributes = null, namespaces = null;
-        /*JsonNode tempNode = new JsonNode();*/
+        /*XmlJsonNode tempNode = new XmlJsonNode();*/
 
         StringBuilder nameBuilder = new StringBuilder();
         if (!StringUtils.isBlank(streamReader.getPrefix())) {

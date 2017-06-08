@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
+import gr.cite.femme.api.MetadataStore;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
@@ -84,7 +85,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				options.getExclude().remove("metadata");
 				this.lazyMetadata = true;
 			}
-			if (this.results != null) {
+			/*if (this.results != null) {
 				if (options.getLimit() != null) {
 					this.results.limit(options.getLimit());
 				}
@@ -108,7 +109,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				if (options.getInclude() != null || options.getInclude() != null) {
 					this.results.projection(Projections.fields(projections));
 				}
-			}
+			}*/
 		}
 		return this;
 	}
@@ -166,7 +167,33 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		this.results = this.queryDocument == null ? this.collection.find()
 		: this.collection.find(Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument));
 
-		options(options);
+		if (this.results != null && this.options != null) {
+			if (options.getLimit() != null) {
+				this.results.limit(options.getLimit());
+			}
+			if (options.getOffset() != null) {
+				this.results.skip(options.getOffset());
+			}
+			if (options.getAsc() != null) {
+				this.results.sort(Sorts.ascending(options.getAsc()));
+			}
+			if (options.getDesc() != null) {
+				this.results.sort(Sorts.descending(options.getDesc()));
+			}
+
+			List<Bson> projections = new ArrayList<>();
+			if (options.getInclude() != null) {
+				projections.addAll(options.getInclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).map(Projections::include).collect(Collectors.toList()));
+			}
+			if (options.getExclude() != null) {
+				projections.addAll(options.getExclude().stream().map(field -> "id".equals(field) ? FieldNames.ID : field).map(Projections::exclude).collect(Collectors.toList()));
+			}
+			if (options.getInclude() != null || options.getInclude() != null) {
+				this.results.projection(Projections.fields(projections));
+			}
+		}
+
+		//options(options);
 
 		/*if (lazyMetadata) {
 			MongoCursor<T> cursor;
@@ -208,7 +235,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	@Override
 	public T first() throws DatastoreException, MetadataStoreException {
 		results = this.queryDocument == null ? collection.find().limit(1) : collection.find(this.queryDocument).limit(1);
-		options(options);
+		//options(options);
 		//T element = results.first();
 		/*if (element != null && lazyMetadata) {
 			element.setMetadata(this.metadataStore.find(element.getId()));
@@ -288,5 +315,26 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 			}
 		}
 		return inclusion;
+	}
+
+	public static <U extends Element>QueryMongoExecutor.QueryExecutionBuilder<U> builder(MongoDatastore datastore, Class<U> elementSubtype) {
+		return new QueryMongoExecutor.QueryExecutionBuilder<>(datastore, elementSubtype);
+	}
+
+	public static class QueryExecutionBuilder<T extends Element> {
+		private QueryMongoExecutor<T> queryExecutor;
+
+		private QueryExecutionBuilder(MongoDatastore datastore, Class<T> elementSubtype) {
+			queryExecutor = new QueryMongoExecutor<>(datastore, elementSubtype);
+		}
+
+		public QueryMongoExecutor.QueryExecutionBuilder options(QueryOptionsMessenger options) {
+			queryExecutor.options(options);
+			return this;
+		}
+
+		public QueryMongoExecutor<T> build() {
+			return queryExecutor;
+		}
 	}
 }

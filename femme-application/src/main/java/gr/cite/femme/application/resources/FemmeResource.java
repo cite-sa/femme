@@ -91,10 +91,10 @@ public class FemmeResource {
 		FemmeResponseEntity<CollectionList> entity = new FemmeResponseEntity<>();
 		
 		//QueryExecutor<Collection> queryExecutor = datastore.get(query, Collection.class).options(options);
-		QueryExecutor<Collection> queryExecutor = this.femme.find(query, Collection.class).options(options);
+		//QueryExecutor<Collection> queryExecutor = this.femme.find(query, Collection.class).options(options).build();
 		
 		try {
-			List<Collection> collections = queryExecutor.list();
+			List<Collection> collections = this.femme.find(query, Collection.class).options(options).build().list();
 
 			String message;
 			if (collections.isEmpty()) {
@@ -145,7 +145,7 @@ public class FemmeResource {
 		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
 
 		try {
-			Collection collection = this.femme.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.NAME, name).end()), Collection.class).first();
+			Collection collection = this.femme.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.NAME, name).end()), Collection.class).build().first();
 
 			if (collection == null) {
 				throw new FemmeApplicationException("No collection with name " + name + " found", Response.Status.NOT_FOUND.getStatusCode());
@@ -196,9 +196,9 @@ public class FemmeResource {
 		DataElementList dataElementList;
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPath(xPath).options(options);
+			//QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).options(options).xPath(xPath).build();
 
-			List<DataElement> dataElements = queryExecutor.list();
+			List<DataElement> dataElements = this.femme.find(query, DataElement.class).options(options).xPath(xPath).build().list();
 			dataElementList = new DataElementList(dataElements);
 
 		} catch (DatastoreException | MetadataStoreException e) {
@@ -238,9 +238,9 @@ public class FemmeResource {
 		DataElementList dataElementList;
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
-			QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPathInMemory(xPath).options(options);
+			//QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPathInMemory(xPath).options(options);
 
-			List<DataElement> dataElements = queryExecutor.list();
+			List<DataElement> dataElements = this.femme.find(query, DataElement.class).xPathInMemory(xPath).options(options).build().list();
 			dataElementList = new DataElementList(dataElements);
 
 		} catch (DatastoreException | MetadataStoreException e) {
@@ -265,7 +265,7 @@ public class FemmeResource {
 
 	@GET
 	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/{id}")
-	public Response getDataElementById(@NotNull @PathParam("id") String id) throws FemmeApplicationException {
+	public Response getDataElementById(@NotNull @PathParam("id") String id, @QueryParam("xpath") String xPath) throws FemmeApplicationException {
 
 		FemmeResponse<DataElement> femmeResponse = new FemmeResponse<>();
 
@@ -275,16 +275,20 @@ public class FemmeResource {
 			options.setLimit(1);
 			DataElement dataElement = query.options(options).first();*/
 
-			DataElement dataElement = this.femme.get(id, DataElement.class);
+			DataElement dataElement = xPath == null ? this.femme.get(id, DataElement.class) : this.femme.get(id, xPath, DataElement.class);
 
 			String message;
 			if (dataElement == null) {
-				message = "No DataElement with id " + id + " found";
+				message = xPath == null || xPath.trim().isEmpty()
+						? "No DataElement with id " + id + " found"
+						: "No DataElement with id " + id + " and XPath " + xPath + " found";
 				logger.info(message);
 				throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 			}
 
-			message = "DataElement " + dataElement.getId() + " found";
+			message = xPath == null || xPath.trim().isEmpty()
+					? "DataElement " + dataElement.getId() + " found"
+					: "DataElement " + dataElement.getId() + " and XPath " + xPath + " found";
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message)
 					.setEntity(new FemmeResponseEntity<>(this.uriInfo.getBaseUriBuilder().path(this.uriInfo.getPath()).toString(), dataElement));
@@ -344,9 +348,10 @@ public class FemmeResource {
 		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
 		try {
 			//QueryExecutor<DataElement> queryExecutor = datastore.get(query, DataElement.class).xPath(xPath).options(options);
-			QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPath(xPath).options(options);
+			//QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPath(xPath).options(options).build();
+
 //			List<DataElement> dataElements = xPath != null && !xPath.equals("") ? queryExecutor.xPath(xPath) : queryExecutor.list();
-			List<DataElement> dataElements = queryExecutor.list();
+			List<DataElement> dataElements = this.femme.find(query, DataElement.class).xPath(xPath).options(options).build().list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -398,8 +403,8 @@ public class FemmeResource {
 							CriterionBuilderMongo.root().eq(field, FieldNames.ID.equals(field) ? new ObjectId(value) : value).end()
 					)).end());
 
-			MetadataQueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPath(xPath).options(options);
-			List<DataElement> dataElements = queryExecutor.list();
+			//MetadataQueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).xPath(xPath).options(options);
+			List<DataElement> dataElements = this.femme.find(query, DataElement.class).xPath(xPath).options(options).build().list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 
 			if (dataElementList.getSize() == 0) {
@@ -434,8 +439,8 @@ public class FemmeResource {
 			Query<? extends Criterion> query = QueryMongo.query().addCriterion(
 					CriterionBuilderMongo.root().and(Arrays.asList(collectionCriterion, dataElementCriterion)).end());
 
-			QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).options(options);
-			List<DataElement> dataElements = queryExecutor.list();
+			//QueryExecutor<DataElement> queryExecutor = this.femme.find(query, DataElement.class).options(options);
+			List<DataElement> dataElements = this.femme.find(query, DataElement.class).options(options).build().list();
 			DataElementList dataElementList = new DataElementList(dataElements);
 			
 			if (dataElementList.getSize() == 0) {

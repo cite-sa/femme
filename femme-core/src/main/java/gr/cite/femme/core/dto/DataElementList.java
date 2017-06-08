@@ -2,15 +2,17 @@ package gr.cite.femme.core.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.core.model.DataElement;
 
-/*@JsonInclude(Include.NON_EMPTY)*/
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class DataElementList {
 	
-	/*@JsonProperty*/
+	//@JsonProperty
 	private List<DataElement> dataElements;
 	
-	/*@JsonProperty*/
+	//@JsonProperty
 	private int size;
 
 	public DataElementList() {

@@ -32,9 +32,9 @@ public interface MetadataStore {
 	
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException;
 
-	public List<Metadatum> xPath(String xPath) throws MetadataStoreException;
+	public List<Metadatum> xPath(String xPath,  boolean lazyPayload) throws MetadataStoreException;
 
-	public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataStoreException;
+	public List<Metadatum> xPath(List<String> elementIds, String xPath, boolean lazyPayload) throws MetadataStoreException;
 
 	public List<Metadatum> xPathInMemory(String xPath) throws MetadataStoreException;
 

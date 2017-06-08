@@ -1,11 +1,13 @@
 package gr.cite.earthserver.wcs.adapter.api;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
+import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.core.query.api.Criterion;
@@ -44,12 +46,18 @@ public interface WCSAdapterAPI {
 	
 	
 	public List<Coverage> getCoverages() throws FemmeException, FemmeClientException;
+
+	public List<Coverage> getCoverages(String xPath) throws FemmeException, FemmeClientException;
+
+	public List<Coverage> getCoverages(List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException;
 	
 	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeException, FemmeClientException;
 	
 	public List<Coverage> getCoverages(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException;
 	
 	public Coverage getCoverageById(String id) throws FemmeException, FemmeClientException;
+
+	public Coverage getCoverageById(String id, String xPath) throws FemmeException;
 	
 	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException;
 	

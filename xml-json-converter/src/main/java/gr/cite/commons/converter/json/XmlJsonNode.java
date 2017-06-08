@@ -5,26 +5,19 @@ import java.util.List;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonInclude(Include.NON_NULL)
-@JsonSerialize(using=JsonNodeSerializer.class)
-public class JsonNode {
+@JsonSerialize(using=XmlJsonNodeSerializer.class)
+public class XmlJsonNode {
 	
 	private String name;
 	
@@ -32,11 +25,11 @@ public class JsonNode {
 	
 	private LinkedHashMap<String, String> attributes;
 	
-	private List<JsonNode> children;
+	private List<XmlJsonNode> children;
 	
 	private String text;
 	
-	private JsonNode parent;
+	private XmlJsonNode parent;
 	
 	
 	public String getName() {
@@ -63,15 +56,15 @@ public class JsonNode {
 		this.attributes = attributes;
 	}
 
-	public List<JsonNode> getChildren() {
+	public List<XmlJsonNode> getChildren() {
 		return children;
 	}
 
-	public void setChildren(List<JsonNode> children) {
+	public void setChildren(List<XmlJsonNode> children) {
 		this.children = children;
 	}
 	
-	public void addChild(JsonNode child) {
+	public void addChild(XmlJsonNode child) {
 		if (children == null) {
 			children = new ArrayList<>();
 		}
@@ -86,15 +79,15 @@ public class JsonNode {
 		this.text = text;
 	}
 
-	public JsonNode getParent() {
+	public XmlJsonNode getParent() {
 		return parent;
 	}
 
-	public void setParent(JsonNode parent) {
+	public void setParent(XmlJsonNode parent) {
 		this.parent = parent;
 	}
 	
-	@Override
+	/*@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("{");
@@ -124,9 +117,9 @@ public class JsonNode {
 			Iterator<Entry<String, String>> namespacesIterator = namespaces.entrySet().iterator();
 			while (namespacesIterator.hasNext()) {
 				Entry<String, String> entry = namespacesIterator.next();
-				builder.append("\"" + entry.getKey() + "\"");
+				builder.append("\"").append(entry.getKey()).append("\"");
 				builder.append(":");
-				builder.append("\"" + entry.getValue() + "\"");
+				builder.append("\"").append(entry.getValue()).append("\"");
 				if (namespacesIterator.hasNext()) {
 					builder.append(",");
 				}
@@ -141,9 +134,9 @@ public class JsonNode {
 				builder.append(",");
 		}
 		
-		/*Iterator<Entry<String, JsonNode>> childrenIterator = children.entrySet().iterator();
+		*//*Iterator<Entry<String, XmlJsonNode>> childrenIterator = children.entrySet().iterator();
 		while (childrenIterator.hasNext()) {
-			Entry<String, JsonNode> entry = childrenIterator.next();
+			Entry<String, XmlJsonNode> entry = childrenIterator.next();
 			builder.append("\"" + entry.getKey() + "\"");
 			builder.append(":");
 			builder.append(entry.getValue().toString());
@@ -151,7 +144,7 @@ public class JsonNode {
 				builder.append(",");
 			}
 			
-		}*/
+		}*//*
 		for (int i = 0; i < children.size(); i++) {
 			builder.append("\"" + children.get(i).getName() + "\"");
 			builder.append(":");
@@ -164,42 +157,40 @@ public class JsonNode {
 		
 		builder.append("}");
 		return builder.toString();
-	}
+	}*/
 }
 
-class JsonNodeSerializer extends JsonSerializer<JsonNode> {
-	
+class XmlJsonNodeSerializer extends JsonSerializer<XmlJsonNode> {
 	private static final String ATTRIBUTES = "@";
 	private static final String NAMESPACES = "ns";
 	private static final String TEXT = "#text";
 
 	@Override
-	public void serialize(JsonNode jsonNode, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-			throws IOException, JsonProcessingException {
+	public void serialize(XmlJsonNode xmlJsonNode, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
 
-		if (jsonNode != null) {
-			if (jsonNode.getNamespaces() == null && jsonNode.getAttributes() == null && jsonNode.getChildren() == null) {
+		if (xmlJsonNode != null) {
+			if (xmlJsonNode.getNamespaces() == null && xmlJsonNode.getAttributes() == null && xmlJsonNode.getChildren() == null) {
 
-				if (jsonNode.getText() != null) {
-					//jsonGenerator.writeString(jsonNode.getText());
+				if (xmlJsonNode.getText() != null) {
+					//jsonGenerator.writeString(xmlJsonNode.getText());
 					jsonGenerator.writeStartObject();
-					jsonGenerator.writeObjectField(JsonNodeSerializer.TEXT, jsonNode.getText());
+					jsonGenerator.writeObjectField(XmlJsonNodeSerializer.TEXT, xmlJsonNode.getText());
 					jsonGenerator.writeEndObject();
 				} else {
-				/*jsonGenerator.writeStartObject();
-				jsonGenerator.writeEndObject();*/
-					jsonGenerator.writeNull();
+					jsonGenerator.writeStartObject();
+					jsonGenerator.writeEndObject();
+					//jsonGenerator.writeNull();
 				}
 			} else {
 				jsonGenerator.writeStartObject();
-				if (jsonNode.getNamespaces() != null) {
-					jsonGenerator.writeObjectField(JsonNodeSerializer.NAMESPACES, jsonNode.getNamespaces());
+				if (xmlJsonNode.getNamespaces() != null) {
+					jsonGenerator.writeObjectField(XmlJsonNodeSerializer.NAMESPACES, xmlJsonNode.getNamespaces());
 				}
-				if (jsonNode.getAttributes() != null) {
-					jsonGenerator.writeObjectField(JsonNodeSerializer.ATTRIBUTES, jsonNode.getAttributes());
+				if (xmlJsonNode.getAttributes() != null) {
+					jsonGenerator.writeObjectField(XmlJsonNodeSerializer.ATTRIBUTES, xmlJsonNode.getAttributes());
 				}
-				if (jsonNode.getChildren() != null) {
-					List<String> names = jsonNode.getChildren().stream().map(JsonNode::getName).collect(Collectors.toList());
+				if (xmlJsonNode.getChildren() != null) {
+					List<String> names = xmlJsonNode.getChildren().stream().map(XmlJsonNode::getName).collect(Collectors.toList());
 
 					Set<String> duplicates = names.stream()
 							.filter(childName -> Collections.frequency(names, childName) > 1)
@@ -218,7 +209,7 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 
 					for (String name : duplicates) {
 						jsonGenerator.writeArrayFieldStart(name);
-						for (JsonNode node : jsonNode.getChildren()) {
+						for (XmlJsonNode node : xmlJsonNode.getChildren()) {
 							if (node.getName().equals(name)) {
 								jsonGenerator.writeObject(node);
 							}
@@ -227,7 +218,7 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 					}
 
 					for (String name : unique) {
-						for (JsonNode node : jsonNode.getChildren()) {
+						for (XmlJsonNode node : xmlJsonNode.getChildren()) {
 							if (node.getName().equals(name)) {
 								jsonGenerator.writeFieldName(node.getName());
 								jsonGenerator.writeObject(node);
@@ -235,8 +226,8 @@ class JsonNodeSerializer extends JsonSerializer<JsonNode> {
 						}
 					}
 				}
-				if (jsonNode.getText() != null) {
-					jsonGenerator.writeStringField(JsonNodeSerializer.TEXT, jsonNode.getText());
+				if (xmlJsonNode.getText() != null) {
+					jsonGenerator.writeStringField(XmlJsonNodeSerializer.TEXT, xmlJsonNode.getText());
 				}
 				jsonGenerator.writeEndObject();
 			}

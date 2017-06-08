@@ -14,20 +14,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import gr.cite.commons.converter.xml.XmlParser;
-
 @JsonSerialize(using=JsonDocumentSerializer.class)
 @JsonInclude(Include.NON_NULL)
 public class JsonDocument {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JsonDocument.class);
 	
-	private JsonNode rootNode;
-	public JsonNode getRootNode() {
+	private XmlJsonNode rootNode;
+	public XmlJsonNode getRootNode() {
 		return rootNode;
 	}
 
-	public void setRootNode(JsonNode rootNode) {
+	public void setRootNode(XmlJsonNode rootNode) {
 		this.rootNode = rootNode;
 	}
 

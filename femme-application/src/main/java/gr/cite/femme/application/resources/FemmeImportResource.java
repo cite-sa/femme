@@ -139,7 +139,7 @@ public class FemmeImportResource {
 			List<DataElement> existingDataElements = this.femme.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().inAnyCollection(
 					Collections.singletonList(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collection
 							.getId())).end()
-					)).end()), DataElement.class).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).list();
+					)).end()), DataElement.class).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).build().list();
 			existingImport.setExistingDataElements(existingDataElements.stream().map(DataElement::getId).collect(Collectors.toList()));
 		} catch (DatastoreException | MetadataStoreException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);

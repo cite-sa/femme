@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.cite.commons.converter.json.JsonDocument;
-import gr.cite.commons.converter.json.JsonNode;
+import gr.cite.commons.converter.json.XmlJsonNode;
 
 public class XmlParser {
 
@@ -24,7 +24,7 @@ public class XmlParser {
 
 	public JsonDocument parseXml(String xml) throws XMLStreamException {
 		jsonDoc = new JsonDocument();
-		JsonNode jsonNode = null;
+		XmlJsonNode xmlJsonNode = null;
 
 		XMLStreamReader streamReader = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(xml));
 
@@ -32,10 +32,10 @@ public class XmlParser {
 			streamReader.next();
 			switch (streamReader.getEventType()) {
 				case XMLStreamReader.START_ELEMENT:
-					jsonNode = xmlElementToJsonNode(streamReader, jsonNode);
+					xmlJsonNode = xmlElementToJsonNode(streamReader, xmlJsonNode);
 					break;
 				case XMLStreamReader.END_ELEMENT:
-					jsonNode = jsonNode.getParent();
+					xmlJsonNode = xmlJsonNode.getParent();
 					break;
 				case XMLStreamReader.ATTRIBUTE:
 					System.out.println("ATTRIBUTE");
@@ -51,7 +51,7 @@ public class XmlParser {
 					if (StringUtils.isBlank(text)) {
 						break;
 					} else {
-						jsonNode.setText(text);
+						xmlJsonNode.setText(text);
 					}
 					break;
 				case XMLStreamReader.END_DOCUMENT:
@@ -65,9 +65,9 @@ public class XmlParser {
 		return jsonDoc;
 	}
 
-	private JsonNode xmlElementToJsonNode(XMLStreamReader streamReader, JsonNode jsonNode) {
+	private XmlJsonNode xmlElementToJsonNode(XMLStreamReader streamReader, XmlJsonNode xmlJsonNode) {
 		LinkedHashMap<String, String> attributes = null, namespaces = null;
-		JsonNode tempNode = new JsonNode();
+		XmlJsonNode tempNode = new XmlJsonNode();
 
 		StringBuilder nameBuilder = new StringBuilder();
 		if (!StringUtils.isBlank(streamReader.getPrefix())) {
@@ -104,10 +104,10 @@ public class XmlParser {
 		tempNode.setNamespaces(namespaces);
 		tempNode.setAttributes(attributes);
 
-		tempNode.setParent(jsonNode);
+		tempNode.setParent(xmlJsonNode);
 
-		if (jsonNode != null) {
-			jsonNode.addChild(tempNode);
+		if (xmlJsonNode != null) {
+			xmlJsonNode.addChild(tempNode);
 		} else {
 			jsonDoc.setRootNode(tempNode);
 		}

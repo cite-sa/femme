@@ -1,33 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
 
-	<!--<property resource="../webapp/WEB-INF/femme.properties.devel" />
-
-	<if condition='property("gr.cite.femme.logging.environment").equals("prod")'>
-		<then>
-			<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-				<file>${CATALINA_HOME}/logs/femme.log</file>
-				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-					<fileNamePattern>${HOME}/femme-tomcat/logs/archived/femme.%d{yyyy-MM}.%i.log</fileNamePattern>
-					<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-						<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-							<maxFileSize>30MB</maxFileSize>
-						</timeBasedFileNamingAndTriggeringPolicy>
-					</triggeringPolicy>
-					<maxHistory>12</maxHistory>
-				</rollingPolicy>
-
-				<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-					<Pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %message%n</Pattern>
-				</encoder>
-			</appender>
-		</then>
-	</if>-->
-
-	<!--<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
        <file>${CATALINA_HOME}/logs/femme.log</file>
        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-           <fileNamePattern>${HOME}/femme-tomcat/logs/archived/femme.%d{yyyy-MM}.%i.log</fileNamePattern>
+           <fileNamePattern>${CATALINA_HOME}/logs/archived/femme.%d{yyyy-MM}.%i.log</fileNamePattern>
            <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                    <maxFileSize>30MB</maxFileSize>
@@ -39,7 +16,7 @@
        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
            <Pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %message%n</Pattern>
        </encoder>
-   </appender> -->
+   </appender>
 	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -50,41 +27,40 @@
 
 	<!--FeMME Loggers-->
 	<logger name="gr.cite.femme.application" level="INFO" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!--<appender-ref ref="FILE" />-->
-		l
+		<!--<appender-ref ref="STDOUT" />-->
+		<appender-ref ref="FILE" />
 	</logger>
-	<logger name="gr.cite.femme.engine" level="DEBUG" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+	<logger name="gr.cite.femme.engine" level="INFO" additivity="false">
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
-	<logger name="gr.cite.femme.engine.datastore" level="DEBUG" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+	<logger name="gr.cite.femme.engine.datastore" level="INFO" additivity="false">
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
-	<logger name="gr.cite.femme.engine.metadatastore" level="DEBUG" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+	<logger name="gr.cite.femme.engine.metadatastore" level="INFO" additivity="false">
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
-	<logger name="gr.cite.femme.engine.queries" level="DEBUG" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+	<logger name="gr.cite.femme.engine.queries" level="INFO" additivity="false">
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
-	<logger name="gr.cite.femme.engine.metadata.xpath" level="DEBUG" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+	<logger name="gr.cite.femme.engine.metadata.xpath" level="INFO" additivity="false">
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
 
 	<!--MongoDB Loggers-->
 	<logger name="org.mongodb.driver" level="INFO" additivity="false">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</logger>
 
 
 	<root level="INFO">
-		<appender-ref ref="STDOUT" />
-		<!-- <appender-ref ref="FILE" /> -->
+		<!--<appender-ref ref="STDOUT" />-->
+		 <appender-ref ref="FILE" />
 	</root>
 
 </configuration>

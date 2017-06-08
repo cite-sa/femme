@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -101,13 +102,13 @@ public final class WCSFemmeMapper {
 		}
 		coverage.setServers(servers);
 
-		String describeCoverage = "";
+		//String describeCoverage = "";
 		if (dataElement.getMetadata() != null && dataElement.getMetadata().size() > 0) {
-			describeCoverage = dataElement.getMetadata().stream()
+			dataElement.getMetadata().stream()
 					.filter(metadatum -> metadatum != null && WCSFemmeMapper.DESCRIBE_COVERAGE.equals(metadatum.getName()))
-					.findFirst().orElse(null).getValue();
+					.findFirst().ifPresent(dataElementMetadatum -> coverage.setMetadata(dataElementMetadatum.getValue()));
 		}
-		coverage.setMetadata(describeCoverage);
+		//coverage.setMetadata(describeCoverage);
 
 		return coverage;
 	}

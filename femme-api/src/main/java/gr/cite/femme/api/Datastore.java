@@ -42,6 +42,8 @@ public interface Datastore {
 
 	public <T extends Element> List<T> delete(Query<? extends Criterion> query, Class<T> elementSubtype) throws DatastoreException;*/
 
+	public <T extends Element> T get(String id, Class<T> elementSubtype) throws DatastoreException, MetadataStoreException;
+
 	public <T extends Element> T get(String id, Class<T> elementSubtype, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException;
 
 	//public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException;

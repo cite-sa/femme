@@ -202,6 +202,13 @@ public class PathMaterializer {
 		//		 System.out.println(json);
 
 		//		 PathMaterializer tree = new PathMaterializer();
-		List<MaterializedPathsNode> metarializedPathsNodes = PathMaterializer.materialize(new ObjectId().toString(), json);
+		List<MaterializedPathsNode> materializedPathsNodes = PathMaterializer.materialize(new ObjectId().toString(), json);
+		materializedPathsNodes.forEach(node -> {
+			try {
+				System.out.println(mapper.writeValueAsString(node));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }

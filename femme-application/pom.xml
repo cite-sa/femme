@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gr.cite.femme</groupId>
 	<artifactId>femme-application</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>war</packaging>
 
 	<properties>
@@ -166,6 +166,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>femme-application</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

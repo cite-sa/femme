@@ -156,7 +156,7 @@ public class MetadataXPath {
         return metadata;
     }
 
-    public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataIndexException {
+    public List<Metadatum> xPath(List<String> elementIds, String xPath, boolean lazyPayload) throws MetadataIndexException {
         Instant start, end;
 
         CharStream stream = CharStreams.fromString(xPath);
@@ -171,7 +171,7 @@ public class MetadataXPath {
         logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
 
         start = Instant.now();
-        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree, false);
+        List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree, lazyPayload);
         end = Instant.now();
         logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
 

@@ -108,9 +108,9 @@ public class MongoDatastoreClient {
 		this.database.getCollection(MongoDatastoreClient.COLLECTIONS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT, FieldNames.NAME), uniqueIndexOptions);
 
 		//DataElements indices
-		this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
-		this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
-				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT)), uniqueIndexOptions);
+		//this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.ascending(FieldNames.ENDPOINT), uniqueIndexOptions);
+		/*this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
+				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT)), uniqueIndexOptions);*/
 		this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
 				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_NAME)), uniqueIndexOptions);
 		

@@ -48,6 +48,8 @@ public interface FemmeClientAPI {
 
 	public List<DataElement> getDataElements(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException;
 
+	public List<DataElement> getDataElements(Integer limit, Integer offset, List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException;
+
 	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException;
 
 	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException;
@@ -55,6 +57,8 @@ public interface FemmeClientAPI {
 	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath, boolean inMemoryXPath) throws FemmeException, FemmeClientException;
 	
 	public DataElement getDataElementById(String id) throws FemmeException;
+
+	public DataElement getDataElementById(String id, String xPath) throws FemmeException;
 
 	public List<DataElement> getDataElementsByName(String name) throws FemmeException, FemmeClientException;
 	

@@ -18,6 +18,7 @@ import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
+import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.api.Criterion;
 import gr.cite.femme.core.query.api.Query;
@@ -108,6 +109,18 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public List<Coverage> getCoverages() throws FemmeException, FemmeClientException {
 		return getCoverages(null, null);
 	}
+
+	@Override
+	public List<Coverage> getCoverages(String xPath) throws FemmeException, FemmeClientException {
+		return this.femmeClient.getDataElements(null, null, xPath).stream()
+				.map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<Coverage> getCoverages(List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException {
+		return this.femmeClient.getDataElements(null, null, includes, excludes, xPath).stream()
+				.map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
+	}
 	
 	@Override
 	public List<Coverage> getCoverages(Integer limit, Integer offset) throws FemmeException, FemmeClientException {
@@ -122,6 +135,11 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	public Coverage getCoverageById(String id) throws FemmeException {
 		return WCSFemmeMapper.dataElementToCoverage(this.femmeClient.getDataElementById(id));
+	}
+
+	public Coverage getCoverageById(String id, String xPath) throws FemmeException {
+		DataElement dataElement = this.femmeClient.getDataElementById(id, xPath);
+		return dataElement != null ? WCSFemmeMapper.dataElementToCoverage(dataElement) : null;
 	}
 	
 	@Override

@@ -7,9 +7,11 @@ import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class XmlToJsonConverterTest {
 	@Test
-	public void convert() throws XMLStreamException {
+	public void convert() throws XMLStreamException, IOException {
 		Client client = ClientBuilder.newClient();
 		//WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
 		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
@@ -24,7 +26,11 @@ public class XmlToJsonConverterTest {
 				 .request().get(String.class);
 
 		//http://earthserver.ecmwf.int/rasdaman/ows?service=WCS&version=2.0.1&request=DescribeCoverage&coverageId=pl_geopot
-		 
-		 System.out.println(XmlJsonConverter.xmlToJson(xml));
+
+		String json = XmlJsonConverter.xmlToJson(xml);
+		System.out.println(json);
+
+		String xmlFromJson = XmlJsonConverter.jsonToXml(json);
+		System.out.println(xmlFromJson);
 	}
 }

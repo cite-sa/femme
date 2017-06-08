@@ -120,14 +120,14 @@ public class MongoDatastore implements Datastore {
 				if (11000 == e.getCode()) {
 					logger.info("Collection " + element.getEndpoint() + " already exists. " + e.getMessage());
 				} else {
-					throw new DatastoreException("Collection " + element.getEndpoint() + " insertion failed", e);
+					throw new DatastoreException("Collection " + element.getName() + " insertion failed", e);
 				}
 			}
 		} else if (element instanceof DataElement) {
 			try {
 				this.mongoClient.getDataElements().insertOne((DataElement) element);
 			} catch (MongoException e) {
-				throw new DatastoreException("DataElement" + element.getEndpoint() + " insertion failed", e);
+				throw new DatastoreException("DataElement " + element.getName() + " insertion failed", e);
 			}
 		}
 		return element.getId();
@@ -539,11 +539,20 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
+	public <T extends Element> T get(String id, Class<T> elementSubtype) throws DatastoreException, MetadataStoreException {
+		try {
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).first();
+		} catch (IllegalArgumentException e) {
+			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id [" + id + "]", e);
+		}
+	}
+
+	@Override
 	public <T extends Element> T get(String id, Class<T> elementSubtype,  QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
 		try {
 			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).options(options).first();
 		} catch (IllegalArgumentException e) {
-			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id: [" + id + "]", e);
+			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id [" + id + "]", e);
 		}
 	}
 

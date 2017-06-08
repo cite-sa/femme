@@ -16,7 +16,8 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 	private Tree<QueryNode> queryTree;
 	private List<Node<QueryNode>> currentLevelNodes;
 	private Set<String> metadataIndices;
-	private boolean predicateMode;
+	private boolean predicateMode = false;
+	private boolean attributeMode = false;
 
 	public MongoXPathVisitor(MetadataSchemaIndexDatastore metadataSchemaDatastore) {
 		this.metadataSchemaDatastore = metadataSchemaDatastore;
@@ -137,6 +138,13 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 			if ("@".equals(ctx.getText())) {
 				this.filterBuilder.getFilterPath().append("@.");
 			}
+		} else {
+			if ("@".equals(ctx.getText())) {
+				this.currentLevelNodes.forEach(node -> {
+					node.getData().getNodePath().append(".").append(ctx.getText()).append(".");
+				});
+				attributeMode = true;
+			}
 		}
 		visitChildren(ctx);
 		return this.queryTree;
@@ -144,6 +152,10 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
 	@Override
 	public Tree<QueryNode> visitNodeTest(XPathParser.NodeTestContext ctx) {
+		if (attributeMode) {
+			this.currentLevelNodes.forEach(node -> node.getData().getNodePath().append(ctx.getText()));
+			attributeMode = false;
+		}
 		visitChildren(ctx);
 		return this.queryTree;
 	}

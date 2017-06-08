@@ -44,7 +44,7 @@ public class MongoMetadataStore implements MetadataStore {
 	private final StampedLock lock = new StampedLock();
 	
 	/*private XPathCacheManager indexManager;*/
-	
+
 	public MongoMetadataStore() {
 		this.mongoMetadataStoreClient = new MongoMetadataStoreClient();
 		this.metadataGridFS = new MetadataGridFS(this.mongoMetadataStoreClient.getMetadataGridFSBucket(), this.mongoMetadataStoreClient.getMetadataGridFSFilesCollection());
@@ -195,18 +195,18 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public List<Metadatum> xPath(String xPath) throws MetadataStoreException {
+	public List<Metadatum> xPath(String xPath, boolean lazyPayload) throws MetadataStoreException {
 		if (this.metadataXPath != null) {
-			return xPath(new ArrayList<>(), xPath);
+			return xPath(new ArrayList<>(), xPath, lazyPayload);
 		} else {
 			throw new MetadataStoreException("FeMME not in index mode");
 		}
 	}
 	@Override
-	public List<Metadatum> xPath(List<String> elementIds, String xPath) throws MetadataStoreException {
+	public List<Metadatum> xPath(List<String> elementIds, String xPath, boolean lazyPayload) throws MetadataStoreException {
 		if (this.metadataXPath != null) {
 			try {
-				return this.metadataXPath.xPath(elementIds, xPath);
+				return this.metadataXPath.xPath(elementIds, xPath, lazyPayload);
 			} catch (MetadataIndexException e) {
 				throw new MetadataStoreException(e.getMessage(), e);
 			}
@@ -265,7 +265,7 @@ public class MongoMetadataStore implements MetadataStore {
 		
 		return xPathSatisfied ? element : null;
 	}*/
-	
+
 	/*private MetadatumXPathCache getIndexedXPath(Metadatum metadatum, String xPath) {
 		if (metadatum.getXPathCache() != null) {
 			for (MetadatumXPathCache insert: metadatum.getXPathCache()) {
@@ -274,7 +274,7 @@ public class MongoMetadataStore implements MetadataStore {
 				}
 			}
 		}
-		
+
 		return null;
 	}*/
 	/*@Override
