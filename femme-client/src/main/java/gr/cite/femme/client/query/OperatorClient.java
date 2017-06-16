@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import gr.cite.femme.core.query.api.Operator;
+import gr.cite.femme.core.query.construction.Operator;
 
 @JsonInclude(Include.NON_EMPTY)
 public class OperatorClient implements Operator<CriterionClient> {

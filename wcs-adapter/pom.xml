@@ -8,6 +8,7 @@
 	<properties>
 		<slf4j.version>1.7.25</slf4j.version>
 		<jackson.version>2.8.8</jackson.version>
+		<geotools.version>17.1</geotools.version>
 	</properties>
 
 	<repositories>
@@ -31,7 +32,7 @@
 	<dependencies>
 		<!--<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<artifactId>slstores-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>-->
 		<dependency>
@@ -52,23 +53,23 @@
 		<dependency>
     		<groupId>org.geotools</groupId>
     		<artifactId>gt-main</artifactId>
-    		<version>16.0</version>
+    		<version>${geotools.version}</version>
 		</dependency>
 		
 		<dependency>
 		    <groupId>org.geotools</groupId>
 		    <artifactId>gt-referencing</artifactId>
-		    <version>16.0</version>
+		    <version>${geotools.version}</version>
 		</dependency>
 		<dependency>
     		<groupId>org.geotools</groupId>
     		<artifactId>gt-epsg-hsql</artifactId>
-    		<version>16.0</version>
+    		<version>${geotools.version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.geotools</groupId>
 		    <artifactId>gt-geojson</artifactId>
-		    <version>16.0</version>
+		    <version>${geotools.version}</version>
 		</dependency>
 
 		<dependency>

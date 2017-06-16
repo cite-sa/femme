@@ -22,4 +22,4 @@ gr.cite.femme.datastore.metadata.schema.index.db.port=27017
 gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db-devel
 #gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db-eval
 
-#gr.cite.femme.datastore.mongodb.index.host=http://localhost:8083/femme-index-application/metadata-index
+gr.cite.femme.fulltext.endpoint=http://localhost:8081/fulltext-application-devel

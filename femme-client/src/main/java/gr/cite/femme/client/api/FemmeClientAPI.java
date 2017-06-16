@@ -4,11 +4,11 @@ import java.util.List;
 
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
-import gr.cite.femme.core.query.api.Query;
+import gr.cite.femme.core.query.construction.Query;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 public interface FemmeClientAPI {
 

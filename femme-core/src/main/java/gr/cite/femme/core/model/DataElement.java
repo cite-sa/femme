@@ -71,7 +71,7 @@ public class DataElement extends Element {
 		this.collections.addAll(collections);
 	}
 
-	@Override
+	/*@Override
 	public String toString() {
 		String element = super.toString();
 		if (this.dataElements != null) {
@@ -80,7 +80,7 @@ public class DataElement extends Element {
 			}
 		}
 		return element;
-	}
+	}*/
 	
 	public static Builder builder() {
 		return new Builder();
@@ -90,7 +90,7 @@ public class DataElement extends Element {
 		
 		private DataElement dataElement;
 		
-		public Builder() {
+		Builder() {
 			dataElement = new DataElement();
 		}
 		

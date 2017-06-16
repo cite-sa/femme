@@ -2,38 +2,27 @@ package gr.cite.femme.engine.datastore.mongodb;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.core.model.Status;
-import gr.cite.femme.core.model.SystemicMetadata;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
-import gr.cite.femme.engine.datastore.mongodb.bson.DataElementBson;
-import gr.cite.femme.engine.datastore.mongodb.codecs.CollectionCodecProvider;
-import gr.cite.femme.engine.datastore.mongodb.codecs.DataElementCodecProvider;
-import gr.cite.femme.engine.datastore.mongodb.utils.Documentizer;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.model.Element;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.Query;
-import gr.cite.femme.engine.query.mongodb.QueryMongo;
-import gr.cite.femme.engine.query.mongodb.QueryOptionsBuilderMongo;
-import gr.cite.femme.core.query.api.QueryExecutor;
-import org.bson.BsonDocument;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
+import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
+import gr.cite.femme.core.query.execution.QueryExecutor;
 import org.bson.Document;
-import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -43,13 +32,12 @@ import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
-import gr.cite.femme.api.Datastore;
-import gr.cite.femme.api.MetadataStore;
+import gr.cite.femme.core.datastores.Datastore;
 /*import gr.cite.femme.datastore.mongodb.cache.MongoXPathCacheManager;*/
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 
 public class MongoDatastore implements Datastore {
 	
@@ -305,8 +293,8 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException {
 		QueryMongo mongoQuery = (QueryMongo) query;
-		logger.debug("addToCollection criteria query: " + mongoQuery.build());
-		//find(query, Collection.class).first()
+		logger.debug("addToCollection criteria getQueryExecutor: " + mongoQuery.build());
+		//find(getQueryExecutor, Collection.class).first()
 		Collection collection = this.mongoClient.getCollections().find(mongoQuery.build()).limit(1).first();
 
 		if (collection != null) {
@@ -324,9 +312,9 @@ public class MongoDatastore implements Datastore {
 	}
 
 	/*@Override
-	public DataElement addToCollection(DataElement dataElement, QueryMongo query) throws DatastoreException {
-		logger.debug("addToCollection criteria query: " + query.build());
-		Collection collection = this.mongoClient.getCollections().get(query.build()).limit(1).first();
+	public DataElement addToCollection(DataElement dataElement, QueryMongo getQueryExecutor) throws DatastoreException {
+		logger.debug("addToCollection criteria getQueryExecutor: " + getQueryExecutor.execute());
+		Collection collection = this.mongoClient.getCollections().get(getQueryExecutor.execute()).limit(1).first();
 
 		if (collection != null) {
 			Collection dataElementCollection = new Collection();
@@ -343,10 +331,10 @@ public class MongoDatastore implements Datastore {
 	}*/
 
 	/*@Override
-	public Collection addToCollection(List<DataElement> dataElementsList, QueryMongo query) throws DatastoreException {
+	public Collection addToCollection(List<DataElement> dataElementsList, QueryMongo getQueryExecutor) throws DatastoreException {
 		Collection updatedCollection = null;
 		
-		logger.debug("addToCollection criteria query: " + query.build());
+		logger.debug("addToCollection criteria getQueryExecutor: " + getQueryExecutor.execute());
 
 		List<Document> dataElementDocuments = dataElementsList.stream().map(dataElement -> {
 			if (dataElement.getId() == null) {
@@ -357,7 +345,7 @@ public class MongoDatastore implements Datastore {
 
 		FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
 		updatedCollection = this.mongoClient.getCollections().findOneAndUpdate(
-				query.build(),
+				getQueryExecutor.execute(),
 				new Document().append("$addToSet", new Document().append("dataElements", new Document().append("$each", dataElementDocuments))),
 				options);
 
@@ -466,13 +454,13 @@ public class MongoDatastore implements Datastore {
 	}*/
 
 	/*@Override
-	public <T extends Element> List<T> delete(Query<? extends Criterion> query, Class<T> elementSubtype) throws DatastoreException {
+	public <T extends Element> List<T> delete(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubtype) throws DatastoreException {
 		int deletedCount = 0;
 		String subtype = elementSubtype.getSimpleName();
 
-		logger.debug("Delete criteria query: " + query);
+		logger.debug("Delete criteria getQueryExecutor: " + getQueryExecutor);
 		
-		List<T> toBeDeleted = get(query, elementSubtype).list();
+		List<T> toBeDeleted = get(getQueryExecutor, elementSubtype).list();
 		
 		for (T element: toBeDeleted) {
 			if (element instanceof DataElement) {
@@ -559,7 +547,7 @@ public class MongoDatastore implements Datastore {
 	/*@Override
 	public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype, metadataStore).options(options).first();
+			return find(QueryMongo.getQueryExecutor().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype, metadataStore).options(options).first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id: [" + id + "]", e);
 		}
@@ -568,18 +556,18 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		QueryMongo queryMongo = (QueryMongo) query;
-		return new QueryOptionsBuilderMongo<T>().query(this, elementSubtype).find(queryMongo);
+		return QueryExecutorFactory.getQueryExecutor(this, elementSubtype).find(queryMongo);
 	}
 
 	/*@Override
-	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype, MetadataStore metadataStore) {
-		QueryMongo queryMongo = (QueryMongo) query;
-		return new QueryOptionsBuilderMongo<T>().query(this, metadataStore, elementSubtype).find(queryMongo);
+	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubtype, MetadataStore metadataStore) {
+		QueryMongo queryMongo = (QueryMongo) getQueryExecutor;
+		return new QueryOptionsBuilderMongo<T>().getQueryExecutor(this, metadataStore, elementSubtype).find(queryMongo);
 	}*/
 
 	@Override
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
-		return new QueryOptionsBuilderMongo<T>().count((QueryMongo)query, this, elementSubtype);
+		return QueryExecutorFactory.getQueryExecutor(this, elementSubtype).count(query);
 	}
 	
 

@@ -34,7 +34,7 @@ import gr.cite.femme.core.dto.FemmeResponse;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Metadatum;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

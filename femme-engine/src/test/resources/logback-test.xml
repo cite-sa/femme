@@ -25,17 +25,17 @@
 	<property name="WEBAPP_LOGS" value="/home/kapostolopoulos/apache-tomcat-8.5.4/logs" />
 
 	<appender name="FILE-AUDIT"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		class="ch.qos.logbconfigcore.rolling.RollingFileAppender">
 		<file>./logs/femme-application.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
 		</encoder>
 
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+		<rollingPolicy class="ch.qos.logbconfigcore.rolling.TimeBasedRollingPolicy">
 			rollover daily
 			<fileNamePattern>./logs/archived/trending.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
-				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				class="ch.qos.logbconfigcore.rolling.SizeAndTimeBasedFNATP">
 				<maxFileSize>10MB</maxFileSize>
 			</timeBasedFileNamingAndTriggeringPolicy>
 		</rollingPolicy>

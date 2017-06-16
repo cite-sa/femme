@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.util.Stack;
 
 public class JsonParser {
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final String DEFAULT_NAMESPACE = "_default";
 	private static final String ATTRIBUTES = "@";
 	private static final String NAMESPACES = "ns";
@@ -121,7 +122,6 @@ public class JsonParser {
 	}
 
 	public String parseJson(String json) throws IOException, XMLStreamException {
-		ObjectMapper mapper = new ObjectMapper();
 		JsonNode tree = mapper.readTree(json);
 
 		XMLOutputFactory xmlFactory = XMLOutputFactory.newInstance();

@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
+import gr.cite.femme.core.exceptions.InvalidQueryOperationException;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
-import gr.cite.femme.core.exceptions.InvalidQueryOperation;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Metadatum;
-import gr.cite.femme.engine.query.mongodb.CriterionMongo;
-import gr.cite.femme.engine.query.mongodb.QueryMongo;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionMongo;
+import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -24,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.model.Collection;
-import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 
 public class DatastoreMongoTest {
 	private static final Logger logger = LoggerFactory.getLogger(DatastoreMongoTest.class);
@@ -48,9 +47,9 @@ public class DatastoreMongoTest {
 	/*@Test
 	public void queryDataElement() {
 		try {
-			List<DataElement> elements = query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
-					.expression(query.<DataElement>expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
-					.isChildOf(dataElement2).and().isParentOf(dataElement1).build().query();
+			List<DataElement> elements = getQueryExecutor.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
+					.expression(getQueryExecutor.<DataElement>expressionFactory().expression(metadatum1).or().expression(metadatum2)).and()
+					.isChildOf(dataElement2).and().isParentOf(dataElement1).execute().getQueryExecutor();
 		} catch (UnsupportedQueryOperationException e1) {
 			fail();
 		}
@@ -58,7 +57,7 @@ public class DatastoreMongoTest {
 	}*/
 	
 //	@Test
-	public void testFind() throws DatastoreException, InvalidQueryOperation, IOException {
+	public void testFind() throws DatastoreException, InvalidQueryOperationException, IOException {
 		CriterionMongo finalCriterion = null;
 		CriterionMongo dataElementCriterion = null;
 		CriterionMongo collectionCriterion = null;
@@ -69,13 +68,13 @@ public class DatastoreMongoTest {
 				.end();
 		
 		/*criteria.where(FieldNames.NAME).eq("frt00009392_07_if166l_trr3")
-			.inCollection(Criteria.query().where(FieldNames.ENDPOINT)
+			.inCollection(Criteria.getQueryExecutor().where(FieldNames.ENDPOINT)
 					.eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities"));*/
 		/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities")
-			.hasDataElements(Criteria.query().where(FieldNames.NAME).eq("hrl0000c067_07_if185l_trr3"));*/
+			.hasDataElements(Criteria.getQueryExecutor().where(FieldNames.NAME).eq("hrl0000c067_07_if185l_trr3"));*/
 		/*criteria.orOperator(
-				Criteria.query().where("name").eq("testDataElement1"),
-				Criteria.query().where("name").eq("testDataElement2"));*/
+				Criteria.getQueryExecutor().where("name").eq("testDataElement1"),
+				Criteria.getQueryExecutor().where("name").eq("testDataElement2"));*/
 		/*criteria.where(FieldNames.ENDPOINT).eq("http://access.planetserver.eu:8080/rasdaman/ows?service=WCS&version=2.0.1&request=GetCapabilities");*/
 		/*finalCriterion = */
 		QueryMongo query = QueryMongo.query().addCriterion(dataElementCriterion).addCriterion(collectionCriterion);
@@ -88,13 +87,13 @@ public class DatastoreMongoTest {
 		System.out.println(mongoQuery.build());
 		
 		/*List<DataElement> r = null;
-		r = mongo.get(query, DataElement.class, this.metadataStore).list();*//*.xPath("//a[text()=\"test value 1\"]");*/
+		r = mongo.get(getQueryExecutor, DataElement.class, this.metadataStore).list();*//*.xPath("//a[text()=\"test value 1\"]");*/
 		
 		List<Duration> totalDuration = new ArrayList<>();
 		/*or (int i = 0; i < 1; i ++) {
 			Instant begin = Instant.now();
 			
-			r = mongo.<DataElement>query(query, DataElement.class).limit(1).list()
+			r = mongo.<DataElement>getQueryExecutor(getQueryExecutor, DataElement.class).limit(1).list()
 					.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
 					.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
 			
@@ -104,7 +103,7 @@ public class DatastoreMongoTest {
 		}*/
 		/*Instant begin = Instant.now();
 		
-		r = mongo.<DataElement>query(query, DataElement.class).limit(1)
+		r = mongo.<DataElement>getQueryExecutor(getQueryExecutor, DataElement.class).limit(1)
 				.xPath("/wcs:CoverageDescriptions/wcs:CoverageDescription/gmlcov:metadata/*[local-name()='adding_target'][text()=\"MARS\"]");
 				.xPath("/*[local-name()='CoverageDescriptions']//*[local-name()='CoverageDescription']//*[local-name()='metadata']/*[local-name()='adding_target'][text()=\"MARS\"]");
 		
@@ -120,7 +119,7 @@ public class DatastoreMongoTest {
 		/*System.out.println(r);*/
 		
 		/*try {
-			mongo.delete(Criteria.query().where(FieldNames.NAME).eq("testDataElement"), DataElement.class);
+			mongo.delete(Criteria.getQueryExecutor().where(FieldNames.NAME).eq("testDataElement"), DataElement.class);
 		} catch (DatastoreException | IllegalElementSubtype | InvalidCriteriaQueryOperation e) {
 			e.printStackTrace();
 		}*/
@@ -132,7 +131,7 @@ public class DatastoreMongoTest {
 		des.add(createDemoDataElement(null, null));
 		
 		try {
-			mongo.addToCollection(des, Criteria.query().where(FieldNames.name()).eq("testCollection"));
+			mongo.addToCollection(des, Criteria.getQueryExecutor().where(FieldNames.name()).eq("testCollection"));
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 		} catch (InvalidCriteriaQueryOperation e) {

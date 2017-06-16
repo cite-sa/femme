@@ -1,0 +1,31 @@
+{
+  "fulltext": {
+    "map": [
+      {
+        "format": "xml",
+        "query": "//wcs:CoverageId/text()",
+        "name": "name",
+        "type": "string",
+        "array": false
+      }
+    ]
+  },
+  "geo": {
+    "map": [
+      {
+        "format": "xml",
+        "query": "//*[local-name()='lowerCorner']/text()",
+        "name": "lowerCorner",
+        "type": "string",
+        "array": false
+      },
+      {
+        "format": "xml",
+        "query": "//*[local-name()='upperCorner']/text()",
+        "name": "upperCorner",
+        "type": "string",
+        "array": false
+      }
+    ]
+  }
+}

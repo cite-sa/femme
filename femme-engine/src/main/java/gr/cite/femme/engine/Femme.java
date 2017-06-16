@@ -1,69 +1,80 @@
 package gr.cite.femme.engine;
 
-import gr.cite.femme.core.query.api.MetadataQueryExecutor;
-import gr.cite.femme.core.query.api.MetadataQueryExecutorBuilder;
-import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+import gr.cite.commons.pipeline.ProcessingPipeline;
+import gr.cite.commons.pipeline.ProcessingPipelineException;
+import gr.cite.commons.pipeline.config.PipelineConfiguration;
+import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
-import gr.cite.femme.api.Datastore;
-import gr.cite.femme.api.MetadataStore;
+import gr.cite.femme.core.datastores.Datastore;
+import gr.cite.femme.core.datastores.MetadataStore;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.exceptions.FemmeException;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
-import gr.cite.femme.engine.metadata.xpath.mongodb.evaluation.MongoQuery;
-import gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.model.SystemicMetadata;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.Query;
-import gr.cite.femme.core.query.api.QueryExecutor;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
-import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
-import gr.cite.femme.engine.query.mongodb.CriterionMongo;
-import gr.cite.femme.engine.query.mongodb.QueryExecutorFactory;
-import gr.cite.femme.engine.query.mongodb.QueryMongo;
-import gr.cite.femme.engine.query.mongodb.QueryOptionsBuilderMongo;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-import org.bson.codecs.configuration.CodecProvider;
-import org.bson.types.ObjectId;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
+import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
+import gr.cite.femme.fulltext.client.FulltextSearchClientAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.xml.crypto.Data;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Femme {
 	private static final Logger logger = LoggerFactory.getLogger(Femme.class);
+	private static final ObjectMapper mapper = new ObjectMapper();
+
+	private static final String PIPELINE_CONFIG_FILE = "pipeline-config.json";
+	private static final String FULLTEXT_PIPELINE_CONFIG = "fulltext";
+	private static final String GEO_PIPELINE_CONFIG = "geo";
 
 	private Datastore datastore;
 	private MetadataStore metadataStore;
+	private FulltextSearchClientAPI fulltextClient;
 
-	public Femme() {
+	private Map<String, PipelineConfiguration> pipelineConfiguration;
+
+	/*public Femme() throws IOException {
 		this.datastore = new MongoDatastore();
 		this.metadataStore = new MongoMetadataStore();
-	}
+
+		String config = Resources.toString(Resources.getResource(Femme.PIPELINE_CONFIG_FILE), Charsets.UTF_8);
+		if (!config.trim().isEmpty()) {
+			this.pipelineConfiguration = mapper.readValue(config, PipelineConfiguration.class);
+		}
+	}*/
 
 	@Inject
-	public Femme(Datastore datastore, MetadataStore metadataStore) {
+	public Femme(Datastore datastore, MetadataStore metadataStore, FulltextSearchClientAPI fulltextClient) throws IOException {
 		this.datastore = datastore;
 		this.metadataStore = metadataStore;
+		this.fulltextClient = fulltextClient;
+
+		String config = Resources.toString(Resources.getResource(Femme.PIPELINE_CONFIG_FILE), Charsets.UTF_8);
+		if (!config.trim().isEmpty()) {
+			this.pipelineConfiguration = mapper.readValue(config, new TypeReference<Map<String, PipelineConfiguration>>() {});
+		}
 	}
 
-	public String insert(Element element) throws DatastoreException, MetadataStoreException {
+	public String insert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
 		if (element.getId() == null) {
 			element.setId(this.datastore.generateId());
 		}
@@ -111,6 +122,8 @@ public class Femme {
 					logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
 				}
 			}
+
+			insertInFulltextIndex(element);
 		}
 
 		return element.getId();
@@ -190,7 +203,7 @@ public class Femme {
 		}
 	}
 
-	public String addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException, IllegalArgumentException {
+	public String addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException, IllegalArgumentException, FemmeException {
 		Collection collection = this.datastore.get(collectionId, Collection.class);
 		if (collection == null) {
 			throw new DatastoreException("Collection doesn't exist [" + collectionId + "]");
@@ -200,7 +213,7 @@ public class Femme {
 		return insert(dataElement);
 	}
 
-	public String addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException {
+	public String addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException, FemmeException {
 		List<Collection> collections;
 		collections = this.datastore.find(query, Collection.class).list();
 
@@ -214,7 +227,7 @@ public class Femme {
 
 	public <T extends Element> T get(String id, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()), elementSubType).build().first();
+			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end())).execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
@@ -222,28 +235,60 @@ public class Femme {
 
 	public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()), elementSubType).xPath(xPath).build().first();
+			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end())).xPath(xPath).execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
 	}
 
-	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
-		return new QueryOptionsBuilderMongo<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
+	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubType) {
+		return new QueryOptionsBuilderMongo<T>().getQueryExecutor(this.datastore, this.metadataStore, elementSubType).find(getQueryExecutor);
 	}*/
-	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
-		return new QueryOptionsBuilderMongo<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
+	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubType) {
+		return new QueryOptionsBuilderMongo<T>().getQueryExecutor(this.datastore, this.metadataStore, elementSubType).find(getQueryExecutor);
 	}*/
 
-	public <T extends Element> MetadataQueryExecutorBuilder<T> find(Query<? extends Criterion> query, Class<T> elementSubType) {
-		return new QueryExecutorFactory<T>().query(this.datastore, this.metadataStore, elementSubType).find(query);
+	public <T extends Element> MetadataQueryExecutorBuilder<T> query(Class<T> elementSubType) {
+		return QueryExecutorFactory.getQueryExecutor(this.datastore, this.metadataStore, elementSubType);
 	}
 
-	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
+	/*public <T extends Element> MetadataQueryExecutorBuilder<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubType) {
+		return new QueryExecutorFactory<T>().getQueryExecutor(this.datastore, this.metadataStore, elementSubType).find(getQueryExecutor);
+	}*/
+
+	/*public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		return this.datastore.count(query, elementSubtype);
-	}
+	}*/
 
 	public void reIndex() throws MetadataStoreException, MetadataIndexException {
 		this.metadataStore.reIndexAll();
 	}
+
+	private void insertInFulltextIndex(Element element) throws FemmeException {
+		if (this.pipelineConfiguration != null) {
+			ProcessingPipeline pipeline;
+			pipeline = new ProcessingPipeline(this.pipelineConfiguration.get("fulltext"));
+
+			for (Metadatum metadatum : element.getMetadata()) {
+				try {
+					this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue(), metadatum.getContentType().toLowerCase().split("/")[1]));
+				} catch (ProcessingPipelineException e) {
+					throw new FemmeException(e.getMessage(), e);
+				}
+			}
+		}
+	}
+
+	private void deleteFromFulltextIndexByElementId(String elementId) throws FemmeException {
+			this.fulltextClient.deleteByElementId(elementId);
+	}
+
+	private void deleteFromFulltextIndexByMetadatumId(String metadatumId) throws FemmeException {
+		// TODO implement
+	}
+
+	private void search() {
+
+	}
+
 }

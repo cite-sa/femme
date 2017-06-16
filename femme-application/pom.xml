@@ -18,7 +18,8 @@
 		<maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
 		<maven-war-plugin.version>3.0.0</maven-war-plugin.version>
-		<tomcat7-maven-plugin.version>2.2</tomcat7-maven-plugin.version>
+		<tomcat-maven-plugin.version>2.2</tomcat-maven-plugin.version>
+		<!--<tomcat-maven-plugin.version>3.0-r1655215</tomcat-maven-plugin.version>-->
 	</properties>
 
 	<dependencies>
@@ -110,7 +111,7 @@
 		</dependency>
 		<!--<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<artifactId>slstores-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
@@ -152,7 +153,7 @@
 			<scope>test</scope>
 		</dependency>
 		<!--<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
+			<groupId>org.glassfish.jerconfigcore</groupId>
 			<artifactId>jersey-client</artifactId>
 			<version>${jersey.version}</version>
 			<scope>test</scope>
@@ -163,6 +164,13 @@
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!--<dependency>
+			<groupId>org.apache.tomcat.maven</groupId>
+			<artifactId>tomcat-maven-plugin</artifactId>
+			<version>${tomcat-maven-plugin.version}</version>
+		</dependency>-->
+
 	</dependencies>
 
 	<build>
@@ -203,9 +211,9 @@
 			<plugin>
 				<groupId>org.apache.tomcat.maven</groupId>
 				<artifactId>tomcat7-maven-plugin</artifactId>
-				<version>${tomcat7-maven-plugin.version}</version>
+				<version>${tomcat-maven-plugin.version}</version>
 				<configuration>
-					<port>8090</port>
+					<port>8080</port>
 					<path>/femme-application-devel</path>
 					<!--<contextFile>src/main/webapp/WEB-INF/web.xml</contextFile>-->
 					<!--<mode>context</mode>-->

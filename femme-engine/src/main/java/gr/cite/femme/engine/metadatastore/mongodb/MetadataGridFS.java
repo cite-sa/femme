@@ -360,7 +360,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		
 		MongoCursor<GridFSFile> cursor = null;
 		try {
-			cursor = gridFSBucket.query(
+			cursor = gridFSBucket.getQueryExecutor(
 					new Document().append(METADATUM_METADATA_KEY + "." + METADATUM_ELEMENT_ID_KEY, new ObjectId(element.getId()))
 					).iterator();
 			map(new Function<GridFSFile, Metadatum>() {
@@ -410,9 +410,9 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	}*/
 
 	
-	/*public <T extends Element> T query(T element, String xPath) throws MetadataStoreException {
+	/*public <T extends Element> T getQueryExecutor(T element, String xPath) throws MetadataStoreException {
 		try {
-			List<Metadatum> metadata = query(element.getId());
+			List<Metadatum> metadata = getQueryExecutor(element.getId());
 			if (xPath(metadata, xPath)) {
 				element.setMetadata(metadata);
 				return element;
@@ -424,7 +424,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			throw new MetadataStoreException("XPath on element with id: " + element.getId() + " failed", e);
 		}
 		try {
-			return query(element.getId(), false).stream().filter(new Predicate<Metadatum>() {
+			return getQueryExecutor(element.getId(), false).stream().filter(new Predicate<Metadatum>() {
 				@Override
 				public boolean test(Metadatum metadatum) {
 					try {
@@ -443,7 +443,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		}
 	}*/
 	
-	/*public <T extends Element> List<T> query(List<T> elementIds, String xPath) throws MetadataStoreException {
+	/*public <T extends Element> List<T> getQueryExecutor(List<T> elementIds, String xPath) throws MetadataStoreException {
 		List<T> elements = null;
 		try {
 			elements = elementIds.stream().filter(new Predicate<T>() {
@@ -451,7 +451,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 				public boolean test(T element) {
 					List<Metadatum> metadata = null;
 					try {
-						metadata = query(element.getId(), false);
+						metadata = getQueryExecutor(element.getId(), false);
 					} catch (MetadataStoreException e) {
 						logger.error(e.getMessage(), e);
 						throw new RuntimeException(e.getMessage(), e);
@@ -475,10 +475,10 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		return elements;
 	}*/
 	
-	/*public List<Metadatum> query(Metadatum metadatum) {
+	/*public List<Metadatum> getQueryExecutor(Metadatum metadatum) {
 		List<Metadatum> metadata = new ArrayList<>();
 		MongoCursor<Metadatum> cursor = gridFSBucket
-				.query(buildMetadataFromDocument(metadatum)).map(new Function<GridFSFile, Metadatum>() {
+				.getQueryExecutor(buildMetadataFromDocument(metadatum)).map(new Function<GridFSFile, Metadatum>() {
 					@Override
 					public Metadatum apply(GridFSFile t) {
 						Metadatum metadatum = new Metadatum();
@@ -499,10 +499,10 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		return metadata;
 	}
 	
-	public List<Metadatum> query(List<Metadatum> metadataList) throws MetadataStoreException {
+	public List<Metadatum> getQueryExecutor(List<Metadatum> metadataList) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		for (Metadatum metadatum : metadataList) {
-			query(metadatum).stream().collect(Collectors.toCollection(() -> metadata));
+			getQueryExecutor(metadatum).stream().collect(Collectors.toCollection(() -> metadata));
 		}
 		
 		return metadata;

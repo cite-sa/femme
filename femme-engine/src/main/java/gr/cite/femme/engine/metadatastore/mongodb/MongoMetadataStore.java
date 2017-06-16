@@ -2,9 +2,7 @@ package gr.cite.femme.engine.metadatastore.mongodb;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,7 +12,7 @@ import java.util.stream.Collectors;
 
 import com.mongodb.client.MongoCursor;
 import gr.cite.femme.core.model.Status;
-import gr.cite.femme.api.MetadataStore;
+import gr.cite.femme.core.datastores.MetadataStore;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.engine.metadata.xpath.MetadataXPath;
@@ -30,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.xpath.XPathFactoryConfigurationException;
 
-//import gr.cite.femme.client.api.MetadataIndexClient;
+//import gr.cite.femme.client.datastores.MetadataIndexClient;
 
 
 public class MongoMetadataStore implements MetadataStore {
@@ -278,7 +276,7 @@ public class MongoMetadataStore implements MetadataStore {
 		return null;
 	}*/
 	/*@Override
-	public <T extends Element> List<T> query(List<T> elements, String xPath) throws MetadataStoreException {
+	public <T extends Element> List<T> getQueryExecutor(List<T> elements, String xPath) throws MetadataStoreException {
 		try {
 			return elements.stream().filter(new Predicate<T>() {
 				@Override

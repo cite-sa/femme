@@ -26,7 +26,7 @@ import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 @Path("/")
 public class FemmeGeoResource {

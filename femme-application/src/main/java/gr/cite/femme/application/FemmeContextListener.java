@@ -3,7 +3,7 @@ package gr.cite.femme.application;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import gr.cite.femme.api.Datastore;
+import gr.cite.femme.core.datastores.Datastore;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 /*@WebListener*/

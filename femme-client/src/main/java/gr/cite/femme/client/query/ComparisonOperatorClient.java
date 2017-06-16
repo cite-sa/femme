@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import gr.cite.femme.core.query.api.ComparisonOperator;
+import gr.cite.femme.core.query.construction.ComparisonOperator;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ComparisonOperatorClient implements ComparisonOperator {

@@ -229,10 +229,10 @@ public abstract class ElementCodec<T extends Element> implements CollectibleCode
         	return DataElement.builder()
         			.id(id).name(name).endpoint(endpoint)
         			.metadata(metadata).systemicMetadata(systemicMetadata)
-        			.dataElements(embeddedDataElements).collections(dataElementCollections).build();
+        			.dataElements(embeddedDataElements).collections(dataElementCollections).execute();
         	*//*return new DataElement(id, name, endpoint, metadata, systemicMetadata, embeddedDataElements, dataElementCollections);*//*
         } else {
-        	return Collection.builder().id(id).name(name).endpoint(endpoint).metadata(metadata).systemicMetadata(systemicMetadata).build();
+        	return Collection.builder().id(id).name(name).endpoint(endpoint).metadata(metadata).systemicMetadata(systemicMetadata).execute();
         	*//*return new Collection(id, name, endpoint, metadata, systemicMetadata, collectionDataElements);*//*
         }
 	}*/

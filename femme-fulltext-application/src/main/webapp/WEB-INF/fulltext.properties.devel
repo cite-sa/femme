@@ -1,0 +1,3 @@
+gr.cite.femme.fulltext.elasticsearch.host=localhost
+gr.cite.femme.fulltext.elasticsearch.port=9200
+gr.cite.femme.fulltext.elasticsearch.indexName=fulltext_search

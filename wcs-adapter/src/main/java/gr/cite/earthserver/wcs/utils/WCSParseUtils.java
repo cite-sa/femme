@@ -43,11 +43,7 @@ public final class WCSParseUtils {
 			List<String> coverageIds = xPathEvaluator.evaluate("/wcs:Capabilities/wcs:Contents/wcs:CoverageSummary/wcs:CoverageId/text()");
 			logger.info("Total coverages: " + coverageIds.size());
 			return coverageIds;
-		} catch (XPathFactoryConfigurationException e) {
-			throw new ParseException(e);
-		} catch (XMLConversionException e) {
-			throw new ParseException(e);
-		} catch (XPathEvaluationException e) {
+		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException e) {
 			throw new ParseException(e);
 		}
 	}
@@ -56,11 +52,7 @@ public final class WCSParseUtils {
 		try {
 			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(getCapabilitiesXML, true));
 			return xPathEvaluator.evaluate("/wcs:Capabilities/ows:ServiceIdentification/ows:Title/text()").get(0);
-		} catch (XPathFactoryConfigurationException e) {
-			throw new ParseException(e);
-		} catch (XMLConversionException e) {
-			throw new ParseException(e);
-		} catch (XPathEvaluationException e) {
+		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException e) {
 			throw new ParseException(e);
 		}
 	}
@@ -69,175 +61,8 @@ public final class WCSParseUtils {
 		try {
 			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(describeCoverageXML, true));
 			return xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/wcs:CoverageId/text()").get(0);
-		} catch (XPathFactoryConfigurationException e) {
-			throw new ParseException(e);
-		} catch (XMLConversionException e) {
-			throw new ParseException(e);
-		} catch (XPathEvaluationException e) {
+		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException e) {
 			throw new ParseException(e);
 		}
-	}
-	
-	public static Pair<String, String> getBoundingBoxJSON(String describeCoverageXML) throws ParseException {
-		String boundingBoxJSON = null;
-		String defaultCrsName = "EPSG:4326";
-			
-		try {
-			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(describeCoverageXML, true));
-			
-			List<String> xPathResults = null;
-			
-			String crsString = null;
-			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/@srsName");
-			crsString = xPathResults.size() > 0 ? xPathResults.get(0) : null;
-			if (crsString != null) {
-				URL srsUrl = new URL(crsString);
-				if (srsUrl.getQuery() != null) {
-					String[] srsQueryParams = srsUrl.getQuery().split("&");
-					String srsQueryParam = srsQueryParams.length > 0 ? srsQueryParams[0] : null;
-					if (srsQueryParam != null) {
-						crsString = srsQueryParam.replace("1=", "");
-						crsString = crsString.substring(crsString.indexOf("/crs/") + 5, crsString.indexOf("/crs/") + 9) + ":" + crsString.substring(crsString.lastIndexOf("/") + 1);
-	
-					}
-				} else {
-					crsString = srsUrl.toString();
-					crsString = crsString.substring(crsString.indexOf("/crs/") + 5, crsString.indexOf("/crs/") + 9) + ":" + crsString.substring(crsString.lastIndexOf("/") + 1);
-				}
-			}
-			
-			CoordinateReferenceSystem currentCrs;
-			try {
-				currentCrs = CRS.decode(crsString);
-			} catch(NoSuchAuthorityCodeException e) {
-				logger.error("Invalid CRS: " + e.getMessage());
-				throw new ParseException(e.getMessage(), e);
-			}
-
-			String axisLabelsString = null;
-			String[] axisLabels = null;
-			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/@axisLabels");
-			axisLabelsString = xPathResults.size() > 0 ? xPathResults.get(0) : null;
-			if (axisLabelsString != null) {
-				axisLabels = axisLabelsString.split(" ");				
-			}
-			
-			String lowerCornerString = null;
-			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/*[local-name()='lowerCorner']/text()");
-			lowerCornerString = xPathResults.size() > 0 ? xPathResults.get(0) : null;
-			String[] lowerCorner = lowerCornerString.split(" ");
-			
-			String upperCornerString = null;
-			xPathResults = xPathEvaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/*[local-name()='upperCorner']/text()");
-			upperCornerString = xPathResults.size() > 0 ? xPathResults.get(0) : null;
-			String[] upperCorner = upperCornerString.split(" ");
-			
-			
-			Double lowerCornerLat = 0.0;
-			Double lowerCornerLon = 0.0;
-			Double upperCornerLat = 0.0;
-			Double upperCornerLon = 0.0;
-			if (axisLabels != null) {
-				for (int i = 0 ; i < axisLabels.length; i ++) {
-					switch (axisLabels[i].toLowerCase()) {
-					case "lat":
-						
-						double lCornerLat = Double.parseDouble(lowerCorner[i]);
-						if (lCornerLat > 90.0) {
-							lCornerLat = Math.floor(lCornerLat);
-						} else if (lCornerLat < -90.0) {
-							lCornerLat = Math.ceil(lCornerLat);
-						}
-						lowerCornerLat = lCornerLat;
-						
-						double uCornerLat = Double.parseDouble(upperCorner[i]);
-						if (uCornerLat > 90.0) {
-							uCornerLat = Math.floor(uCornerLat);
-						} else if (lCornerLat < -90.0) {
-							uCornerLat = Math.ceil(uCornerLat);
-						}
-						upperCornerLat = uCornerLat;
-						
-						break;
-						
-					case "long":
-						
-						double lCornerLong = Double.parseDouble(lowerCorner[i]);
-						if (lCornerLong > 180.0) {
-							lCornerLong = Math.floor(lCornerLong);
-						} else if (lCornerLong < -180.0) {
-							lCornerLong = Math.ceil(lCornerLong);
-						}
-						lowerCornerLon = lCornerLong;
-						
-						double uCornerLong = Double.parseDouble(upperCorner[i]);
-						if (uCornerLong > 180.0) {
-							uCornerLong = Math.floor(uCornerLong);
-						} else if (uCornerLong < -180.0) {
-							uCornerLong = Math.ceil(uCornerLong);
-						}
-						upperCornerLon = uCornerLong;
-						
-						break;
-						
-					case "e":
-
-						lowerCornerLon = Double.parseDouble(lowerCorner[i]);
-						upperCornerLon = Double.parseDouble(upperCorner[i]);
-						
-						break;
-						
-					case "n":
-						
-						lowerCornerLat = Double.parseDouble(lowerCorner[i]);
-						upperCornerLat = Double.parseDouble(upperCorner[i]);
-						
-						break;
-					default:
-						break;
-					}
-				}
-			}
-			
-			CoordinateReferenceSystem defaultCrs = CRS.decode("EPSG:4326");
-			ReferencedEnvelope envelope;
-			try {
-				envelope = new ReferencedEnvelope(lowerCornerLon, upperCornerLon, lowerCornerLat, upperCornerLat, currentCrs);
-			} catch(MismatchedDimensionException e) {
-				throw new ParseException(e);				
-			}
-		    
-		    if (!currentCrs.getName().equals(defaultCrs.getName())) {		    	
-		    	envelope = envelope.transform(defaultCrs, true);
-		    }
-		    Polygon geometry = JTS.toGeometry(envelope);
-		    
-		    GeometryJSON geomJSON = new GeometryJSON();
-		    boundingBoxJSON = geomJSON.toString(geometry);
-			
-			
-		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException |
-				MalformedURLException | MismatchedDimensionException | FactoryException | TransformException e) {
-			throw new ParseException(e);
-		}
-
-		return new Pair<>(defaultCrsName, boundingBoxJSON);
-	}
-	
-	public static void main(String[] args) throws ParseException, NoSuchAuthorityCodeException, FactoryException {
-		
-		Client client = ClientBuilder.newClient();
-		 WebTarget webTarget = client.target("http://eodataservice.org/rasdaman/ows");
-		 
-		 String xml = webTarget
-				 .queryParam("service", "WCS")
-				 .queryParam("version", "2.0.1")
-				 .queryParam("request", "DescribeCoverage")
-				 .queryParam("coverageId", "L8_B5_32634_30")
-				 .request().get(String.class);
-		 
-		 //System.out.println(WCSParseUtils.getBoundingBoxJSON(xml));
-		 //System.out.println(CRS.decode("EPSG:4326").getName());
-		WCSParseUtils.getBoundingBoxJSON(xml);
 	}
 }

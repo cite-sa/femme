@@ -50,7 +50,7 @@ public class CollectionBsonBuilder {
 		return this;
 	}
 	
-	/*public CollectionBson build() {
+	/*public CollectionBson execute() {
 		Collection collectionObj = new Collection();
 		collectionObj.setId(id);
 		collectionObj.setName(name);

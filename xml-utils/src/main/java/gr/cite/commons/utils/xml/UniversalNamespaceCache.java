@@ -22,7 +22,7 @@ public class UniversalNamespaceCache implements NamespaceContext {
 	}
 
 	/**
-	 * This constructor parses the document and stores all namespaces it can
+	 * This constructor parses the document and datastores all namespaces it can
 	 * find. If toplevelOnly is true, only namespaces in the root are used.
 	 * 
 	 * @param document
@@ -64,7 +64,7 @@ public class UniversalNamespaceCache implements NamespaceContext {
 	}
 
 	/**
-	 * This method looks at an attribute and stores it, if it is a namespace
+	 * This method looks at an attribute and datastores it, if it is a namespace
 	 * attribute.
 	 * 
 	 * @param attribute

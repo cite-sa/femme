@@ -2,9 +2,9 @@ package gr.cite.femme.client.query;
 
 import java.util.List;
 
-import gr.cite.femme.core.query.api.ComparisonOperator;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.LogicalOperator;
+import gr.cite.femme.core.query.construction.ComparisonOperator;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.LogicalOperator;
 
 public class CriterionOperatorClient extends LogicalOperatorClient {
 	

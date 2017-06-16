@@ -5,13 +5,13 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Arrays;
 
-import gr.cite.femme.engine.query.mongodb.CriterionMongo;
-import gr.cite.femme.engine.query.mongodb.QueryMongo;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionMongo;
+import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 
 public class CriteriaQueryTest {
 	
@@ -28,7 +28,7 @@ public class CriteriaQueryTest {
 							subCriteria2.where("endpoint").eq("sdf").and("name").eq("ddsf"));
 			
 			
-		} catch (InvalidQueryOperation e) {
+		} catch (InvalidQueryOperationException e) {
 			logger.error(e.getMessage(), e);
 		}
 
@@ -81,15 +81,15 @@ public class CriteriaQueryTest {
 	 createDemoDataElement(null, null); Metadatum metadatumtest =
 	 dataElement.getMetadata().get(0);
 	 
-	 Document query = new RootQueryDocumentBuilder() .element(new
+	 Document getQueryExecutor = new RootQueryDocumentBuilder() .element(new
 	 DataElementQueryDocumentBuilder(dataElement).hasMetadata( new
 	 MetadataQueryDocumentBuilder()
-	 .metadatum(metadatumtest).or().metadatum(metadatumtest) )).build();
+	 .metadatum(metadatumtest).or().metadatum(metadatumtest) )).execute();
 	 
 	 MongoCursor<Element> cursor =
-	 mongo.getElementCollection().query(query).iterator(); try { while
+	 mongo.getElementCollection().getQueryExecutor(getQueryExecutor).iterator(); try { while
 	 (cursor.hasNext()) { System.out.println(cursor.next()); } } finally {
-	 cursor.close(); } System.out.println(query); }
+	 cursor.close(); } System.out.println(getQueryExecutor); }
 	 
 	 private DataElement createDemoDataElement(String name, String endpoint) {
 	 DataElement dataElement = new DataElement(); if (name != null) {
@@ -133,13 +133,13 @@ public class CriteriaQueryTest {
 	 * Metadatum metadatum1 = mock(Metadatum.class); Metadatum metadatum2 =
 	 * mock(Metadatum.class);
 	 * 
-	 * CriteriaQuery<DataElement> query = simpleMock();
+	 * CriteriaQuery<DataElement> getQueryExecutor = simpleMock();
 	 * 
 	 * try { List<DataElement> elements =
-	 * query.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
-	 * .expression(query.<DataElement>expressionFactory().expression(metadatum1)
+	 * getQueryExecutor.whereBuilder().expression(metadatum1).or().exists(metadatum2).and()
+	 * .expression(getQueryExecutor.<DataElement>expressionFactory().expression(metadatum1)
 	 * .or().expression(metadatum2)).and()
-	 * .isChildOf(dataElement2).and().isParentOf(dataElement1).build().query(); }
+	 * .isChildOf(dataElement2).and().isParentOf(dataElement1).execute().getQueryExecutor(); }
 	 * catch (UnsupportedQueryOperationException e1) { fail(); }
 	 * 
 	 * }
@@ -150,12 +150,12 @@ public class CriteriaQueryTest {
 	 * Metadatum m1 = mock(Metadatum.class); Metadatum m2 =
 	 * mock(Metadatum.class);
 	 * 
-	 * CriteriaQuery<Metadatum> query = simpleMock();
+	 * CriteriaQuery<Metadatum> getQueryExecutor = simpleMock();
 	 * 
 	 * List<Metadatum> elements =
-	 * query.whereBuilder().expression(m1).or().exists(m2).and()
-	 * .expression(query.<Metadatum>expressionFactory().expression(m1).or().
-	 * expression(m2)).and().isChildOf(e2).build() .query();
+	 * getQueryExecutor.whereBuilder().expression(m1).or().exists(m2).and()
+	 * .expression(getQueryExecutor.<Metadatum>expressionFactory().expression(m1).or().
+	 * expression(m2)).and().isChildOf(e2).execute() .getQueryExecutor();
 	 * 
 	 * }
 	 */

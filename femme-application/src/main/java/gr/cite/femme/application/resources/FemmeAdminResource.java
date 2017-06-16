@@ -84,7 +84,7 @@ public class FemmeAdminResource {
 					.setMessage(message)
 					.setEntity(new FemmeResponseEntity<String>().setHref(location.toString()).setBody(collectionId));
 
-		} catch (DatastoreException | MetadataStoreException e) {
+		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
 			String errorMessage = "Collection insertion failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
@@ -110,7 +110,7 @@ public class FemmeAdminResource {
 			String message = "DataElement " + dataElement.getId() + " successfully inserted";
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
-		} catch (DatastoreException | MetadataStoreException e) {
+		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
 			String errorMessage = "DataElement insertion failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
@@ -137,7 +137,7 @@ public class FemmeAdminResource {
 			String message = "DataElement " + dataElement.getId() + " successfully inserted in collection " + collectionId;
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
-		} catch (DatastoreException | MetadataStoreException e) {
+		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
 			String errorMessage = "DataElement insertion in Collection " + collectionId + " failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
@@ -261,9 +261,9 @@ public class FemmeAdminResource {
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());
-			return Response.serverError().entity(femmeResponse).build();
+			return Response.serverError().entity(femmeResponse).execute();
 		}
-		return Response.ok().entity(femmeResponse).build();
+		return Response.ok().entity(femmeResponse).execute();
 	}
 
 	@DELETE
@@ -279,8 +279,8 @@ public class FemmeAdminResource {
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			femmeResponse.setStatus(500).setMessage(e.getMessage());
-			return Response.serverError().entity(femmeResponse).build();
+			return Response.serverError().entity(femmeResponse).execute();
 		}
-		return Response.ok().entity(femmeResponse).build();
+		return Response.ok().entity(femmeResponse).execute();
 	}*/
 }

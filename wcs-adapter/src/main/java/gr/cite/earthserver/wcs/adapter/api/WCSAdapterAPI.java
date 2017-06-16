@@ -1,18 +1,16 @@
 package gr.cite.earthserver.wcs.adapter.api;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
-import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.Query;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 public interface WCSAdapterAPI {
 

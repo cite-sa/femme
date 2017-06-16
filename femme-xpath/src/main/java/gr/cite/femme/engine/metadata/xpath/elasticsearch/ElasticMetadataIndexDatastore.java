@@ -170,16 +170,11 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		List<ElasticSearchQuery> finalQueries = new ArrayList<>();
 		List<ElasticSearchQuery> shoulds = buildShoulds(queryTree.getRoot());
 
-		String elementIdsFilter = elementIds.stream().map(elementId -> "\"" + elementId +"\"")
-				.collect(Collectors.joining(",", "{\"terms\":{\"elementId\":[", "]}},"));
+		String elementIdsFilter = !elementIds.isEmpty()
+			? elementIds.stream().map(elementId -> "\"" + elementId +"\"")
+				.collect(Collectors.joining(",", "{\"terms\":{\"elementId\":[", "]}},"))
+			: "";
 
-		/*String elementIdsFilter = !elementIds.isEmpty()
-			? "{" +
-				"\"terms\":{" +
-					"\"elementId\":[" + elementIds.stream().map(elementId -> "\"" + elementId +"\"").collect(Collectors.joining(",")) + "]" +
-					"}" +
-				"},"
-			: "";*/
 		shoulds.forEach(query -> {
 			ElasticSearchQuery finalQuery = new ElasticSearchQuery();
 			finalQuery.getIncludes().addAll(query.getIncludes());

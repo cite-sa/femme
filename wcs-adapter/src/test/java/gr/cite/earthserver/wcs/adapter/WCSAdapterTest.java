@@ -12,14 +12,13 @@ import gr.cite.earthserver.wcs.utils.WCSParseUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import gr.cite.earthserver.wcs.adapter.WCSAdapter;
 import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.Query;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 public class WCSAdapterTest {
 	
@@ -71,7 +70,7 @@ public class WCSAdapterTest {
 		}
 //		List<String> sorted = idAndInc.stream().sorted().collect(Collectors.toList());
 		/*for (int i = 0; i < ids.size(); i ++) {
-			String describeCoverage = new WCSRequestBuilder().endpoint(endpoint).describeCoverage().coverageId(ids.get(i)).build().get().getResponse();
+			String describeCoverage = new WCSRequestBuilder().endpoint(endpoint).describeCoverage().coverageId(ids.get(i)).execute().get().getResponse();
 			System.out.println(i + ": " + WCSParseUtils.getCoverageId(describeCoverage));
 		}*/
 

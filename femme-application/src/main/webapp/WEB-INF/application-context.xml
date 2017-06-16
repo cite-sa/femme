@@ -5,7 +5,7 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
    
-	<context:property-placeholder location="WEB-INF/femme.properties.prod" />
+	<context:property-placeholder location="WEB-INF/femme.properties.devel" />
 	<context:annotation-config/>
 	<context:component-scan base-package="gr.cite.femme.application"/>
 
@@ -41,9 +41,14 @@
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.name}"/>
 	</bean>
 
+	<bean id="fulltextClient" name="fulltextClient" class="gr.cite.femme.fulltext.client.FulltextSearchClient">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.endpoint}"/>
+	</bean>
+
 	<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
 		<constructor-arg ref="datastore"/>
 		<constructor-arg ref="metadataStore"/>
+		<constructor-arg ref="fulltextClient"/>
 	</bean>
 
    <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">

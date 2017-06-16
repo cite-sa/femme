@@ -19,7 +19,7 @@
 	<dependencies>
 		<!--<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<artifactId>slstores-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>-->
 		<dependency>
@@ -33,7 +33,7 @@
 			<version>${logback.version}</version>
 		</dependency>-->
 		<!--<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
+			<groupId>com.fasterxml.jackconfigcore</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>-->
@@ -113,7 +113,7 @@
 					</sourceDirectory>
 					<outputDirectory>
 						${project.build.directory}/generated-sources/antlr4/gr/cite/femme/engine/metadata/xpath/grammar
-						<!--${project.build.directory}/generated-sources/antlr4/gr/cite/femme/metadata/xpath/grammar/classes-->
+						<!--${projexecuteuild.directory}/generated-sources/antlr4/gr/cite/femme/metadata/xpath/grammar/classes-->
 						<!--${basedir}/src/main/java/antlr4/gr/cite/femme/metadata/xpath/grammar/classes-->
 					</outputDirectory>
 					<listener>true</listener>

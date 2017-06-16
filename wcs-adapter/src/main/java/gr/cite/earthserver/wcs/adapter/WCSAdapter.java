@@ -20,9 +20,9 @@ import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
-import gr.cite.femme.core.query.api.Criterion;
-import gr.cite.femme.core.query.api.Query;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
+import gr.cite.femme.core.query.construction.Criterion;
+import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 public class WCSAdapter implements WCSAdapterAPI {

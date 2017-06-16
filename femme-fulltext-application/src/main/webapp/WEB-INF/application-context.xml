@@ -1,0 +1,22 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="WEB-INF/fulltext.properties.devel" />
+
+	<bean id="fulltextSearchEngine" class="gr.cite.femme.fulltext.engine.FulltextSearchEngine">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.host}"/>
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.elasticsearch.port}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.indexName}"/>
+	</bean>
+
+	<bean id="fulltextSearchResource" class="gr.cite.femme.fulltext.application.resources.FulltextSearchResource">
+		<constructor-arg ref="fulltextSearchEngine"/>
+	</bean>
+
+	<context:annotation-config/>
+	<context:component-scan base-package="gr.cite.femme.fulltext.application"/>
+</beans>

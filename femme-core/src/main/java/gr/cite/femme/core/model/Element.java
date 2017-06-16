@@ -55,11 +55,7 @@ public class Element {
 		} else {
 			this.metadata = new ArrayList<>();
 		}
-		/*if (systemicMetadata != null) {*/
-		this.systemicMetadata = systemicMetadata;			
-		/*} else {
-			this.systemicMetadata = new SystemicMetadata();
-		}*/
+		this.systemicMetadata = systemicMetadata;
 	}
 	
 	public String getId() {
@@ -102,7 +98,7 @@ public class Element {
 		this.systemicMetadata = systemicMetadata;
 	}
 
-	@Override
+	/*@Override
 	public String toString() {
 		StringBuilder elementBuilder = new StringBuilder();
 		if (this.id != null) {
@@ -136,5 +132,5 @@ public class Element {
 		}
 		elementBuilder.append("\n");
 		return elementBuilder.toString();
-	}
+	}*/
 }

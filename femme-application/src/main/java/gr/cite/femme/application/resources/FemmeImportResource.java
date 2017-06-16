@@ -16,9 +16,9 @@ import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.exceptions.FemmeException;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.core.query.api.QueryOptionsMessenger;
-import gr.cite.femme.engine.query.mongodb.CriterionBuilderMongo;
-import gr.cite.femme.engine.query.mongodb.QueryMongo;
+import gr.cite.femme.core.dto.QueryOptionsMessenger;
+import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
+import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import jersey.repackaged.com.google.common.collect.Sets;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -136,10 +136,10 @@ public class FemmeImportResource {
 		}
 
 		try {
-			List<DataElement> existingDataElements = this.femme.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().inAnyCollection(
+			List<DataElement> existingDataElements = this.femme.query(DataElement.class).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().inAnyCollection(
 					Collections.singletonList(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collection
 							.getId())).end()
-					)).end()), DataElement.class).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).build().list();
+					)).end())).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).execute().list();
 			existingImport.setExistingDataElements(existingDataElements.stream().map(DataElement::getId).collect(Collectors.toList()));
 		} catch (DatastoreException | MetadataStoreException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
