@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.naming.OperationNotSupportedException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -147,34 +148,74 @@ public class FemmeAdminResource {
 	}
 
 	@POST
-	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}")
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateCollection(@NotNull @PathParam("collectionId") String collectionId, @NotNull Collection collection) throws FemmeApplicationException {
-		return updateElement(collectionId, collection);
+	public Response updateCollection(@NotNull @PathParam("id") String id, @NotNull Collection collection) throws FemmeApplicationException {
+		return updateElement(id, collection);
 	}
 
 	@POST
-	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}")
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateCollection(@NotNull @PathParam("dataElementId") String dataElementId, @NotNull DataElement dataElement) throws FemmeApplicationException {
-		return updateElement(dataElementId, dataElement);
+	public Response updateDataElement(@NotNull @PathParam("id") String id, @NotNull DataElement dataElement) throws FemmeApplicationException {
+		return updateElement(id, dataElement);
 	}
 
-	private Response updateElement(String elementId, Element element) throws FemmeApplicationException {
-		FemmeResponse<Collection> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
+	private <T extends Element> Response updateElement(String elementId, T element) throws FemmeApplicationException {
+		FemmeResponse<T> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<T> entity = new FemmeResponseEntity<>();
 
 		element.setId(elementId);
 
 		try {
-			Collection updatedCollection = (Collection) this.femme.update(element);
-			entity.setBody(updatedCollection);
+			T updatedElement = this.femme.update(element);
+			entity.setBody(updatedElement);
 
 			String message = element.getClass().getSimpleName() + " " + element.getId() + " successfully updated";
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (DatastoreException | MetadataStoreException e) {
 			String errorMessage = element.getClass().getSimpleName() + " " + elementId + " update failed";
+			logger.error(errorMessage, e);
+			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
+		}
+
+		return Response.status(Response.Status.OK).entity(femmeResponse).build();
+	}
+
+	@POST
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.METADATA_PATH)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response insertCollectionMetadatum(
+			@NotNull @PathParam("collectionId") String collectionId,
+			@NotNull Metadatum metadatum) throws FemmeApplicationException {
+		return insertMetadatum(metadatum, collectionId);
+	}
+
+	@POST
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response insertDataElementMetadata(
+			@NotNull @PathParam("dataElementId") String dataElementId,
+			@NotNull Metadatum metadatum) throws FemmeApplicationException {
+		return insertMetadatum(metadatum, dataElementId);
+	}
+
+	private Response insertMetadatum(Metadatum metadatum, String elementId) throws FemmeApplicationException {
+		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
+
+		metadatum.setElementId(elementId);
+
+		try {
+			String metadatumId = this.femme.insert(metadatum);
+			entity.setBody(metadatumId);
+
+			String message = "Metadatum " + metadatumId + " successfully inserted";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
+		} catch (FemmeException e) {
+			String errorMessage = "Metadatum insertion failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
@@ -196,13 +237,13 @@ public class FemmeAdminResource {
 	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateDataElementMetadata(
-			@NotNull @PathParam("collectionId") String collectionId,
+			@NotNull @PathParam("dataElementId") String dataElementId,
 			@NotNull @PathParam("metadatumId") String metadatumId,
 			@NotNull Metadatum metadatum) throws FemmeApplicationException {
-		return updateElementMetadata(collectionId, metadatumId, metadatum, DataElement.class);
+		return updateElementMetadata(dataElementId, metadatumId, metadatum, DataElement.class);
 	}
 
-	private Response updateElementMetadata(String elementId, String metadatumId, Metadatum metadatum, Class<? extends Element> elementSubType) throws FemmeApplicationException {
+	private <T extends Element> Response updateElementMetadata(String elementId, String metadatumId, Metadatum metadatum, Class<T> elementSubType) throws FemmeApplicationException {
 		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
 
@@ -211,9 +252,9 @@ public class FemmeAdminResource {
 
 		try {
 			Metadatum updatedMetadatum = this.femme.update(metadatum);
-			if (updatedMetadatum == null) {
-				throw new FemmeApplicationException("No metadatum " + metadatumId + " found", Response.Status.NOT_FOUND.getStatusCode());
-			}
+			//if (updatedMetadatum == null) {
+			//	throw new FemmeApplicationException("No metadatum " + metadatumId + " found", Response.Status.NOT_FOUND.getStatusCode());
+			//}
 			entity.setBody(updatedMetadatum);
 
 			String message = "Metadatum " + metadatumId + " successfully updated";
@@ -221,6 +262,43 @@ public class FemmeAdminResource {
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (FemmeException e) {
 			String errorMessage = "Metadatum " + metadatumId + " of " + elementSubType.getSimpleName() + " " + elementId + " update failed";
+			logger.error(errorMessage, e);
+			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
+		}
+
+		return Response.status(Response.Status.OK).entity(femmeResponse).build();
+	}
+
+	@DELETE
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response deleteCollectionMetadatum(
+			@NotNull @PathParam("collectionId") String collectionId,
+			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
+		return deleteElementMetadata(collectionId, metadatumId);
+	}
+
+	@DELETE
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response deleteDataElementMetadatum(
+			@NotNull @PathParam("dataElementId") String dataElementId,
+			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
+		return deleteElementMetadata(dataElementId, metadatumId);
+	}
+
+	private Response deleteElementMetadata(String elementId, String metadatumId) throws FemmeApplicationException {
+		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
+
+		try {
+			this.femme.softDeleteMetadatum(metadatumId);
+
+			String message = "Metadatum " + metadatumId + " successfully soft deleted";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
+		} catch (FemmeException e) {
+			String errorMessage = "Metadatum " + metadatumId + " of " + elementId + " soft deletion failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}

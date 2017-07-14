@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 
 import com.mongodb.Function;
@@ -23,6 +24,7 @@ import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
 import gr.cite.commons.utils.hash.HashGeneratorUtils;
 import gr.cite.commons.utils.hash.HashGenerationException;
+import gr.cite.commons.utils.xml.XMLFormatter;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.model.SystemicMetadata;
@@ -69,7 +71,11 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		metadatum.getSystemicMetadata().setModified(now);
 		metadatum.getSystemicMetadata().setStatus(Status.ACTIVE);
 
-		removeWhiteSpaceAndCalculateChecksum(metadatum);
+		try {
+			removeWhiteSpaceAndCalculateChecksum(metadatum);
+		} catch (HashGenerationException e) {
+			throw new MetadataStoreException(e);
+		}
 
 		this.upload(metadatum);
 	}
@@ -118,29 +124,45 @@ public class MetadataGridFS implements MongoMetadataCollection {
 
 	@Override
 	public Metadatum update(Metadatum metadatum) throws MetadataStoreException {
+		//Metadatum currentMetadatum;
+		//if (metadatum.getId() != null) {
+		//	currentMetadatum = get(metadatum.getId());
+		//}
 		Metadatum updatedMetadatum = null;
 		if (metadatum.getValue() != null) {
-			removeWhiteSpaceAndCalculateChecksum(metadatum);
+			try {
+				removeWhiteSpaceAndCalculateChecksum(metadatum);
+			} catch (HashGenerationException e) {
+				throw new MetadataStoreException(e);
+			}
 
+			// Update metadata of metadatum
 			if (existsByIdAndChecksum(metadatum)) {
-				updatedMetadatum = updateMetadata(metadatum);
+				updateMetadata(metadatum);
+			// Insert new
 			} else if (existsById(metadatum)) {
-				//String oldMetadatumId = metadatum.getId();
+				String oldMetadatumId = metadatum.getId();
 				insert(metadatum);
+				updateStatus(oldMetadatumId, Status.INACTIVE);
+				updatedMetadatum = metadatum;
 
 				/*Metadatum oldMetadatum = new Metadatum();
 				metadatum.setId(oldMetadatumId);
 				delete(oldMetadatum);*/
-
-			} else if (existsByElementIdAndChecksum(metadatum)){
-				updatedMetadatum = updateMetadata(metadatum);
-				updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+			// No duplicate metadata
+			} else if (existsByElementIdAndChecksum(metadatum)) {
+				/*updatedMetadatum = */updateMetadata(metadatum);
+				//updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+			// Insert new
 			} else {
 				insert(metadatum);
+				updatedMetadatum = metadatum;
+
 			}
+		// Update metadata of metadatum
 		} else {
-			updatedMetadatum = updateMetadata(metadatum);
-			updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+			/*updatedMetadatum = */updateMetadata(metadatum);
+			//updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
 		}
 
 		return updatedMetadatum;
@@ -210,9 +232,9 @@ public class MetadataGridFS implements MongoMetadataCollection {
 					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
 			)).projection(Projections.include(FieldNames.ID)).limit(1).first();
 
-			if (existing != null) {
+			/*if (existing != null) {
 				metadatum.setId(existing.getId());
-			}
+			}*/
 		}
 
 		return existing != null;
@@ -240,6 +262,11 @@ public class MetadataGridFS implements MongoMetadataCollection {
 		return download(metadatum.getId());
 	}
 */
+	@Override
+	public Metadatum get(String id) throws MetadataStoreException {
+		return get(id, false);
+	}
+
 	@Override
 	public Metadatum get(String id, boolean lazy) throws MetadataStoreException {
 		Metadatum metadatum = this.gridFsFilesCollection.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first().getMetadata();
@@ -295,23 +322,34 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	public List<Metadatum> find(String elementId) throws MetadataStoreException {
 		return find(elementId, true);
 	}
-	
+
 	@Override
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
+		return find(elementId, true, false);
+	}
+	
+	@Override
+	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
 		try {
-			this.gridFsFilesCollection.find(Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
-					.map(metadataGridFSFile -> {
-						Metadatum metadatum = metadataGridFSFile.getMetadata();
-						if (!lazy) {
-							try {
-								metadatum.setValue(download(metadataGridFSFile.getId()).getValue());
-							} catch (MetadataStoreException e) {
-								throw new RuntimeException(e.getMessage(), e);
-							}
+			this.gridFsFilesCollection.find(
+					loadInactive ?
+					Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)) :
+					Filters.and(
+						Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)),
+						Filters.eq(FieldNames.METADATA + "." + FieldNames.STATUS, Status.ACTIVE.getStatusCode())
+					)
+				).map(metadataGridFSFile -> {
+					Metadatum metadatum = metadataGridFSFile.getMetadata();
+					if (!lazy) {
+						try {
+							metadatum.setValue(download(metadataGridFSFile.getId()).getValue());
+						} catch (MetadataStoreException e) {
+							throw new RuntimeException(e.getMessage(), e);
 						}
-						return metadatum;
-					}).into(metadata);
+					}
+					return metadatum;
+				}).into(metadata);
 		} catch (RuntimeException e) {
 			throw new MetadataStoreException("Metadata retrieval failed. Element id: [" + elementId + "]" , e);
 		}
@@ -556,21 +594,28 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	}
 
 	private static String removeWhiteSpace(String metadata) {
-			return metadata.replaceAll(">\\s+<", "><").trim();
+		if (metadata != null && !metadata.isEmpty()) {
+			try {
+				return XMLFormatter.unindent(metadata).replaceAll(">\\s+<", "><").trim();
+			} catch (TransformerException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+		return metadata;
 	}
 
-	private static void removeWhiteSpaceAndCalculateChecksum(Metadatum metadatum) {
+	private static void removeWhiteSpaceAndCalculateChecksum(Metadatum metadatum) throws HashGenerationException {
 		if (metadatum.getContentType().contains("xml")) {
 			metadatum.setValue(MetadataGridFS.removeWhiteSpace(metadatum.getValue()));
 		} else {
 			metadatum.setValue(metadatum.getValue());
 		}
 
-		try {
-			metadatum.setChecksum(HashGeneratorUtils.generateMD5(metadatum.getValue()));
-		} catch (HashGenerationException e) {
+		//try {
+		metadatum.setChecksum(HashGeneratorUtils.generateMD5(metadatum.getValue()));
+		/*} catch (HashGenerationException e) {
 			logger.error("Checksum generation failed");
-		}
+		}*/
 	}
 
 	private Function<GridFSFile, Metadatum> gridFsFileToMetadatumTransformation(boolean lazy) {

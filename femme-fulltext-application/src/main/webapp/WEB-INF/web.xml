@@ -33,7 +33,7 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
     	</init-param>-->
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>gr.cite.femme.fulltext.application.FulltextSearchApplication</param-value>
+			<param-value>gr.cite.femme.fulltext.application.FulltextIndexApplication</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>

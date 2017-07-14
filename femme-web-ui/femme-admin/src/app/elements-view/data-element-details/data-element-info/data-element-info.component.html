@@ -1,0 +1,11 @@
+<form class="element-form" (ngSubmit)="onSubmit()" #dataElementForm="ngForm">
+		<div class="form-group">
+			<label for="name">Name</label>
+			<input type="text" class="form-control" id="name" name="name" placeholder="Name" [(ngModel)]="dataElement.name">
+		</div>
+		<div class="form-group">
+			<label for="Endpoint">Endpoint</label>
+			<input type="text" class="form-control" id="endpoint" name="endpoint" placeholder="Endpoint" [(ngModel)]="dataElement.endpoint">
+		</div>
+		<button type="submit" class="btn btn-primary">Submit</button>
+	</form>

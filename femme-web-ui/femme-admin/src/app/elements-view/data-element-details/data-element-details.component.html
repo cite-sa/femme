@@ -1,0 +1,12 @@
+<ngb-tabset #t="ngbTabset">
+	<ngb-tab id="info" title="Info">
+		<ng-template ngbTabContent>
+			<data-element-info [dataElement]="dataElement"></data-element-info>
+		</ng-template>
+	</ngb-tab>
+	<ngb-tab id="metadata" title="Metadata">
+		   <ng-template ngbTabContent>
+				<data-element-metadata [dataElementId]="dataElement.id" [dataElementMetadata]="dataElement.metadata"></data-element-metadata>
+			</ng-template>
+  </ngb-tab>
+</ngb-tabset>

@@ -32,7 +32,7 @@ public class Metadatum {
 
 	@JsonIgnore
 	private String checksum;
-	
+
 	/*private List<MetadatumXPathCache> xPathCache;*/
 
 	

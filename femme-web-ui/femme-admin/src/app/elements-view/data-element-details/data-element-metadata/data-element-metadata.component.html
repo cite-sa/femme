@@ -1,0 +1,66 @@
+<div class="row">
+	<div class="col">
+		<button type="button" class="btn btn-primary" (click)="addMetadatumForm()">
+			<span class="fa fa-plus" aria-hidden="true"></span>
+		</button>
+	</div>
+</div>
+<div class="row">
+	<div class="col">
+		<form class="metadata-form" [formGroup]="metadataForm" (ngSubmit)="onSubmit()" novalidate>
+
+			<ngb-accordion [closeOthers]="true" activeIds="" formArrayName="metadata">
+				<ngb-panel id="{{i}}" *ngFor="let metadatum of metadataForm.controls.metadata.controls; let i = index"  [formGroupName]="i">
+					<ng-template ngbPanelTitle>
+						<div class="row">
+							<div class="col-11">
+								<span>{{metadatum._value.name || 'Untitled'}}</span>
+							</div>
+							<div class="col-1">
+								<!-- <span class="fa fa-times" (click)="removeMetadatumForm($event, i)"></span> -->
+								<span class="fa" [ngClass]="{'fa-times':dataElementStatus,'fa-check':!dataElementStatus }" (click)="changeDataElementStatus(metadatum, $event)"></span>
+							</div>
+						</div>
+					</ng-template>
+					<ng-template ngbPanelContent>
+						<div>
+
+							<div class="form-group">
+								<label>Name</label>
+								<input class="form-control" formControlName="name">
+							</div>
+							<div class="form-group">
+								<label>Endpoint</label>
+								<input class="form-control" formControlName="endpoint">
+							</div>
+							<div class="form-group">
+								<label>Value</label>
+								<textarea class="form-control" formControlName="value"></textarea>
+							</div>
+							<div class="form-group">
+								<label>Content Type</label>
+								<!-- <input class="form-control" formControlName="contentType"> -->
+								<select class="custom-select" formControlName="contentType">
+    								<option selected>Choose...</option>
+									<option value="application/xml">application/xml</option>
+									<option value="text/xml">text/xml</option>
+									<option value="application/json">application/json</option>
+							</select>
+							</div>
+							<!-- <div class="form-check">
+  								<label class="form-check-label">
+								<input class="form-check-input" type="checkbox" formControlName="status" value="status" (change)="status = !status">
+    								Active
+  								</label>
+							</div> -->
+
+						</div>
+
+					</ng-template>
+				</ngb-panel>
+			</ngb-accordion>
+			<button type="submit" class="btn btn-primary">Submit</button>
+			<button type="reset" class="btn btn-primary" (click)="revert()">Reset</button>
+		</form>
+	</div>
+</div>

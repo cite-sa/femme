@@ -1,0 +1,46 @@
+#femme-navbar {
+	height: 3rem;
+	margin-bottom: 0;
+	border: none;
+	/*background-color: #6C5D53;*/
+	background-color: #873703;
+	box-shadow: 0 2px 5px 0px rgba(0,0,0,0.4);
+}
+
+/*#femme-main {
+	height: calc(100vh - 4rem);
+	margin-top: 4rem;
+}*/
+
+/*#femme-main > * {
+	height: 100%;
+}*/
+
+/*.navbar-brand {
+	padding: 0px 15px;
+}*/
+
+/*#femme-logo {
+	height: 100%;
+	width: 100%;
+}*/
+
+.side-panel {
+	box-shadow: 1px 0px 3px 0px rgba(0,0,0,0.4);
+}
+
+#elements {
+	margin-top: 20px;
+}
+
+.main-panel {
+	width: 80%;
+	padding-top: 5rem;
+}
+
+femme-app-navbar {
+	height: 4rem;
+	width: 100%;
+	position: fixed;
+	z-index: 100;
+}

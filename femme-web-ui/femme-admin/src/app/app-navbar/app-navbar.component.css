@@ -1,0 +1,14 @@
+/*md-toolbar {
+	height: 3rem;
+}*/
+
+#femme-navbar {
+	background-color: #873703;
+    box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.3);
+	height: 4rem;
+
+}
+
+#femme-logo {
+    height: 2rem;
+}

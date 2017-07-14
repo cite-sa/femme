@@ -1,23 +1,18 @@
 package gr.cite.femme.fulltext.engine;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import gr.cite.commons.pipeline.ProcessingPipeline;
 import gr.cite.commons.pipeline.ProcessingPipelineException;
-import gr.cite.commons.pipeline.config.PipelineConfiguration;
 import gr.cite.femme.fulltext.core.FulltextDocument;
-import gr.cite.femme.fulltext.engine.elasticsearch.FulltextSearchException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class FullTextEngineTest {
-	private FulltextSearchEngine engine;
+	private FulltextIndexEngine engine;
 
 	String input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
 			"<wcs:CoverageDescriptions xsi:schemaLocation=\"http://www.opengis.net/wcs/2.0 http://schemas.opengis" +
@@ -243,11 +238,11 @@ public class FullTextEngineTest {
 
 	@Before
 	public void init() throws UnknownHostException {
-		this.engine = new FulltextSearchEngine("localhost", 9200, "fulltext_search");
+		this.engine = new FulltextIndexEngine("localhost", 9200, "fulltext_search");
 	}
 
 	@Test
-	public void testInsert() throws IOException, FulltextSearchException, ProcessingPipelineException {
+	public void testInsert() throws IOException, FulltextIndexException, ProcessingPipelineException {
 		FulltextDocument doc = new FulltextDocument();
 		doc.setElementId(UUID.randomUUID().toString());
 

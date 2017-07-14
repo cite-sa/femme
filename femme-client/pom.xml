@@ -5,13 +5,13 @@
 	<artifactId>femme-client</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<repositories>
-		<repository>
-			<id>archiva.internal</id>
-			<name>Internal Snapshot Repository</name>
-			<url>http://maven.local.cite.gr:8080/repository/internal/</url>
-		</repository>
-	</repositories>
+	<!--<repositories>-->
+		<!--<repository>-->
+			<!--<id>archiva.internal</id>-->
+			<!--<name>Internal Snapshot Repository</name>-->
+			<!--<url>http://maven.local.cite.gr:8080/repository/internal/</url>-->
+		<!--</repository>-->
+	<!--</repositories>-->
 
 	<properties>
 		<jersey.version>2.25.1</jersey.version>

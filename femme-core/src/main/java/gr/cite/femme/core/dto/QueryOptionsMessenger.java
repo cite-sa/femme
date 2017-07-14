@@ -38,6 +38,12 @@ public class QueryOptionsMessenger {
 	@JsonProperty("exclude")
 	private Set<String> exclude;
 
+	@JsonProperty("loadInactiveElements")
+	private String loadInactiveElements;
+
+	@JsonProperty("loadInactiveMetadata")
+	private String loadInactiveMetadata;
+
 	public Integer getLimit() {
 		return limit;
 	}
@@ -93,7 +99,23 @@ public class QueryOptionsMessenger {
 	public void setExclude(Set<String> exclude) {
 		this.exclude = exclude;
 	}
-	
+
+	public String isLoadInactiveElements() {
+		return loadInactiveElements;
+	}
+
+	public void setLoadInactiveElements(String loadInactiveElements) {
+		this.loadInactiveElements = loadInactiveElements;
+	}
+
+	public String isLoadInactiveMetadata() {
+		return loadInactiveMetadata;
+	}
+
+	public void setLoadInactiveMetadata(String loadInactiveMetadata) {
+		this.loadInactiveMetadata = loadInactiveMetadata;
+	}
+
 	public static QueryOptionsMessenger valueOf(String optionsJson) throws JsonParseException, JsonMappingException, IOException {
 		if (optionsJson != null) {
 			final ObjectMapper mapper = new ObjectMapper();
@@ -151,6 +173,16 @@ public class QueryOptionsMessenger {
 		
 		public Builder exclude(Set<String> exclude) {
 			options.setExclude(exclude);
+			return this;
+		}
+
+		public Builder loadInactiveElements(boolean loadInactive) {
+			options.setLoadInactiveElements(String.valueOf(loadInactive));
+			return this;
+		}
+
+		public Builder loadInactiveMetadata(boolean loadInactive) {
+			options.setLoadInactiveMetadata(String.valueOf(loadInactive));
 			return this;
 		}
 		

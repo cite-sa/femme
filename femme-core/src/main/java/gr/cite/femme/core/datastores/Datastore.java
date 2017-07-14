@@ -28,13 +28,13 @@ public interface Datastore {
 	
 	public DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException;
 
-	public Element update(Element element) throws DatastoreException;
+	public <T extends Element> T update(Element element) throws DatastoreException;
 
-	public Element update(String id, Map<String, Object> fieldsAndValues, Class<? extends Element> elementSubType) throws DatastoreException;
+	public <T extends Element> T  update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException;
 
-	public Element deactivate(String id, Class<? extends Element> elementSubType) throws DatastoreException;
+	public <T extends Element> T softDelete(String id, Class<T> elementSubType) throws DatastoreException;
 
-	public Element findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<? extends Element> elementSubType);
+	public <T extends Element> T  findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType);
 
 	public void remove(DataElement dataElement, Collection collection) throws DatastoreException;
 

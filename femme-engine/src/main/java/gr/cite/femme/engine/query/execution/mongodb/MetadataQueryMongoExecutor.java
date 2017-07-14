@@ -16,10 +16,14 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,7 +157,7 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 						}
 					} else {
 						try {
-							element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata()));
+							element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata(), Boolean.valueOf(getOptions().isLoadInactiveMetadata())));
 						} catch (MetadataStoreException e) {
 							throw new RuntimeException(e.getMessage(), e);
 						}
@@ -207,7 +211,7 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 						element.setMetadata(xPathResult);
 					}
 				} else {
-					element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata()));
+					element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata(), Boolean.valueOf(getOptions().isLoadInactiveMetadata())));
 				}
 			}
 		}

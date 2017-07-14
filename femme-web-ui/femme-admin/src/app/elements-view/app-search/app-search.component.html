@@ -1,0 +1,35 @@
+	<!--<md-input-container>
+	<md-icon mdPrefix>arrow-drop-down</md-icon>
+	<input mdInput type="search" placeholder="Search" [(ngModel)]="query" (ngModelChange)="search($event)">
+	<md-icon mdSuffix>search</md-icon>
+</md-input-container>-->
+
+<div class="row">
+	<div class="col">
+		<div class="input-group">
+			<div ngbDropdown [autoClose]="false" class="d-inline-block">
+				<span ngbDropdownToggle id="search-options" class=""></span>
+				<div class="dropdown-menu" aria-labelledby="search-options">
+					<label class="custom-control custom-checkbox">
+						<input type="checkbox" name="xpath" class="custom-control-input" [(ngModel)]="isXpath">
+						<span class="custom-control-indicator"></span>
+						<span class="custom-control-description">XPath</span>
+					</label>
+				</div>
+			</div>
+			<input #term id="search-form" class="form-control" type="search" placeholder="Search" (keyup)="search(term.value)" (keyup.enter)="xpath(term.value)">
+			<button form="search-form" id="search-icon" class="input-group-addon fa fa-search" aria-hidden="true" (click)="xpath(term.value)"></button>
+		</div>
+	</div>
+
+<!--<div class="row">
+  <div class="col">
+    <div ngbDropdown class="d-inline-block">
+      <button class="btn btn-outline-primary" id="dropdownBasic1" ngbDropdownToggle>Toggle dropdown</button>
+      <div class="dropdown-menu" aria-labelledby="dropdownBasic1">
+        <button class="dropdown-item">Action - 1</button>
+        <button class="dropdown-item">Another Action</button>
+        <button class="dropdown-item">Something else is here</button>
+      </div>
+    </div>
+  </div>-->

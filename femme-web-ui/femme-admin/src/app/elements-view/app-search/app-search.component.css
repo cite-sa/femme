@@ -1,0 +1,50 @@
+md-input-container {
+	width: 100%;
+}
+
+#search-form {
+	padding-left: 2.5rem;
+	padding-right: 2.5rem;
+}
+
+#search-options {
+	padding: 0.4rem 0.75rem;
+	position: absolute;
+	left: 0;
+	z-index: 10;
+	background: none;
+	border: none;
+	cursor: pointer;
+	transition: opacity 0.3s ease 0s;
+}
+
+#search-options:hover {
+	opacity: 0.5;
+}
+
+#search-options:focus {
+	outline: none;
+}
+
+#search-icon {
+	padding: 0.70rem 0.75rem;
+	position: absolute;
+	right: 0;
+	z-index: 10;
+	background: none;
+	border: none;
+	cursor: pointer;
+	transition: opacity 0.3s ease 0s;
+}
+
+#search-icon:hover {
+	opacity: 0.5;
+}
+
+#search-icon:focus {
+	outline: none;
+}
+
+.dropdown-menu {
+	padding: 0.5rem 1rem;
+}

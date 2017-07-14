@@ -133,7 +133,7 @@ class CustomInstantSerializer extends JsonSerializer<Instant> {
 		jgen.writeStartObject();
 		jgen.writeNumberField("timestamp", value.toEpochMilli());
 		jgen.writeEndObject();
-		
+
 	}
 }
 
@@ -142,10 +142,9 @@ class CustomInstantDeserializer extends JsonDeserializer<Instant> {
 	@Override
 	public Instant deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException {
 		Map<String, Long> instantMap = jsonParser.readValueAs(new TypeReference<Map<String, Long>>() {});
-		
+
 		Long epochMillis = instantMap.get("timestamp");
-		
-		Instant instant = Instant.ofEpochMilli((epochMillis));
-		return instant;
+
+		return Instant.ofEpochMilli((epochMillis));
 	}
 }

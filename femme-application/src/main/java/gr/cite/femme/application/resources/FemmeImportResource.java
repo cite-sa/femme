@@ -185,7 +185,7 @@ public class FemmeImportResource {
 				.filter(existingDataElement -> ! importToBeDeleted.getNewDataElements().contains(existingDataElement)).collect(Collectors.toList());
 		for (String deactivateId: deactivate) {
 			try {
-				this.femme.deactivateElement(deactivateId, DataElement.class);
+				this.femme.softDeleteElement(deactivateId, DataElement.class);
 			} catch (FemmeException e) {
 				logger.error(e.getMessage(), e);
 			}

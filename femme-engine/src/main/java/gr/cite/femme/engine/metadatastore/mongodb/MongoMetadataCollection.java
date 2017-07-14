@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mongodb.client.MongoCursor;
+import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
@@ -21,11 +22,15 @@ public interface MongoMetadataCollection {
 
 	//public Metadatum get(Metadatum metadatum) throws MetadataStoreException;
 
+	public Metadatum get(String id) throws MetadataStoreException;
+
 	public Metadatum get(String id, boolean lazy) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException;
+
+	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException;
 
 	public MongoCursor<Metadatum> findAllBeforeTimestamp(Instant timestamp) throws MetadataStoreException;
 

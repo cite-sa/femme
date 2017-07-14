@@ -27,7 +27,7 @@ import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
-import gr.cite.femme.fulltext.client.FulltextSearchClientAPI;
+import gr.cite.femme.fulltext.client.FulltextIndexClientAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,22 +48,23 @@ public class Femme {
 
 	private Datastore datastore;
 	private MetadataStore metadataStore;
-	private FulltextSearchClientAPI fulltextClient;
+	private FulltextIndexClientAPI fulltextClient;
 
 	private Map<String, PipelineConfiguration> pipelineConfiguration;
 
-	/*public Femme() throws IOException {
-		this.datastore = new MongoDatastore();
-		this.metadataStore = new MongoMetadataStore();
+	//@Inject
+	public Femme(Datastore datastore, MetadataStore metadataStore) throws IOException {
+		this.datastore = datastore;
+		this.metadataStore = metadataStore;
 
 		String config = Resources.toString(Resources.getResource(Femme.PIPELINE_CONFIG_FILE), Charsets.UTF_8);
 		if (!config.trim().isEmpty()) {
-			this.pipelineConfiguration = mapper.readValue(config, PipelineConfiguration.class);
+			this.pipelineConfiguration = mapper.readValue(config, new TypeReference<Map<String, PipelineConfiguration>>() {});
 		}
-	}*/
+	}
 
 	@Inject
-	public Femme(Datastore datastore, MetadataStore metadataStore, FulltextSearchClientAPI fulltextClient) throws IOException {
+	public Femme(Datastore datastore, MetadataStore metadataStore, FulltextIndexClientAPI fulltextClient) throws IOException {
 		this.datastore = datastore;
 		this.metadataStore = metadataStore;
 		this.fulltextClient = fulltextClient;
@@ -123,10 +124,21 @@ public class Femme {
 				}
 			}
 
-			insertInFulltextIndex(element);
+			if (this.fulltextClient != null) {
+				insertInFulltextIndex(element);
+			}
 		}
 
 		return element.getId();
+	}
+
+	public String insert(Metadatum metadatum) throws FemmeException {
+		try {
+			this.metadataStore.insert(metadatum);
+			return metadatum.getId();
+		} catch (MetadataStoreException | MetadataIndexException e) {
+			throw new FemmeException("Metadatum insertion failed", e);
+		}
 	}
 
 	private String exists(Element element) throws DatastoreException, MetadataStoreException {
@@ -140,9 +152,9 @@ public class Femme {
 		return existingElement != null ? existingElement.getId() : null;
 	}
 
-	public Element update(Element element) throws DatastoreException, MetadataStoreException {
+	public <T extends Element> T update(Element element) throws DatastoreException, MetadataStoreException {
 		// TODO implement update
-		Element updatedElement = null;
+		T updatedElement = null;
 		if (element.getId() != null) {
 			/*try {
 				updateElement = this.datastore.get(element.getId(), element.getClass(), this.metadataStore, null);
@@ -173,7 +185,7 @@ public class Femme {
 
 			for (Metadatum obsoleteMetadatum : existingMetadata) {
 				try {
-					this.metadataStore.deactivate(obsoleteMetadatum.getId());
+					this.metadataStore.softDelete(obsoleteMetadatum.getId());
 				} catch (MetadataStoreException e) {
 					logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
 				} catch (MetadataIndexException e) {
@@ -191,15 +203,22 @@ public class Femme {
 		} catch (MetadataStoreException | MetadataIndexException e) {
 			throw new FemmeException("Metadatum " + metadatum.getId() + " update failed", e);
 		}
-
 	}
 
-	public void deactivateElement(String id, Class<? extends Element> elementSubType) throws FemmeException {
+	public void softDeleteElement(String id, Class<? extends Element> elementSubType) throws FemmeException {
 		try {
-			this.datastore.deactivate(id, elementSubType);
-			this.metadataStore.deactivateAll(id);
+			this.metadataStore.softDeleteAll(id);
+			this.datastore.softDelete(id, elementSubType);
 		} catch (DatastoreException | MetadataIndexException | MetadataStoreException e) {
-			throw new FemmeException("Deactivate " + elementSubType.getSimpleName() + " " + id + " failed", e);
+			throw new FemmeException("Soft delete " + elementSubType.getSimpleName() + " " + id + " failed", e);
+		}
+	}
+
+	public void softDeleteMetadatum(String id) throws FemmeException {
+		try {
+			this.metadataStore.softDelete(id);
+		} catch (MetadataIndexException | MetadataStoreException e) {
+			throw new FemmeException("Soft delete metadatum " + id + " failed", e);
 		}
 	}
 
@@ -226,8 +245,14 @@ public class Femme {
 	}
 
 	public <T extends Element> T get(String id, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
+		return get(id, elementSubType, false);
+	}
+
+	public <T extends Element> T get(String id, Class<T> elementSubType, boolean loadInactiveMetadata) throws DatastoreException, MetadataStoreException {
 		try {
-			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end())).execute().first();
+			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()))
+					.options(QueryOptionsMessenger.builder().loadInactiveMetadata(loadInactiveMetadata).build())
+					.execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
@@ -267,7 +292,7 @@ public class Femme {
 	private void insertInFulltextIndex(Element element) throws FemmeException {
 		if (this.pipelineConfiguration != null) {
 			ProcessingPipeline pipeline;
-			pipeline = new ProcessingPipeline(this.pipelineConfiguration.get("fulltext"));
+			pipeline = new ProcessingPipeline(this.pipelineConfiguration.get(Femme.FULLTEXT_PIPELINE_CONFIG));
 
 			for (Metadatum metadatum : element.getMetadata()) {
 				try {

@@ -1,0 +1,18 @@
+<div id="search-bar">
+	<span id="search-options" class="search-bar-icon">
+		<span class="fa fa-caret-down fa-align-justify" aria-hidden="true"></span>
+	</span>
+	<span id="search-icon" class="search-bar-icon" (click)="search(query);">
+		<span class="fa fa-search" aria-hidden="true"></span>
+	</span>
+	<!--<input id="typeahead-http" type="text" class="form-control" [(ngModel)]="query" [ngbTypeahead]="autocomplete" [inputFormatter]="formatter" [resultFormatter]="formatter" placeholder="Search" (ngModelChange)="search($event)"/>-->
+	<input id="typeahead-http" type="text" class="form-control" [(ngModel)]="query" placeholder="Search" (ngModelChange)="search($event)"/>
+</div>
+
+<div id="#search-results">
+	<div class="card" *ngFor="let result of searchResults">
+		<div class="card-block">
+			{{result.name}}
+		</div>
+	</div>
+</div>

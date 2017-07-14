@@ -18,7 +18,7 @@ public interface MetadataStore {
 
 	public void index(Metadatum metadatum) throws MetadataIndexException;
 
-	public void unIndex(String id) throws MetadataIndexException;
+	public void deIndex(String id) throws MetadataIndexException;
 
 	public void reIndexAll() throws MetadataIndexException, MetadataStoreException;
 	
@@ -29,6 +29,8 @@ public interface MetadataStore {
 	public List<Metadatum> find(String elementId) throws MetadataStoreException;
 	
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException;
+
+	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException;
 
 	public List<Metadatum> xPath(String xPath,  boolean lazyPayload) throws MetadataStoreException;
 
@@ -44,9 +46,9 @@ public interface MetadataStore {
 	
 	public void deleteAll(String elementId) throws MetadataStoreException;
 
-	public void deactivate(String metadatumId) throws MetadataStoreException, MetadataIndexException;
+	public void softDelete(String metadatumId) throws MetadataStoreException, MetadataIndexException;
 
-	public void deactivateAll(String elementId) throws MetadataStoreException, MetadataIndexException;
+	public void softDeleteAll(String elementId) throws MetadataStoreException, MetadataIndexException;
 
 	public String generateMetadatumId();
 

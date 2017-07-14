@@ -62,6 +62,11 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	}
 
 	@Override
+	public Metadatum get(String id) throws MetadataStoreException {
+		return null;
+	}
+
+	@Override
 	public Metadatum get(String id, boolean lazy) throws MetadataStoreException {
 		return this.metadataCollection.find(Filters.eq(FieldNames.ID, new ObjectId(id))).limit(1).first();
 	}
@@ -86,6 +91,11 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
 		return metadataCollection.find(Filters.eq(FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
 				.map(metadatumTransformation).into(new ArrayList<>());
+	}
+
+	@Override
+	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException {
+		return null;
 	}
 
 	@Override

@@ -1,0 +1,31 @@
+#search-bar {
+	position: relative;
+	height: 2.5rem;
+}
+
+.search-bar-icon {
+	height: 100%;
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0rem 1rem;
+}
+
+/*#search-options {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0rem 1rem;
+}*/
+
+#search-icon {
+	right: 0;
+}
+
+#typeahead-http {
+	/*height: 100%;*/
+	padding-left: 2.5rem;
+	padding-right: 2.5rem;
+	border-radius: 30px;
+}

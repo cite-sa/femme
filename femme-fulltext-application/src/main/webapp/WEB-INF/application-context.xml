@@ -7,14 +7,17 @@
 
 	<context:property-placeholder location="WEB-INF/fulltext.properties.devel" />
 
-	<bean id="fulltextSearchEngine" class="gr.cite.femme.fulltext.engine.FulltextSearchEngine">
+	<bean id="fulltextIndexEngine" class="gr.cite.femme.fulltext.engine.FulltextIndexEngine">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.fulltext.elasticsearch.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.indexName}"/>
 	</bean>
 
-	<bean id="fulltextSearchResource" class="gr.cite.femme.fulltext.application.resources.FulltextSearchResource">
-		<constructor-arg ref="fulltextSearchEngine"/>
+	<bean id="fulltextIndexResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexResource">
+		<constructor-arg ref="fulltextIndexEngine"/>
+	</bean>
+	<bean id="fulltextIndexAdminResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexAdminResource">
+		<constructor-arg ref="fulltextIndexEngine"/>
 	</bean>
 
 	<context:annotation-config/>

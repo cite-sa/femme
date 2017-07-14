@@ -1,7 +1,5 @@
 package gr.cite.femme.fulltext.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gr.cite.femme.fulltext.core.FulltextDocument;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -10,11 +8,11 @@ import java.util.Map;
 import java.util.UUID;
 
 public class FulltextClientTest {
-	private FulltextSearchClientAPI client;
+	private FulltextIndexClientAPI client;
 
 	@Before
 	public void init() {
-		this.client = new FulltextSearchClient("http://localhost:8081/fulltext-application-devel");
+		this.client = new FulltextIndexClient("http://localhost:8081/fulltext-application-devel");
 	}
 
 	@Test

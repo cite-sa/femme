@@ -59,6 +59,10 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 		return lazyMetadata;
 	}
 
+	public QueryOptionsMessenger getOptions() {
+		return options;
+	}
+
 	protected void setLazyMetadata(boolean lazyMetadata) {
 		this.lazyMetadata = lazyMetadata;
 	}
@@ -150,7 +154,6 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 			this.results = this.collection.find(
 					this.queryDocument == null
 							? Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode())
-
 							: Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument)
 			);
 

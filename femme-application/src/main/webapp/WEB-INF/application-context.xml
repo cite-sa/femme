@@ -41,15 +41,13 @@
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.name}"/>
 	</bean>
 
-	<bean id="fulltextClient" name="fulltextClient" class="gr.cite.femme.fulltext.client.FulltextSearchClient">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.endpoint}"/>
-	</bean>
 
-	<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
+
+	<!--<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
 		<constructor-arg ref="datastore"/>
 		<constructor-arg ref="metadataStore"/>
 		<constructor-arg ref="fulltextClient"/>
-	</bean>
+	</bean>-->
 
    <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
    		<constructor-arg ref="femme" />
@@ -65,6 +63,10 @@
 			<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.db.port}"/>
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
+		</bean>
+		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
+			<constructor-arg ref="datastore"/>
+			<constructor-arg ref="metadataStore"/>
 		</bean>
 	</beans>
 
@@ -92,6 +94,16 @@
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
 			<constructor-arg ref="metadataXPath"/>
+		</bean>
+
+		<bean id="fulltextClient" name="fulltextClient" class="gr.cite.femme.fulltext.client.FulltextIndexClient">
+			<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.endpoint}"/>
+		</bean>
+
+		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
+			<constructor-arg ref="datastore"/>
+			<constructor-arg ref="metadataStore"/>
+			<constructor-arg ref="fulltextClient"/>
 		</bean>
 	</beans>
 

@@ -1,0 +1,11 @@
+.mat-tab-header {
+	margin-bottom: 20px;
+}
+
+md-input-container {
+	width: 100%;
+}
+
+md-input-container textarea {
+	resize: vertical;
+}

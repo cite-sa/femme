@@ -1,0 +1,23 @@
+<!--<md-toolbar class="mat-elevation-z6" color="primary">
+	<span>
+		<a md-button>
+			<img id="femme-logo" alt="FeMME" src="../../assets/images/Femme_logo_white.png">
+		</a>
+		<a md-button [routerLink]="['/collections']">Collections</a>
+		<a md-button [routerLink]="['/dataElements']">DataElements</a>
+	</span>
+</md-toolbar>-->
+
+<div class="container-fluid">
+	<nav id="femme-navbar" class="navbar navbar-toggleable-sm fixed-top navbar-light">
+		<div class="navbar-collapse">
+			<a class="navbar-brand" href="#">
+				<img id="femme-logo" src="../../assets/images/Femme_logo_white.png" alt="FeMME">
+			</a>
+			<div class="navbar-nav">
+				<a class="nav-item nav-link active" [routerLink]="['/collections']">Collections</a>
+				<a class="nav-item nav-link active" [routerLink]="['/dataElements']">DataElements</a>
+			</div>
+		</div>
+	</nav>
+</div>

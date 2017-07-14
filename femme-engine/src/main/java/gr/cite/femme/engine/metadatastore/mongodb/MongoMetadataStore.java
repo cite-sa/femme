@@ -86,11 +86,13 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public Metadatum update(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
+		String oldMetadatumId = metadatum.getId();
 		Metadatum updatedMetadatum = this.metadataGridFS.update(metadatum);
-		if (updatedMetadatum == null) {
+
+		if (updatedMetadatum != null) {
+			deIndex(metadatum.getId());
 			index(metadatum);
 		}
-
 		return updatedMetadatum;
 	}
 
@@ -107,12 +109,13 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void unIndex(String id) throws MetadataIndexException {
+	public void deIndex(String id) throws MetadataIndexException {
 		if (this.metadataXPath != null) {
-			this.metadataXPath.unIndex(id);
+			this.metadataXPath.deIndex(id);
 		}
 	}
 
+	@Override
 	public void reIndexAll() throws MetadataIndexException, MetadataStoreException {
 		if (this.metadataXPath != null) {
 			MongoCursor<Metadatum> snapshotCursor;
@@ -181,14 +184,19 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException {
+		return find(elementId, lazy, false);
+	}
+
+	@Override
+	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException {
 		List<Metadatum> metadata = new ArrayList<>();
-		
+
 		//List<Metadatum> jsonMetadata = metadataMongoCollection.get(elementId, lazy);
-		List<Metadatum> otherMetadata = this.metadataGridFS.find(elementId, lazy);
-		
+		List<Metadatum> otherMetadata = this.metadataGridFS.find(elementId, lazy, loadInactive);
+
 		//metadata.addAll(jsonMetadata);
 		metadata.addAll(otherMetadata);
-		
+
 		return metadata;
 	}
 
@@ -228,15 +236,18 @@ public class MongoMetadataStore implements MetadataStore {
 			while (metadataCursor.hasNext()) {
 				Metadatum metadatum = metadataCursor.next();
 
-				String xPathResult = new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).stream().collect(Collectors.joining());
-				if (xPathResult.length() > 0) {
-					metadatum.setValue(xPathResult);
-					metadata.add(metadatum);
+				if (metadatum.getValue() != null) {
+					String xPathResult = new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).stream().collect(Collectors.joining());
+
+					if (xPathResult.length() > 0) {
+						metadatum.setValue(xPathResult);
+						metadata.add(metadatum);
 
 					/*if (!metadataPerElementId.containsKey(metadatum.getElementId())) {
 						metadataPerElementId.put(metadatum.getElementId(), new ArrayList<>());
 					}
 					metadataPerElementId.get(metadatum.getElementId()).add(metadatum);*/
+					}
 				}
 			}
 		} catch (XPathEvaluationException | XMLConversionException | XPathFactoryConfigurationException e) {
@@ -312,12 +323,12 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void deactivate(String metadatumId) throws MetadataStoreException, MetadataIndexException {
+	public void softDelete(String metadatumId) throws MetadataStoreException, MetadataIndexException {
 		this.metadataGridFS.updateStatus(metadatumId, Status.INACTIVE);
 	}
 
 	@Override
-	public void deactivateAll(String elementId) throws MetadataStoreException, MetadataIndexException {
+	public void softDeleteAll(String elementId) throws MetadataStoreException, MetadataIndexException {
 		List<Metadatum> metadata = this.metadataGridFS.find(elementId, true);
 		for (Metadatum metadatum: metadata) {
 			this.metadataGridFS.updateStatus(metadatum.getId(), Status.INACTIVE);

@@ -283,8 +283,12 @@ public class FemmeClient implements FemmeClientAPI {
 		
 		String queryJson = null, optionsJson = null;
 		try {
-			queryJson = mapper.writeValueAsString(query);
-			optionsJson = mapper.writeValueAsString(options);
+			if (query != null) {
+				queryJson = mapper.writeValueAsString(query);
+			}
+			if (options != null) {
+				optionsJson = mapper.writeValueAsString(options);
+			}
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage(), e);
 			throw new FemmeClientException(e.getMessage(), e);
@@ -295,11 +299,21 @@ public class FemmeClient implements FemmeClientAPI {
 			webTarget = webTarget.path("xpath");
 		}*/
 
-		Response response = webTarget.path("dataElements").path(inMemoryXPath ? "xpath" : "")
-				.queryParam("query", UriComponent.encode(queryJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
-				.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
-				.queryParam("xpath", xPath)
-				.request().get(Response.class);
+		WebTarget target = webTarget.path("dataElements").path(inMemoryXPath ? "xpath" : "");
+		if (queryJson != null) {
+			target = target.queryParam("query", UriComponent.encode(queryJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
+		}
+		if (optionsJson != null) {
+			target = target.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
+		}
+		if (xPath != null) {
+			target = target.queryParam("xpath", xPath);
+		}
+
+		logger.debug("FeMME request [" + target.getUri() + "]");
+		logger.debug("FeMME request [" + target.toString() + "]");
+
+		Response response = target.request().get(Response.class);
 
 		FemmeResponse<DataElementList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {

@@ -9,26 +9,26 @@
 		<mongodb.version>3.4.2</mongodb.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>archiva.snapshots</id>
-			<name>Internal Snapshot Repository</name>
-			<url>http://maven.local.cite.gr:8080/repository/internal/</url>
-		</repository>
-	</repositories>
+	<!--<repositories>-->
+		<!--<repository>-->
+			<!--<id>archiva.snapshots</id>-->
+			<!--<name>Internal Snapshot Repository</name>-->
+			<!--<url>http://maven.local.cite.gr:8080/repository/internal/</url>-->
+		<!--</repository>-->
+	<!--</repositories>-->
 
-	<distributionManagement>
-		<repository>
-			<id>archiva.internal</id>
-			<name>Internal Release Repository</name>
-			<url>http://maven.local.cite.gr:8080/repository/internal/</url>
-		</repository>
-		<snapshotRepository>
-			<id>archiva.snapshots</id>
-			<name>Internal Snapshot Repository</name>
-			<url>http://maven.local.cite.gr:8080/repository/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
+	<!--<distributionManagement>-->
+		<!--<repository>-->
+			<!--<id>archiva.internal</id>-->
+			<!--<name>Internal Release Repository</name>-->
+			<!--<url>http://maven.local.cite.gr:8080/repository/internal/</url>-->
+		<!--</repository>-->
+		<!--<snapshotRepository>-->
+			<!--<id>archiva.snapshots</id>-->
+			<!--<name>Internal Snapshot Repository</name>-->
+			<!--<url>http://maven.local.cite.gr:8080/repository/snapshots/</url>-->
+		<!--</snapshotRepository>-->
+	<!--</distributionManagement>-->
 
 	<dependencies>
 		<dependency>

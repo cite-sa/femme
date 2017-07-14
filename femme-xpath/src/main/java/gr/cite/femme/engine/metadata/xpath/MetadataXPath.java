@@ -102,7 +102,7 @@ public class MetadataXPath {
         }
     }
 
-    public void unIndex(String metadatumId) throws UnsupportedOperationException, MetadataIndexException {
+    public void deIndex(String metadatumId) throws UnsupportedOperationException, MetadataIndexException {
         this.metadataIndexDatastore.delete(metadatumId);
     }
 

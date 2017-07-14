@@ -381,8 +381,8 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public Element update(String id, Map<String, Object> fieldsAndValues, Class<? extends Element> elementSubType) throws DatastoreException {
-		Element updated = null;
+	public <T extends Element> T update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException {
+		T updated = null;
 		if (id != null) {
 			List<Bson> updates = fieldsAndValues.entrySet().stream().map(fieldAndValue -> {
 				Bson update;
@@ -407,14 +407,14 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public Element deactivate(String id, Class<? extends Element> elementSubType) throws DatastoreException {
+	public <T extends Element> T softDelete(String id, Class<T> elementSubType) throws DatastoreException {
 		Map<String, Object> statusFieldAndValue = new HashMap<>();
 		statusFieldAndValue.put(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE);
 		return update(id, statusFieldAndValue, elementSubType);
 	}
 
 	@Override
-	public Element findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<? extends Element> elementSubType) {
+	public <T extends Element> T  findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType) {
 		Bson addUpdate = Updates.addEachToSet(FieldNames.METADATA, addMetadataIds.stream().map(metadatumId -> new Document(FieldNames.ID, new ObjectId(metadatumId))).collect(Collectors.toList()));
 		List<Bson> removeUpdates = removeMetadataIds.stream().map(metadatumId -> Updates.pullByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.ID, new ObjectId(metadatumId)))).collect(Collectors.toList());
 

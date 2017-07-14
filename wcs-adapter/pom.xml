@@ -12,11 +12,11 @@
 	</properties>
 
 	<repositories>
-		<repository>
-			<id>archiva.internal</id>
-			<name>Internal Snapshot Repository</name>
-			<url>http://maven.local.cite.gr:8080/repository/internal/</url>
-		</repository>
+		<!--<repository>-->
+			<!--<id>archiva.internal</id>-->
+			<!--<name>Internal Snapshot Repository</name>-->
+			<!--<url>http://maven.local.cite.gr:8080/repository/internal/</url>-->
+		<!--</repository>-->
 		<repository>
           <id>maven2-repository.dev.java.net</id>
           <name>Java.net repository</name>

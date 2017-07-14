@@ -429,4 +429,5 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		}
 		return subQuery;*/
 	}
+
 }
