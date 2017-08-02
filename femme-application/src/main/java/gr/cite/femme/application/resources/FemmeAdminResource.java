@@ -1,12 +1,9 @@
 package gr.cite.femme.application.resources;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URI;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.naming.OperationNotSupportedException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,6 +25,7 @@ import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.engine.Femme;
 import gr.cite.femme.core.exceptions.FemmeException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -70,8 +68,10 @@ public class FemmeAdminResource {
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 		
 		try {
-			if (collection.getName() == null) {
+			if (StringUtils.isEmpty(collection.getName())) {
 				collection.setName("collection_" + UUID.randomUUID().toString());
+			} else {
+				collection.setName(collection.getName().trim().toLowerCase().replaceAll(" ", "_"));
 			}
 
 			String collectionId = this.femme.insert(collection);
@@ -103,6 +103,11 @@ public class FemmeAdminResource {
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
 		
 		try {
+
+			if (StringUtils.isEmpty(dataElement.getName())) {
+				dataElement.setName("dataElement_" + UUID.randomUUID().toString());
+			}
+
 			//this.datastore.insert(dataElement);
 			this.femme.insert(dataElement);
 			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();

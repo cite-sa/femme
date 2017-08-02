@@ -1,4 +1,4 @@
-.mat-tab-header {
+/* .mat-tab-header {
 	margin-bottom: 20px;
 }
 
@@ -8,4 +8,8 @@ md-input-container {
 
 md-input-container textarea {
 	resize: vertical;
+} */
+
+.nav-link {
+	outline: none;
 }

@@ -3,9 +3,8 @@
 public class Server {
 	
 	private String id;
-	
+	private String name;
 	private String endpoint;
-	
 	private String metadata;
 
 	public String getId() {
@@ -14,6 +13,14 @@ public class Server {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getEndpoint() {

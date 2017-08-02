@@ -1,5 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { ElementsService } from '../../elements-service.service';
 import { DataElement } from '../../model/data-element';
 import { FemmeQueryService } from '../../femme-services/femme-query.service';
 

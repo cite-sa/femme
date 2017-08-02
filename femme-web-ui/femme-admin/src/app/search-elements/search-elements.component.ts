@@ -1,7 +1,6 @@
 import { FulltextResult } from './../model/fulltext-result';
 import { FulltextField } from './../model/fulltext-field';
 import { Component, OnInit } from '@angular/core';
-import { FemmeSearchService } from '../femme-services/femme-search.service';
 
 import { FulltextQuery } from './../model/fulltext-query';
 import { Element } from '../model/element'

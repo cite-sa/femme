@@ -71,8 +71,8 @@ public interface FemmeClientAPI {
 	
 	public List<DataElement> getDataElementsInCollectionByEndpoint(String endpoint, Integer limit, Integer offset) throws FemmeException, FemmeClientException;
 	
-	public List<DataElement> getDataElementsInCollectionByName(String endpoint) throws FemmeException, FemmeClientException;
+	public List<DataElement> getDataElementsInCollectionByName(String name) throws FemmeException, FemmeClientException;
 	
-	public List<DataElement> getDataElementsInCollectionByName(String endpoint, Integer limit, Integer offset) throws FemmeException, FemmeClientException;
+	public List<DataElement> getDataElementsInCollectionByName(String name, Integer limit, Integer offset) throws FemmeException, FemmeClientException;
 	
 }

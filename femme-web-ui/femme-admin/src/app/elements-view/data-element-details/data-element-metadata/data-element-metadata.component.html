@@ -10,14 +10,13 @@
 		<form class="metadata-form" [formGroup]="metadataForm" (ngSubmit)="onSubmit()" novalidate>
 
 			<ngb-accordion [closeOthers]="true" activeIds="" formArrayName="metadata">
-				<ngb-panel id="{{i}}" *ngFor="let metadatum of metadataForm.controls.metadata.controls; let i = index"  [formGroupName]="i">
+				<ngb-panel id="{{i}}" [ngClass]="'metadatum-panel'" *ngFor="let metadatum of metadataForm.controls.metadata.controls; let i = index"  [formGroupName]="i">
 					<ng-template ngbPanelTitle>
 						<div class="row">
 							<div class="col-11">
 								<span>{{metadatum._value.name || 'Untitled'}}</span>
 							</div>
 							<div class="col-1">
-								<!-- <span class="fa fa-times" (click)="removeMetadatumForm($event, i)"></span> -->
 								<span class="fa" [ngClass]="{'fa-times':dataElementStatus,'fa-check':!dataElementStatus }" (click)="changeDataElementStatus(metadatum, $event)"></span>
 							</div>
 						</div>

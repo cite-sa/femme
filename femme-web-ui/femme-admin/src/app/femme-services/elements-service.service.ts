@@ -1,8 +1,7 @@
-import { FulltextResult } from './model/fulltext-result';
-import { FulltextQuery } from './model/fulltext-query';
-import { FemmeSearchService } from './femme-services/femme-search.service';
-import { FemmeQueryService } from './femme-services/femme-query.service';
-import { DataElement } from './model/data-element';
+import { FulltextResult } from '../model/fulltext-result';
+import { FulltextQuery } from '../model/fulltext-query';
+import { FemmeQueryService } from './femme-query.service';
+import { DataElement } from '../model/data-element';
 import { Injectable, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';

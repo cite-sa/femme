@@ -1,4 +1,7 @@
 <form class="element-form" (ngSubmit)="onSubmit()" #dataElementForm="ngForm">
+		<!-- <div>
+			<input type="hidden" id="id" name="name" [(ngModel)]="dataElement.id">
+		</div> -->
 		<div class="form-group">
 			<label for="name">Name</label>
 			<input type="text" class="form-control" id="name" name="name" placeholder="Name" [(ngModel)]="dataElement.name">
@@ -6,6 +9,12 @@
 		<div class="form-group">
 			<label for="Endpoint">Endpoint</label>
 			<input type="text" class="form-control" id="endpoint" name="endpoint" placeholder="Endpoint" [(ngModel)]="dataElement.endpoint">
+		</div>
+		<div class="form-check">
+			<label class="form-check-label">
+			<input class="form-check-input" type="checkbox" name="status" [(ngModel)]="status" (change)="status = !status">
+				Active
+			</label>
 		</div>
 		<button type="submit" class="btn btn-primary">Submit</button>
 	</form>

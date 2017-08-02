@@ -1,13 +1,12 @@
-import { FemmeSearchService } from './../femme-services/femme-search.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
 
-import { DataElement } from './../model/data-element';
-import { Metadatum } from './../model/metadatum';
-import { FemmeQueryService } from './../femme-services/femme-query.service';
+import { DataElement } from '../../model/data-element';
+import { Metadatum } from '../../model/metadatum';
+import { FemmeQueryService } from '../../femme-services/femme-query.service';
 
 @Component({
   selector: 'data-element-details',
@@ -43,7 +42,7 @@ export class DataElementDetailsComponent implements OnInit, OnDestroy {
 		this.femmeService.getDataElement(this.id)
 			.subscribe(
 				dataElement => {
-					console.log(dataElement);
+					// console.log(dataElement);
 					this.dataElement = dataElement
 				},
 				error => this.errorMessage = <any>error);

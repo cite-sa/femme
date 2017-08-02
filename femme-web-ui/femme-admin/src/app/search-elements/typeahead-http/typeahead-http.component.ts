@@ -1,3 +1,4 @@
+import { FemmeQueryService } from './../../femme-services/femme-query.service';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/catch';
@@ -7,7 +8,6 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/switchMap';
 
-import { FemmeSearchService } from '../../femme-services/femme-search.service';
 import { Component, OnInit } from '@angular/core';
 import { FulltextResult } from '../../model/fulltext-result';
 import { FulltextField } from '../../model/fulltext-field';
@@ -27,7 +27,7 @@ export class TypeaheadHttpComponent {
 	searchFailed: boolean;
 	searchResults: Array<FulltextResult>;
 
-	constructor(private femmeSearchService: FemmeSearchService) { }
+	constructor(private femmeService: FemmeQueryService) { }
 
 	// autocomplete(text$: Observable<string>) {
 
@@ -35,7 +35,7 @@ export class TypeaheadHttpComponent {
 		console.log($event);
 		let fulltextQuery = new FulltextQuery;
 		fulltextQuery.metadataField = new FulltextField("name", this.query);
-		this.femmeSearchService.autocomplete(fulltextQuery)
+		this.femmeService.autocomplete(fulltextQuery)
 			.subscribe(
 				searchResults => this.searchResults = searchResults,
 				error => this.errorMessage = <any>error);
@@ -59,7 +59,7 @@ export class TypeaheadHttpComponent {
 			let fulltextQuery: FulltextQuery;
 			fulltextQuery = new FulltextQuery();
 			fulltextQuery.metadataField = new FulltextField("name", term);
-			return this.femmeSearchService.autocomplete(fulltextQuery)
+			return this.femmeService.autocomplete(fulltextQuery)
 				// .subscribe(
 				// 	fulltextResults => this.fulltextResults = fulltextResults,
 				// 	error => this.errorMessage = <any>error);

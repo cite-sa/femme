@@ -12,3 +12,24 @@
 #femme-logo {
     height: 2rem;
 }
+
+.nav-item.nav-link {
+	margin: 0px 5px;
+}
+
+.nav-item.nav-link,
+.nav-item.nav-link.nav-item:hover,
+.nav-item.nav-link.nav-item:focus,
+.nav-item.nav-link.nav-item.active {
+	color: #dec8c8;
+}
+
+.nav-item.nav-link.nav-item:hover,
+.nav-item.nav-link.nav-item:focus,
+.nav-item.nav-link.nav-item.active {
+	background-color: #953b00;
+}
+
+.nav-item.nav-link.nav-item:focus {
+	outline: none;
+}

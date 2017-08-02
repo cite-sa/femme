@@ -1,3 +1,11 @@
+/* ngb-a:focus {
+	outline: none;
+} */
+
+.metadatum-panel {
+	margin-top: 1.5rem;
+}
+
 .inactive {
 	opacity: 0.5;
 }

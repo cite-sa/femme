@@ -34,6 +34,6 @@ public class CollectionList {
 	public void setSize(int size) {
 		this.size = size;
 	}
-	
-	
+
+
 }

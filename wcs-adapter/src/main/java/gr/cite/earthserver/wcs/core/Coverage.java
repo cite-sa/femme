@@ -5,11 +5,8 @@ import java.util.List;
 public class Coverage {
 	
 	private String id;
-	
 	private String coverageId;
-
 	private String metadata;
-	
 	private List<Server> servers;
 
 	

@@ -1,8 +1,8 @@
-import { SystemicMetadata } from './../../model/systemic-metadata';
-import { MetadataRetrievalService } from './../../femme-services/metadata-retrieval.service';
+import { SystemicMetadata } from '../../../model/systemic-metadata';
+import { MetadataRetrievalService } from '../../../femme-services/metadata-retrieval.service';
 import { FormGroup, FormArray, FormBuilder } from '@angular/forms';
-import { Metadatum } from './../../model/metadatum';
-import { FemmeQueryService } from './../../femme-services/femme-query.service';
+import { Metadatum } from '../../../model/metadatum';
+import { FemmeQueryService } from '../../../femme-services/femme-query.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs/Subscription';
 import { Component, OnInit, OnChanges, Input } from '@angular/core';

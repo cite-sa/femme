@@ -119,6 +119,7 @@ public final class WCSFemmeMapper {
 		if (collection != null) {
 			Server server = new Server();
 			server.setId(collection.getId());
+			server.setName(collection.getName());
 			server.setEndpoint(collection.getEndpoint());
 	
 			String describeCoverage = "";

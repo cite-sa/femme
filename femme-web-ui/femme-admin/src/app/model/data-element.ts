@@ -1,3 +1,4 @@
+import { SystemicMetadata } from './systemic-metadata';
 import { Element } from './element';
 import { Collection } from './collection';
 import { Metadatum } from './metadatum';
@@ -5,7 +6,8 @@ import { Metadatum } from './metadatum';
 
 export class DataElement extends Element {
 
-	collection: Array<Collection>;
+	collections: Array<Collection>;
+	dataElements: Array<Collection>;
 
 	constructor() {
 		super();
