@@ -63,3 +63,4 @@ e2e/*.map
 # System Files
 .DS_Store
 Thumbs.db
+femme-web-ui/femme-admin/.vs/

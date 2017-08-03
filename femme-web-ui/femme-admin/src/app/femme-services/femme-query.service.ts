@@ -1,4 +1,4 @@
-import { Metadatum } from './../model/metadatum';
+﻿import { Metadatum } from './../model/metadatum';
 import { FulltextQuery } from './../model/fulltext-query';
 import { FulltextResult } from './../model/fulltext-result';
 import { FulltextField } from './../model/fulltext-field';
@@ -9,13 +9,17 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 
+import { environment } from '../.././environments/environment'; 
+
 import { DataElement } from './../model/data-element';
 
 @Injectable()
 export class FemmeQueryService {
-	private femmeUrl = 'http://localhost:8080/femme-application-devel/';
-	private femmeAdminUrl = this.femmeUrl + 'admin/';
-	private femmeFulltextUrl = 'http://localhost:8081/fulltext-application-devel/elements';
+	//private femmeUrl = 'http://localhost:8080/femme-application-devel/';
+	//private femmeUrl = 'http://earthserver-devel.vhosts.cite.gr/femme-application/';
+	//private femmeFulltextUrl = 'http://localhost:8081/fulltext-application-devel/elements';
+
+	private femmeAdminUrl = environment.femmeUrl + 'admin/';
 	private headers = new Headers({ 'Content-Type': 'application/json' });
 
 	dataElements: Array<DataElement>;
@@ -32,7 +36,7 @@ export class FemmeQueryService {
 			params: params
 		});
 
-		return this.http.get(this.femmeUrl + "dataElements/" + id, requestOptions)
+		return this.http.get(environment.femmeUrl + "dataElements/" + id, requestOptions)
 			.map(response => response.json().entity.body);
 	}
 
@@ -48,7 +52,7 @@ export class FemmeQueryService {
 			params: params
 		});
 
-		return this.http.get(this.femmeUrl + "dataElements/" + id, requestOptions)
+		return this.http.get(environment.femmeUrl + "dataElements/" + id, requestOptions)
 			.map(response => response.json().entity.body);
 	}
 
@@ -57,7 +61,7 @@ export class FemmeQueryService {
 			headers: this.headers
 		});
 
-		return this.http.post(this.femmeAdminUrl + 'dataElements/' + dataElement.id, JSON.stringify(dataElement), requestOptions)
+			return this.http.post(this.femmeAdminUrl + 'dataElements/' + dataElement.id, JSON.stringify(dataElement), requestOptions)
 				.map(response => response.json().entity);
 	}
 
@@ -73,7 +77,7 @@ export class FemmeQueryService {
 			params: params
 		});
 
-		return this.http.get(this.femmeUrl + 'dataElements/' + dataElementId + '/metadata', requestOptions)
+		return this.http.get(environment.femmeUrl + 'dataElements/' + dataElementId + '/metadata', requestOptions)
 			.map(response => response.json().entity.body.metadata);
 	}
 
@@ -104,7 +108,7 @@ export class FemmeQueryService {
 			params: params
 		});
 
-		return this.http.get(this.femmeUrl + 'dataElements', requestOptions)
+		return this.http.get(environment.femmeUrl + 'dataElements', requestOptions)
 			.map(response => response.json().entity.body.dataElements);
 	}
 
@@ -125,7 +129,7 @@ export class FemmeQueryService {
 		});
 		console.log(requestOptions);
 
-		return this.http.get(this.femmeUrl + 'dataElements', requestOptions)
+		return this.http.get(environment.femmeUrl + 'dataElements', requestOptions)
 			.map(response => response.json().entity.body.dataElements);
 	}
 
@@ -140,7 +144,7 @@ export class FemmeQueryService {
 
 		console.log(JSON.stringify(query));
 
-		return this.http.post(this.femmeFulltextUrl, JSON.stringify(query), options)
+		return this.http.post(environment.femmeFulltextUrl, JSON.stringify(query), options)
 			.map(response =>  response.json());
 	}
 }
