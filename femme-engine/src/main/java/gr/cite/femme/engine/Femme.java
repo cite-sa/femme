@@ -76,53 +76,21 @@ public class Femme {
 	}
 
 	public String insert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
-		if (element.getId() == null) {
-			element.setId(this.datastore.generateId());
-		}
-		element.getMetadata().forEach(metadatum -> metadatum.setElementId(element.getId()));
-
 		String id = exists(element);
 		if (id != null) {
 			element.setId(id);
 			update(element);
 		} else {
-			// Insert Element
-			if (element.getSystemicMetadata() == null) {
-				element.setSystemicMetadata(new SystemicMetadata());
-			}
-			element.getSystemicMetadata().setStatus(Status.ACTIVE);
-
-			this.datastore.insert(element);
+			prepareAndInsertElement(element);
 
 			if (element instanceof Collection) {
-				// Insert Collection's DataElements
-				Collection collection = (Collection) element;
-				for (DataElement dataElement: collection.getDataElements()) {
-					dataElement.addCollection(collection);
-					if (dataElement.getId() == null) {
-						dataElement.setId(this.datastore.generateId());
-					}
-					insert(dataElement);
-				}
+				insertCollectionDataElements((Collection) element);
 				// TODO check how subDataElements are stored in MongoDB
 			} else if (element instanceof DataElement) {
-				// Insert DataElement's DataElements
-				DataElement dataElement = (DataElement) element;
-				for (DataElement subDataElement: dataElement.getDataElements()) {
-					insert(subDataElement);
-				}
+				insertDataElementDataElements((DataElement) element);
 			}
 
-			// Insert Metadata
-			for (Metadatum metadatum : element.getMetadata()) {
-				try {
-					this.metadataStore.insert(metadatum);
-				} catch (MetadataStoreException e) {
-					logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
-				} catch (MetadataIndexException e) {
-					logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
-				}
-			}
+			insertElementMetadata(element);
 
 			if (this.fulltextClient != null) {
 				insertInFulltextIndex(element);
@@ -130,6 +98,49 @@ public class Femme {
 		}
 
 		return element.getId();
+	}
+
+	private void prepareAndInsertElement(Element element) throws DatastoreException {
+		if (element.getId() == null) {
+			element.setId(this.datastore.generateId());
+		}
+
+		element.getMetadata().forEach(metadatum -> metadatum.setElementId(element.getId()));
+
+		if (element.getSystemicMetadata() == null) {
+			element.setSystemicMetadata(new SystemicMetadata());
+		}
+		element.getSystemicMetadata().setStatus(Status.ACTIVE);
+
+		this.datastore.insert(element);
+	}
+
+	private void insertCollectionDataElements(Collection collection) throws DatastoreException, MetadataStoreException, FemmeException {
+		for (DataElement dataElement: collection.getDataElements()) {
+			dataElement.addCollection(collection);
+			if (dataElement.getId() == null) {
+				dataElement.setId(this.datastore.generateId());
+			}
+			insert(dataElement);
+		}
+	}
+
+	private void insertDataElementDataElements(DataElement dataElement) throws DatastoreException, MetadataStoreException, FemmeException {
+		for (DataElement subDataElement: dataElement.getDataElements()) {
+			insert(subDataElement);
+		}
+	}
+
+	private void insertElementMetadata(Element element) {
+		for (Metadatum metadatum : element.getMetadata()) {
+			try {
+				this.metadataStore.insert(metadatum);
+			} catch (MetadataStoreException e) {
+				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
+			} catch (MetadataIndexException e) {
+				logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
+			}
+		}
 	}
 
 	public String insert(Metadatum metadatum) throws FemmeException {
@@ -153,7 +164,6 @@ public class Femme {
 	}
 
 	public <T extends Element> T update(Element element) throws DatastoreException, MetadataStoreException {
-		// TODO implement update
 		T updatedElement = null;
 		if (element.getId() != null) {
 			/*try {
@@ -164,44 +174,49 @@ public class Femme {
 
 			updatedElement = this.datastore.update(element);
 
-			List<Metadatum> existingMetadata;
-			existingMetadata = this.metadataStore.find(element.getId());
-
-			for (Metadatum metadatum : element.getMetadata()) {
-				metadatum.setElementId(element.getId());
-				try {
-					Metadatum updatedMetadatum = this.metadataStore.update(metadatum);
-
-					if (updatedMetadatum != null) {
-						existingMetadata.removeIf(existing -> existing.getId().equals(updatedMetadatum.getId()));
-					}
-				} catch (MetadataStoreException e) {
-					logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
-				} catch (MetadataIndexException e) {
-					logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
-
-				}
-			}
-
-			for (Metadatum obsoleteMetadatum : existingMetadata) {
-				try {
-					this.metadataStore.softDelete(obsoleteMetadatum.getId());
-				} catch (MetadataStoreException e) {
-					logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
-				} catch (MetadataIndexException e) {
-					logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
-				}
-			}
+			List<Metadatum> existingMetadata = this.metadataStore.find(element.getId());
+			updateElementMetadata(element, existingMetadata);
+			deleteObsoleteElementMetadata(element, existingMetadata);
 		}
 
 		return updatedElement;
 	}
 
-	public Metadatum update(Metadatum metadatum	) throws FemmeException {
+	private void updateElementMetadata(Element element, List<Metadatum> existingMetadata) {
+		for (Metadatum metadatum : element.getMetadata()) {
+			metadatum.setElementId(element.getId());
+			try {
+				Metadatum updatedMetadatum = this.metadataStore.update(metadatum);
+
+				if (updatedMetadatum != null) {
+					existingMetadata.removeIf(existing -> existing.getId().equals(updatedMetadatum.getId()));
+				}
+			} catch (MetadataStoreException e) {
+				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
+			} catch (MetadataIndexException e) {
+				logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
+
+			}
+		}
+	}
+
+	public Metadatum update(Metadatum metadatum) throws FemmeException {
 		try {
 			return this.metadataStore.update(metadatum);
 		} catch (MetadataStoreException | MetadataIndexException e) {
 			throw new FemmeException("Metadatum " + metadatum.getId() + " update failed", e);
+		}
+	}
+
+	private void deleteObsoleteElementMetadata(Element element, List<Metadatum> existingMetadata) {
+		for (Metadatum obsoleteMetadatum : existingMetadata) {
+			try {
+				this.metadataStore.softDelete(obsoleteMetadatum.getId());
+			} catch (MetadataStoreException e) {
+				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
+			} catch (MetadataIndexException e) {
+				logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
+			}
 		}
 	}
 

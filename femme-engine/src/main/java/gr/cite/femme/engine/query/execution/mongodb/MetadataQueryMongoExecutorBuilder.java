@@ -1,4 +1,6 @@
-package gr.cite.femme.engine.query.execution.mongodb;
+package gr.cite.femme.engine.query.execution.mongodb;/*if (existing != null) {
+				metadatum.setId(existing.getId());
+			}*/
 
 import gr.cite.femme.core.datastores.MetadataStore;
 import gr.cite.femme.core.exceptions.DatastoreException;
@@ -90,7 +92,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 			}
 
 			this.queryExecutor.find(this.query);
-			this.queryExecutor.options(this.options);
+			this.queryExecutor.options(this.options != null ? this.options : QueryOptionsMessenger.builder().build());
 
 			return this.queryExecutor;
 		}

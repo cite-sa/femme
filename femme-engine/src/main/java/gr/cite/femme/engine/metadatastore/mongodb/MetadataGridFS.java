@@ -77,7 +77,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			throw new MetadataStoreException(e);
 		}
 
-		this.upload(metadatum);
+		upload(metadatum);
 	}
 
 	private void upload(Metadatum metadatum) throws MetadataStoreException {
@@ -183,9 +183,9 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			updates.add(Updates.currentDate(FieldNames.METADATA + "." + FieldNames.MODIFIED));
 
 			updated = this.gridFsFilesCollection.findOneAndUpdate(
-					Filters.eq(FieldNames.ID, new ObjectId(id)),
-					Updates.combine(updates),
-					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+					Filters.eq(FieldNames.ID, new ObjectId(id)), Updates.combine(updates),
+					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+			);
 		}
 
 		return updated != null ? updated.getMetadata() : null;
@@ -196,72 +196,34 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	}
 
 	private boolean existsById(Metadatum metadatum) throws MetadataStoreException {
-		MetadataGridFSFile existing = null;
-		if (metadatum.getId() != null) {
-			existing = this.gridFsFilesCollection.find(
-					Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId()))).projection(Projections.include(FieldNames.ID)).limit(1).first();
-			if (existing != null) {
-				metadatum.setId(existing.getId());
-			}
-		}
-
-		return existing != null;
+		return metadatum.getId() != null && existsByFilter(Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId())));
 	}
 
 	private boolean existsByChecksum(Metadatum metadatum) {
-		MetadataGridFSFile existing = null;
-
-		if (metadatum.getChecksum() != null) {
-			existing = this.gridFsFilesCollection.find(
-					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum()))
-					.projection(Projections.include(FieldNames.ID)).limit(1).first();
-			if (existing != null) {
-				metadatum.setId(existing.getId());
-			}
-		}
-
-		return existing != null;
+		return metadatum.getChecksum() != null &&
+				existsByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum()));
 	}
 
 	private boolean existsByIdAndChecksum(Metadatum metadatum) {
-		MetadataGridFSFile existing = null;
-
-		if (metadatum.getId() != null && metadatum.getChecksum() != null) {
-			existing = this.gridFsFilesCollection.find(Filters.and(
-					Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId())),
-					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
-			)).projection(Projections.include(FieldNames.ID)).limit(1).first();
-
-			/*if (existing != null) {
-				metadatum.setId(existing.getId());
-			}*/
-		}
-
-		return existing != null;
+		return metadatum.getId() != null && metadatum.getChecksum() != null
+				&& existsByFilter(Filters.and(
+						Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId())),
+						Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
+		));
 	}
 
 	private boolean existsByElementIdAndChecksum(Metadatum metadatum) {
-		MetadataGridFSFile existing = null;
-
-		if (metadatum.getElementId() != null && metadatum.getChecksum() != null) {
-			existing = this.gridFsFilesCollection.find(Filters.and(
-					Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId())),
-					Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
-			)).projection(Projections.include(FieldNames.ID)).limit(1).first();
-
-			if (existing != null) {
-				metadatum.setId(existing.getId());
-			}
-		}
-
-		return existing != null;
+		return metadatum.getElementId() != null && metadatum.getChecksum() != null
+				&& existsByFilter(Filters.and(
+						Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId())),
+						Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
+		));
 	}
-	
-	/*@Override
-	public Metadatum get(Metadatum metadatum) throws MetadataStoreException {
-		return download(metadatum.getId());
+
+	private boolean existsByFilter(Bson filter) {
+		return this.gridFsFilesCollection.find(filter).projection(Projections.include(FieldNames.ID)).limit(1).first() != null;
 	}
-*/
+
 	@Override
 	public Metadatum get(String id) throws MetadataStoreException {
 		return get(id, false);

@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CollectionCodec extends ElementCodec<Collection> {
-
 	public CollectionCodec(CodecRegistry codecRegistry) {
 		super(codecRegistry);
 	}

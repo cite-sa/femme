@@ -177,7 +177,7 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 		T element = super.first();
 
 		if (element != null) {
-			if (! isLazyMetadata()) {
+			if (!isLazyMetadata()) {
 				if (this.metadataXPathResults != null) {
 					List<Metadatum> xPathResult = this.metadataXPathResults.stream()
 							.filter(metadatum -> metadatum.getElementId().equals(element.getId()))

@@ -56,6 +56,7 @@ public class FemmeAdminResource {
 
 	@GET
 	@Path("ping")
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response ping() {
 		return Response.ok("pong").build();
 	}
@@ -108,7 +109,6 @@ public class FemmeAdminResource {
 				dataElement.setName("dataElement_" + UUID.randomUUID().toString());
 			}
 
-			//this.datastore.insert(dataElement);
 			this.femme.insert(dataElement);
 			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
 			entity.setHref(location.toString()).setBody(dataElement.getId());
@@ -134,7 +134,6 @@ public class FemmeAdminResource {
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
 		
 		try {
-			//this.datastore.addToCollection(dataElement, collectionId);
 			this.femme.addToCollection(dataElement, collectionId);
 
 			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();

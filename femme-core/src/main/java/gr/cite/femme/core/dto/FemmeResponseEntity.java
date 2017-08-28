@@ -17,7 +17,11 @@ public class FemmeResponseEntity<T> {
 	public FemmeResponseEntity() {
 		
 	}
-	
+
+	public FemmeResponseEntity(T body) {
+		this.body = body;
+	}
+
 	public FemmeResponseEntity(String href, T body) {
 		this.href = href;
 		this.body = body;
