@@ -414,10 +414,21 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public <T extends Element> T  findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType) {
+	public <T extends Element> T delete(String id, Class<T> elementSubtype) throws DatastoreException {
+		T deletedElement;
+		try {
+			deletedElement = this.mongoClient.getCollection(elementSubtype).findOneAndDelete(Filters.eq(FieldNames.ID, new ObjectId(id)));
+		} catch (IllegalArgumentException e) {
+			throw new DatastoreException(e);
+		}
+
+		return deletedElement;
+	}
+
+	@Override
+	public <T extends Element> T findElementAndUpdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType) {
 		Bson addUpdate = Updates.addEachToSet(FieldNames.METADATA, addMetadataIds.stream().map(metadatumId -> new Document(FieldNames.ID, new ObjectId(metadatumId))).collect(Collectors.toList()));
 		List<Bson> removeUpdates = removeMetadataIds.stream().map(metadatumId -> Updates.pullByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.ID, new ObjectId(metadatumId)))).collect(Collectors.toList());
-
 
 		List<Bson> updates = new ArrayList<>();
 		updates.add(addUpdate);
@@ -432,26 +443,6 @@ public class MongoDatastore implements Datastore {
 					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 				);
 	}
-
-	/*@Override
-	public <T extends Element> T delete(String id, Class<T> elementSubtype) throws DatastoreException {
-		T deletedElement;
-		try {
-			deletedElement = this.mongoClient.getCollection(elementSubtype).findOneAndDelete(Filters.eq("_id", new ObjectId(id)));
-
-		} catch (IllegalArgumentException e) {
-			throw new DatastoreException(e);
-		}
-
-		if (deletedElement != null) {
-			try {
-				this.metadataStore.deleteAll(deletedElement.getId());
-			} catch (MetadataStoreException e) {
-				throw new DatastoreException("Element " + id + " deletion failed", e);
-			}
-		}
-		return  deletedElement;
-	}*/
 
 	/*@Override
 	public <T extends Element> List<T> delete(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubtype) throws DatastoreException {
@@ -536,7 +527,7 @@ public class MongoDatastore implements Datastore {
 	}
 
 	@Override
-	public <T extends Element> T get(String id, Class<T> elementSubtype,  QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
+	public <T extends Element> T get(String id, Class<T> elementSubtype, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
 		try {
 			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).options(options).first();
 		} catch (IllegalArgumentException e) {
@@ -544,26 +535,11 @@ public class MongoDatastore implements Datastore {
 		}
 	}
 
-	/*@Override
-	public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
-		try {
-			return find(QueryMongo.getQueryExecutor().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype, metadataStore).options(options).first();
-		} catch (IllegalArgumentException e) {
-			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id: [" + id + "]", e);
-		}
-	}*/
-
 	@Override
 	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		QueryMongo queryMongo = (QueryMongo) query;
 		return QueryExecutorFactory.getQueryExecutor(this, elementSubtype).find(queryMongo);
 	}
-
-	/*@Override
-	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubtype, MetadataStore metadataStore) {
-		QueryMongo queryMongo = (QueryMongo) getQueryExecutor;
-		return new QueryOptionsBuilderMongo<T>().getQueryExecutor(this, metadataStore, elementSubtype).find(queryMongo);
-	}*/
 
 	@Override
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {

@@ -1,7 +1,5 @@
 package gr.cite.femme.engine.query.execution.mongodb;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -41,7 +39,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	private QueryOptionsMessenger options;
 	private FindIterable<T> results;
 	private boolean lazyMetadata = false;
-	private Instant totalQueryDuration;
+	//private long totalQueryStart;
 
 
 	QueryMongoExecutor(MongoDatastore datastore, Class<T> elementSubtype) {
@@ -92,7 +90,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public QueryExecutor<T> find(Query<? extends Criterion> query) {
-		totalQueryDuration = Instant.now();
+		//totalQueryStart = System.currentTimeMillis();
 		if (query != null) {
 			this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
 		}
@@ -102,7 +100,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public long count(Query<? extends Criterion> query) {
-		totalQueryDuration = Instant.now();
+		//totalQueryStart = System.currentTimeMillis();
 		this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
 		//logger.debug("Query: " + queryDocument.toJson());
 
@@ -184,7 +182,7 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 			}
 			this.results.into(elements);
 
-			logger.info("Total getQueryExecutor duration: " + Duration.between(totalQueryDuration, Instant.now()).toMillis() + "ms");
+			//logger.info("Total query time: " + (System.currentTimeMillis() - this.totalQueryStart) + " ms");
 		}
 
 		return elements;

@@ -64,60 +64,44 @@ public class FemmeAdminResource {
 	@POST
 	@Path(FemmeAdminResource.COLLECTIONS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response insert(@NotNull Collection collection) throws FemmeApplicationException {
-		URI location;
-		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		
-		try {
-			if (StringUtils.isEmpty(collection.getName())) {
-				collection.setName("collection_" + UUID.randomUUID().toString());
-			} else {
-				collection.setName(collection.getName().trim().toLowerCase().replaceAll(" ", "_"));
-			}
-
-			String collectionId = this.femme.insert(collection);
-
-			location = this.uriInfo.getBaseUriBuilder().path(FemmeResource.class).path(FemmeAdminResource.COLLECTIONS_PATH).path(collectionId).build();
-
-			String message = "Collection " + collectionId + " successfully inserted";
-			logger.info(message);
-			femmeResponse
-					.setStatus(Response.Status.CREATED.getStatusCode())
-					.setMessage(message)
-					.setEntity(new FemmeResponseEntity<String>().setHref(location.toString()).setBody(collectionId));
-
-		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
-			String errorMessage = "Collection insertion failed";
-			logger.error(errorMessage, e);
-			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
+	public Response insertCollection(@NotNull Collection collection) throws FemmeApplicationException {
+		if (StringUtils.isEmpty(collection.getName())) {
+			collection.setName("collection_" + UUID.randomUUID().toString());
+		} else {
+			collection.setName(collection.getName().trim().toLowerCase().replaceAll(" ", "_"));
 		}
-
-		return Response.status(Response.Status.CREATED).location(location).entity(femmeResponse).build();
+		return insert(collection);
 	}
 
 	@POST
 	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response insert(@NotNull DataElement dataElement) throws FemmeApplicationException {
+	public Response insertDataElement(@NotNull DataElement dataElement) throws FemmeApplicationException {
+		if (StringUtils.isEmpty(dataElement.getName())) {
+			dataElement.setName("dataElement_" + UUID.randomUUID().toString());
+		}
+		return insert(dataElement);
+	}
+
+	private <T extends Element> Response insert(T element) throws FemmeApplicationException {
 		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
-		
+
 		try {
+			this.femme.insert(element);
 
-			if (StringUtils.isEmpty(dataElement.getName())) {
-				dataElement.setName("dataElement_" + UUID.randomUUID().toString());
-			}
+			String elementSubtypePathFragment = element.getClass().getSimpleName().toLowerCase().charAt(0) + element.getClass().getSimpleName().substring(1) + "s";
+			location = this.uriInfo.getRequestUriBuilder()
+					.path(elementSubtypePathFragment)
+					.path(element.getId()).build();
+			entity.setHref(location.toString()).setBody(element.getId());
 
-			this.femme.insert(dataElement);
-			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
-			entity.setHref(location.toString()).setBody(dataElement.getId());
-
-			String message = "DataElement " + dataElement.getId() + " successfully inserted";
+			String message = element.getClass().getSimpleName() + " " + element.getId() + " successfully inserted";
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
-			String errorMessage = "DataElement insertion failed";
+			String errorMessage = element.getClass().getSimpleName() + " insertion failed";
 			logger.error(errorMessage, e);
 			throw new FemmeApplicationException(errorMessage, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
@@ -230,24 +214,24 @@ public class FemmeAdminResource {
 	@POST
 	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateCollectionMetadata(
+	public Response updateCollectionMetadatum(
 			@NotNull @PathParam("collectionId") String collectionId,
 			@NotNull @PathParam("metadatumId") String metadatumId,
 			@NotNull Metadatum metadatum) throws FemmeApplicationException {
-		return updateElementMetadata(collectionId, metadatumId, metadatum, Collection.class);
+		return updateElementMetadatum(collectionId, metadatumId, metadatum, Collection.class);
 	}
 
 	@POST
 	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateDataElementMetadata(
+	public Response updateDataElementMetadatum(
 			@NotNull @PathParam("dataElementId") String dataElementId,
 			@NotNull @PathParam("metadatumId") String metadatumId,
 			@NotNull Metadatum metadatum) throws FemmeApplicationException {
-		return updateElementMetadata(dataElementId, metadatumId, metadatum, DataElement.class);
+		return updateElementMetadatum(dataElementId, metadatumId, metadatum, DataElement.class);
 	}
 
-	private <T extends Element> Response updateElementMetadata(String elementId, String metadatumId, Metadatum metadatum, Class<T> elementSubType) throws FemmeApplicationException {
+	private Response updateElementMetadatum(String elementId, String metadatumId, Metadatum metadatum, Class<? extends Element> elementSubType) throws FemmeApplicationException {
 		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
 
@@ -279,7 +263,7 @@ public class FemmeAdminResource {
 	public Response deleteCollectionMetadatum(
 			@NotNull @PathParam("collectionId") String collectionId,
 			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
-		return deleteElementMetadata(collectionId, metadatumId);
+		return deleteElementMetadatum(collectionId, metadatumId);
 	}
 
 	@DELETE
@@ -288,10 +272,10 @@ public class FemmeAdminResource {
 	public Response deleteDataElementMetadatum(
 			@NotNull @PathParam("dataElementId") String dataElementId,
 			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
-		return deleteElementMetadata(dataElementId, metadatumId);
+		return deleteElementMetadatum(dataElementId, metadatumId);
 	}
 
-	private Response deleteElementMetadata(String elementId, String metadatumId) throws FemmeApplicationException {
+	private Response deleteElementMetadatum(String elementId, String metadatumId) throws FemmeApplicationException {
 		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
 
@@ -330,39 +314,40 @@ public class FemmeAdminResource {
 		return Response.ok().entity(femmeResponse).build();
 	}
 
-	/*@DELETE
+	@DELETE
 	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}")
 	public Response deleteCollection(@PathParam("collectionId") String collectionId) {
-		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-
-		try {
-			this.datastore.delete(collectionId, Collection.class);
-
-			femmeResponse.setStatus(200).setMessage("Collection " + collectionId + " successfully deleted");
-			logger.info("Collection " + collectionId + " successfully deleted");
-		} catch (DatastoreException e) {
-			logger.error(e.getMessage(), e);
-			femmeResponse.setStatus(500).setMessage(e.getMessage());
-			return Response.serverError().entity(femmeResponse).execute();
-		}
-		return Response.ok().entity(femmeResponse).execute();
+		return deleteElement(collectionId, Collection.class);
 	}
 
 	@DELETE
 	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}")
 	public Response deleteDataElement(@PathParam("dataElementId") String dataElementId) {
+		return deleteElement(dataElementId, DataElement.class);
+	}
+
+	private Response deleteElement(String elementId, Class<? extends Element> elementSubtype) {
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 
 		try {
-			this.datastore.delete(dataElementId, DataElement.class);
+			if (!this.femme.exists(elementId, elementSubtype)) {
+				String message = elementSubtype.getSimpleName() + " " + elementId + " doesn't exist";
+				femmeResponse.setStatus(Response.Status.NOT_FOUND.getStatusCode()).setMessage(message);
+				logger.info(message);
+				return Response.status(Response.Status.NOT_FOUND).entity(femmeResponse).build();
+			}
 
-			femmeResponse.setStatus(200).setMessage("DataElement " + dataElementId + " successfully deleted");
-			logger.info("Collection " + dataElementId + " successfully deleted");
-		} catch (DatastoreException e) {
+			this.femme.delete(elementId, elementSubtype);
+
+			String message = elementSubtype.getSimpleName() + " " + elementId + " successfully deleted";
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message);
+			logger.info(message);
+			return Response.ok().entity(femmeResponse).build();
+		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
 			logger.error(e.getMessage(), e);
-			femmeResponse.setStatus(500).setMessage(e.getMessage());
-			return Response.serverError().entity(femmeResponse).execute();
+			femmeResponse.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).setMessage(e.getMessage());
+			return Response.serverError().entity(femmeResponse).build();
 		}
-		return Response.ok().entity(femmeResponse).execute();
-	}*/
+
+	}
 }

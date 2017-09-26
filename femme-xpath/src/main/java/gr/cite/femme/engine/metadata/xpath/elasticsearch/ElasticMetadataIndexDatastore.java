@@ -10,6 +10,7 @@ import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Node;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
@@ -109,16 +110,26 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public void delete(String metadatumId) throws MetadataIndexException {
-		Map<String, String> metadatumIdAndValue = new HashMap<>();
-		metadatumIdAndValue.put("metadatumId", metadatumId);
-		this.client.deleteByQuery(metadatumIdAndValue);
+		delete("metadatumId", metadatumId);
+	}
+
+	@Override
+	public void deleteByElementId(String elementId) throws MetadataIndexException {
+		delete("elementId", elementId);
 	}
 
 	@Override
 	public void delete(String field, String value) throws MetadataIndexException {
-		Map<String, String> metadatumIdAndValue = new HashMap<>();
-		metadatumIdAndValue.put(field, value);
-		this.client.deleteByQuery(metadatumIdAndValue);
+		Map<String, String> fieldsAndValues = new HashMap<>();
+		fieldsAndValues.put(field, value);
+
+		this.client.search(fieldsAndValues).forEach(hit -> {
+			try {
+				this.client.delete(hit.getId(), hit.getIndex());
+			} catch (MetadataIndexException e) {
+				logger.error(e.getMessage(), e);
+			}
+		});
 	}
 
 	@Override
@@ -147,14 +158,21 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		try {
 			//logger.info("ElasticSearch query: " + buildElasticSearchQuery(queryTree, lazy));
 			//String searchQuery = buildElasticSearchQuery(queryTree, lazy);
+			long start, end;
+			start = System.currentTimeMillis();
 			List<ElasticSearchQuery> searchQueries = buildElasticSearchQuery(elementIds, queryTree);
+			end = System.currentTimeMillis();
+			logger.info("Elasticsearch query build time: " + (end - start) + " ms");
 
 			for (ElasticSearchQuery searchQuery: searchQueries) {
 				for (Map.Entry<String, List<String>> searchQueryEntry: searchQuery.getIndicesPerQuery().entrySet()) {
+					start = System.currentTimeMillis();
 					scrollQuery.query(searchQueryEntry.getKey(), searchQuery.getIncludes(), searchQueryEntry.getValue(), lazy);
 					while (scrollQuery.hasNext()) {
 						results.addAll(scrollQuery.next());
 					}
+					end = System.currentTimeMillis();
+					logger.info("Elasticsearch scroll query total time: " + (end - start) + " ms");
 				}
 			}
 		} catch (IOException | XMLStreamException e) {

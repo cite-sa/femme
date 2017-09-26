@@ -7,7 +7,7 @@
 
 	<properties>
 		<slf4j.version>1.7.25</slf4j.version>
-		<jackson.version>2.8.8</jackson.version>
+		<jackson.version>2.9.1</jackson.version>
 		<geotools.version>17.1</geotools.version>
 	</properties>
 

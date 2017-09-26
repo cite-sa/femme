@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context"
@@ -55,7 +56,9 @@
 	<bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
    		<constructor-arg ref="femme" />
    </bean>
-	<bean id="femmeImportResource" class="gr.cite.femme.application.resources.FemmeImportResource" />
+	<bean id="femmeImportResource" class="gr.cite.femme.application.resources.FemmeImportResource">
+		<constructor-arg ref="femme" />
+	</bean>
 
 	<beans profile="no_index_mode">
 		<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">

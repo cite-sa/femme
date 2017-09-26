@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
+import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
+import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
+import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseHit;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
@@ -346,7 +349,49 @@ public class ElasticMetadataIndexDatastoreClient {
 		}
 	}
 
-	void deleteByQuery(Map<String, String> fieldsAndValues) throws MetadataIndexException {
+	List<ElasticResponseHit> search(Map<String, String> fieldsAndValues) throws MetadataIndexException {
+		String searchQuery = "{" +
+				"\"query\":{" +
+					"\"bool\":{" +
+						"\"must\":" +
+							fieldsAndValues.entrySet().stream()
+								.map(fieldAndValue -> "{\"term\":{\"" + fieldAndValue.getKey() + "\":\"" + fieldAndValue.getValue() + "\"}}")
+								.collect(Collectors.joining(",", "[", "]")) +
+					"}" +
+				"}" +
+			"}";
+
+		Response response;
+		try {
+			response = this.client.performRequest(
+					"POST",
+					"/" + this.indexAlias + "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_TYPE + "/_search",
+					Collections.emptyMap(),
+					new NStringEntity(searchQuery, ContentType.APPLICATION_JSON));
+		} catch (IOException e) {
+			throw new MetadataIndexException("Search query failed", e);
+		}
+
+		ElasticResponseContent responseContent;
+		try {
+			responseContent = mapper.readValue(response.getEntity().getContent(), ElasticResponseContent.class);
+		} catch (IOException e) {
+			throw new MetadataIndexException("Serialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
+		}
+		return responseContent.getHits().getHits();
+	}
+
+	void delete(String id, String indexName) throws MetadataIndexException {
+		try {
+			this.client.performRequest(
+					"DELETE",
+					"/" + indexName + "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_TYPE + "/" + id);
+		} catch (IOException e) {
+			throw new MetadataIndexException("Delete " + id + " failed", e);
+		}
+	}
+
+	void deleteByQuery(Map<String, String> fieldsAndValues, String indexName) throws MetadataIndexException {
 		String deleteQuery = "{" +
 				"\"query\":{" +
 					"\"bool\":{" +
@@ -361,7 +406,7 @@ public class ElasticMetadataIndexDatastoreClient {
 		try {
 			this.client.performRequest(
 					"POST",
-					"/" + this.indexAlias + "*/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_TYPE,
+					"/" + indexName + "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_TYPE,
 					Collections.emptyMap(),
 					new NStringEntity(deleteQuery, ContentType.APPLICATION_JSON));
 		} catch (IOException e) {

@@ -61,9 +61,9 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	@Override
-	public String beginImport(String endpoint) throws FemmeException {
+	public String beginImport(String endpointAlias, String endpoint) throws FemmeException {
 		Response response = webTarget.path("importer").path("imports")
-				.request().post(Entity.entity(new ImportEndpoint(endpoint), MediaType.APPLICATION_JSON));
+				.request().post(Entity.entity(new ImportEndpoint(endpointAlias, endpoint), MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
 		if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {

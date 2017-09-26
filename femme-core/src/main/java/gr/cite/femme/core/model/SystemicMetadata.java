@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonInclude(Include.NON_EMPTY)
 public class SystemicMetadata {
 
-	/*@JsonProperty("id")
-	private String id;*/
-
 	@JsonProperty("created")
 	@JsonSerialize(using = CustomInstantSerializer.class)
 	@JsonDeserialize(using = CustomInstantDeserializer.class)
@@ -43,9 +40,6 @@ public class SystemicMetadata {
 	@JsonProperty("other")
 	private Map<String, Object> other;
 	
-	/*private Map<String, MetadataStatistics> xPathFrequencies;*/
-	
-
 	public SystemicMetadata() {
 		
 	}
@@ -126,23 +120,18 @@ public class SystemicMetadata {
 }
 
 class CustomInstantSerializer extends JsonSerializer<Instant> {
-
 	@Override
-	public void serialize(Instant value, JsonGenerator jgen, SerializerProvider provider)
-			throws IOException, JsonProcessingException {
+	public void serialize(Instant value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
 		jgen.writeStartObject();
 		jgen.writeNumberField("timestamp", value.toEpochMilli());
 		jgen.writeEndObject();
-
 	}
 }
 
 class CustomInstantDeserializer extends JsonDeserializer<Instant> {
-
 	@Override
 	public Instant deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException {
 		Map<String, Long> instantMap = jsonParser.readValueAs(new TypeReference<Map<String, Long>>() {});
-
 		Long epochMillis = instantMap.get("timestamp");
 
 		return Instant.ofEpochMilli((epochMillis));

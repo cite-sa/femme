@@ -65,7 +65,7 @@ public class FemmeApplicationTest {
 		String name = "ECMWF";
 		WCSRequestBuilder wcsRequestBuilder = WCSRequest.newBuilder().endpoint(endpoint);
 
-		String importId = this.femmeClient.beginImport(endpoint);
+		String importId = this.femmeClient.beginImport(name, endpoint);
 
 		WCSResponse wcsServerResponse = wcsRequestBuilder.getCapabilities().build().get();
 		List<String> coverageIds = WCSParseUtils.getCoverageIds(wcsServerResponse.getResponse());

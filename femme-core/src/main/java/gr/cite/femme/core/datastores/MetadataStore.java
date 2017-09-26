@@ -18,7 +18,9 @@ public interface MetadataStore {
 
 	public void index(Metadatum metadatum) throws MetadataIndexException;
 
-	public void deIndex(String id) throws MetadataIndexException;
+	public void deIndexMetadatum(String id) throws MetadataIndexException;
+
+	public void deIndexElement(String elementId) throws MetadataIndexException;
 
 	public void reIndexAll() throws MetadataIndexException, MetadataStoreException;
 	
@@ -42,9 +44,9 @@ public interface MetadataStore {
 
 	//public <T extends Element> T xPath(T element, String xPath) throws MetadataStoreException;
 	
-	public void delete(Metadatum metadatum) throws MetadataStoreException;
+	public void delete(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException;
 	
-	public void deleteAll(String elementId) throws MetadataStoreException;
+	public void deleteAll(String elementId) throws MetadataStoreException, MetadataIndexException;
 
 	public void softDelete(String metadatumId) throws MetadataStoreException, MetadataIndexException;
 

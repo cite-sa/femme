@@ -28,6 +28,7 @@ import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import gr.cite.femme.fulltext.client.FulltextIndexClientAPI;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,13 +154,26 @@ public class Femme {
 	}
 
 	private String exists(Element element) throws DatastoreException, MetadataStoreException {
-		Element existingElement = this.datastore
-				.find(QueryMongo.query()
-						.addCriterion(CriterionBuilderMongo.root().and(Arrays.asList(
-								CriterionBuilderMongo.root().eq(FieldNames.NAME, element.getName()).end(),
-								CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, element.getEndpoint()).end()
-						)).end()), element.getClass())
-				.options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).first();
+		Element existingElement = null;
+		if (element instanceof DataElement) {
+			existingElement = this.datastore
+					.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().and(Arrays.asList(
+							CriterionBuilderMongo.root().inAnyCollection(Collections.singletonList(
+									CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(((DataElement) element).getCollections().get(0).getId())).end()
+							)).end(),
+							CriterionBuilderMongo.root().eq(FieldNames.NAME, element.getName()).end(),
+							CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, element.getEndpoint()).end()
+					)).end()), element.getClass())
+					.options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).first();
+		} else if (element instanceof Collection) {
+			existingElement = this.datastore
+					.find(QueryMongo.query()
+							.addCriterion(CriterionBuilderMongo.root().and(Arrays.asList(
+									CriterionBuilderMongo.root().eq(FieldNames.NAME, element.getName()).end(),
+									CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, element.getEndpoint()).end()
+							)).end()), element.getClass())
+					.options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).first();
+		}
 		return existingElement != null ? existingElement.getId() : null;
 	}
 
@@ -205,6 +219,17 @@ public class Femme {
 			return this.metadataStore.update(metadatum);
 		} catch (MetadataStoreException | MetadataIndexException e) {
 			throw new FemmeException("Metadatum " + metadatum.getId() + " update failed", e);
+		}
+	}
+
+	public void delete(String elementId, Class<? extends Element> elementSubTytpe) throws FemmeException {
+		try {
+			this.metadataStore.deleteAll(elementId);
+			this.datastore.delete(elementId, elementSubTytpe);
+		} catch (MetadataIndexException | MetadataStoreException e) {
+			throw new FemmeException("Delete metadata of " + elementSubTytpe.getSimpleName() + " " + elementId + " failed", e);
+		} catch (DatastoreException e) {
+			throw new FemmeException("Delete " + elementSubTytpe.getSimpleName() + " " + elementId + " failed", e);
 		}
 	}
 
@@ -257,6 +282,11 @@ public class Femme {
 		}
 
 		return null;
+	}
+
+	public boolean exists(String elementId, Class<? extends Element> elementSubtype) throws DatastoreException, MetadataStoreException {
+		QueryMongo countQuery = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(elementId)).end());
+		return query(elementSubtype).count(countQuery).execute() > 0;
 	}
 
 	public <T extends Element> T get(String id, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
@@ -327,8 +357,12 @@ public class Femme {
 		// TODO implement
 	}
 
-	private void search() {
+	public String generateId() {
+		return new ObjectId().toString();
+	}
 
+	public Object generateId(String id) {
+		return new ObjectId(id);
 	}
 
 }

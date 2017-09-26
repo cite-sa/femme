@@ -18,6 +18,8 @@ public interface MetadataIndexDatastore {
 
 	public void delete(String metadatumId) throws MetadataIndexException;
 
+	public void deleteByElementId(String elementId) throws MetadataIndexException;
+
 	public void delete(String field, String value) throws MetadataIndexException;
 
 	public ReIndexingProcess retrieveReIndexer(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore);

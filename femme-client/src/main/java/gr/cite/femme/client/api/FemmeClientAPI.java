@@ -12,7 +12,7 @@ import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 public interface FemmeClientAPI {
 
-	public String beginImport(String endpoint) throws FemmeException;
+	public String beginImport(String endpointAlias, String endpoint) throws FemmeException;
 
 	public void endImport(String importId) throws FemmeException;
 

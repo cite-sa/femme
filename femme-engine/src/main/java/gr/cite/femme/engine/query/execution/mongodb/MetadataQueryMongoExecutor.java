@@ -16,14 +16,8 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,14 +54,12 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 		if (xPath != null && !xPath.trim().equals("")) {
 			//List<Metadatum> metadataXPathResults;
 
-			Duration xPathQueryDuration;
-			Instant xPathQueryStart = Instant.now();
+			long xPathQueryStart = System.currentTimeMillis();
 
 			this.metadataXPathResults = this.metadataStore.xPath(elementIds, xPath, isLazyMetadata());
 
-			Instant xPathQueryEnd = Instant.now();
-			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
-			logger.info("XPath getQueryExecutor duration: " + xPathQueryDuration.toMillis() + " ms");
+			long xPathQueryEnd = System.currentTimeMillis();
+			logger.info("[" + xPath + "] XPath metadata query time: " + (xPathQueryEnd - xPathQueryStart) + " ms");
 
 			Document xPathSatisfyingElementsQuery = new Document()
 					.append(FieldNames.ID,
@@ -92,14 +84,13 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	public MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
 		if (xPath != null && !xPath.trim().equals("")) {
 
-			Duration xPathQueryDuration;
-			Instant xPathQueryStart = Instant.now();
+			long xPathQueryStart = System.currentTimeMillis();
 
 			this.metadataXPathResults = this.metadataStore.xPathInMemory(xPath);
 
-			Instant xPathQueryEnd = Instant.now();
-			xPathQueryDuration = Duration.between(xPathQueryStart, xPathQueryEnd);
-			logger.info("XPath getQueryExecutor duration: " + xPathQueryDuration.toMillis() + "ms");
+			long xPathQueryEnd = System.currentTimeMillis();
+
+			logger.info("[" + xPath + "] XPath in memory metadata query time: " + (xPathQueryEnd - xPathQueryStart) + " ms");
 
 			Document retrieveXPathSatisfyElementsQuery = new Document()
 					.append(FieldNames.ID,

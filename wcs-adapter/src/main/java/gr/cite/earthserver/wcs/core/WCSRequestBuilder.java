@@ -3,8 +3,12 @@ package gr.cite.earthserver.wcs.core;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
+import gr.cite.earthserver.wcs.utils.ParseException;
+import gr.cite.earthserver.wcs.utils.WCSParseUtils;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriComponent.Type;
+
+import java.util.List;
 
 public class WCSRequestBuilder {
 	private String endpoint;
@@ -126,5 +130,12 @@ public class WCSRequestBuilder {
 		public WCSRequest build() {
 			return new WCSRequest(webTarget.queryParam("coverageId", coverageId));
 		}
+	}
+
+	public static void main(String[] args) throws WCSRequestException, ParseException {
+		WCSRequestBuilder wcsRequestBuilder = new WCSRequestBuilder().endpoint("http://access.planetserver.eu:8080/rasdaman/ows");
+		WCSResponse getCapabilities = wcsRequestBuilder.getCapabilities().build().get();
+		System.out.println(WCSParseUtils.getCoverageIds(getCapabilities.getResponse()).size());
+
 	}
 }

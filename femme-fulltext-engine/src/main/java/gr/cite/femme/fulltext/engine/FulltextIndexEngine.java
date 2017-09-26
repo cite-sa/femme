@@ -32,25 +32,25 @@ public class FulltextIndexEngine {
 		if (!this.indexClient.indexExists(this.indexName)) {
 			String settings =  "\"settings\": {" +
 					"\"analysis\": {" +
-					"\"filter\": {" +
-					"\"grams_filter\": {" +
-					"\"type\":\"ngram\"," +
-					"\"min_gram\": 2," +
-					"\"max_gram\": 3" +
-					"}" +
-					"}," +
+						"\"filter\": {" +
+							"\"grams_filter\": {" +
+								"\"type\":\"ngram\"," +
+								"\"min_gram\": 2," +
+								"\"max_gram\": 3" +
+							"}" +
+						"}," +
 					"\"analyzer\": {" +
-					"\"grams\": {" +
-					"\"type\":\"custom\"," +
-					"\"tokenizer\": \"standard\"," +
-					"\"filter\": [" +
-					"\"lowercase\"," +
-					"\"grams_filter\"" +
-					"]" +
+						"\"grams\": {" +
+							"\"type\":\"custom\"," +
+							"\"tokenizer\": \"standard\"," +
+							"\"filter\": [" +
+								"\"lowercase\"," +
+								"\"grams_filter\"" +
+							"]" +
+						"}" +
 					"}" +
-					"}" +
-					"}" +
-					"}";
+				"}" +
+			"}";
 			
 			String mappings = "\"mappings\" : {" +
 					"\"elements\" : {" +

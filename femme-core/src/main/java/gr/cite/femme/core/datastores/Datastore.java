@@ -34,7 +34,9 @@ public interface Datastore {
 
 	public <T extends Element> T softDelete(String id, Class<T> elementSubType) throws DatastoreException;
 
-	public <T extends Element> T  findElementAndupdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType);
+	public <T extends Element> T delete(String id, Class<T> elementSubType) throws DatastoreException;
+
+	public <T extends Element> T findElementAndUpdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType);
 
 	public void remove(DataElement dataElement, Collection collection) throws DatastoreException;
 

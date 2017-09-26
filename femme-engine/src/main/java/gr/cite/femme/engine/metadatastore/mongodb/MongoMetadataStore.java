@@ -82,7 +82,7 @@ public class MongoMetadataStore implements MetadataStore {
 		Metadatum updatedMetadatum = this.metadataGridFS.update(metadatum);
 
 		if (updatedMetadatum != null) {
-			deIndex(metadatum.getId());
+			deIndexMetadatum(metadatum.getId());
 			index(metadatum);
 		}
 		return updatedMetadatum;
@@ -101,9 +101,16 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 
 	@Override
-	public void deIndex(String id) throws MetadataIndexException {
+	public void deIndexMetadatum(String id) throws MetadataIndexException {
 		if (isFemmeInIndexMode()) {
 			this.metadataXPath.deIndex(id);
+		}
+	}
+
+	@Override
+	public void deIndexElement(String elementId) throws MetadataIndexException {
+		if (isFemmeInIndexMode()) {
+			this.metadataXPath.deIndexAll(elementId);
 		}
 	}
 
@@ -250,14 +257,16 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 	
 	@Override
-	public void delete(Metadatum metadatum) throws MetadataStoreException {
+	public void delete(Metadatum metadatum) throws MetadataStoreException, MetadataIndexException {
+		deIndexMetadatum(metadatum.getId());
 		getMetadataStore(metadatum).delete(metadatum.getId());
 	}
 	
 	@Override
-	public void deleteAll(String elementId) throws MetadataStoreException {
-		metadataMongoCollection.deleteAll(elementId);
-		metadataGridFS.deleteAll(elementId);
+	public void deleteAll(String elementId) throws MetadataStoreException, MetadataIndexException {
+		deIndexElement(elementId);
+		//metadataMongoCollection.deleteAll(elementId);
+		this.metadataGridFS.deleteAll(elementId);
 		
 	}
 

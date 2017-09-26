@@ -67,7 +67,9 @@ public class FemmeImportResource {
 
 	@GET
 	@Path("ping")
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response ping() {
+		logger.info("ping-pong");
 		return Response.ok("pong").build();
 	}
 
@@ -94,21 +96,24 @@ public class FemmeImportResource {
 
 		Import newImport = new Import();
 		try {
-			newImport.setId(HashGeneratorUtils.generateMD5(importEndpoint.getEndpoint()));
+			newImport.setId(HashGeneratorUtils.generateMD5(importEndpoint.getEndpointAlias()));
 		} catch (HashGenerationException e) {
 			throw new FemmeApplicationException("Import initialization failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
+		newImport.setEndpointAlias(importEndpoint.getEndpointAlias());
 		newImport.setEndpoint(importEndpoint.getEndpoint());
 
 		if (this.imports.containsKey(newImport.getId())) {
-			throw new FemmeApplicationException("Import " + newImport.getId() + " for endpoint " + newImport.getEndpoint() + " already in progress", Response.Status.BAD_REQUEST.getStatusCode());
+			throw new FemmeApplicationException("Import " + newImport.getId() + " for endpoint alias " + newImport.getEndpointAlias() + " already in progress", Response.Status.BAD_REQUEST.getStatusCode());
 		}
 		this.imports.put(newImport.getId(), newImport);
 
 		location = this.uriInfo.getRequestUriBuilder().path(FemmeImportResource.IMPORTS_PATH).path(newImport.getId()).build();
 		entity.setHref(location.toASCIIString());
 		entity.setBody(newImport.getId());
-		femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage("New import" + newImport.getId() + " started").setEntity(entity);
+		String message = "New import " + newImport.getId() + " started";
+		femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
+		logger.info(message);
 
 		return Response.created(location).entity(femmeResponse).build();
 	}
@@ -122,14 +127,14 @@ public class FemmeImportResource {
 		}
 
 		try {
-			if (!id.equals(HashGeneratorUtils.generateMD5(collection.getEndpoint()))) {
-				throw new FemmeApplicationException("Import id " + id + " and endpoint " + collection.getEndpoint() +  "do not match", Response.Status.BAD_REQUEST.getStatusCode());
+			if (!id.equals(HashGeneratorUtils.generateMD5(collection.getName()))) {
+				throw new FemmeApplicationException("Import id " + id + " and endpoint " + collection.getName() +  " do not match", Response.Status.BAD_REQUEST.getStatusCode());
 			}
 		} catch (HashGenerationException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
-		Response response = this.resourceContext.getResource(FemmeAdminResource.class).insert(collection);
+		Response response = this.resourceContext.getResource(FemmeAdminResource.class).insertCollection(collection);
 		Import existingImport = this.imports.get(id);
 		if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
 			existingImport.setCollectionId(collection.getId());

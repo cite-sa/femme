@@ -15,6 +15,9 @@ public class Import {
 	@JsonProperty("endpoint")
 	private String endpoint;
 
+	@JsonProperty("endpointAlias")
+	private String endpointAlias;
+
 	@JsonProperty("collectionId")
 	private String collectionId;
 
@@ -38,6 +41,14 @@ public class Import {
 
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
+	}
+
+	public String getEndpointAlias() {
+		return endpointAlias;
+	}
+
+	public void setEndpointAlias(String endpointAlias) {
+		this.endpointAlias = endpointAlias;
 	}
 
 	public String getCollectionId() {

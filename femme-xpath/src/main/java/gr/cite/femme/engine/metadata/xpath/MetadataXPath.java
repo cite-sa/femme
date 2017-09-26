@@ -3,6 +3,7 @@ package gr.cite.femme.engine.metadata.xpath;
 import gr.cite.commons.converter.XmlJsonConverter;
 import gr.cite.commons.metadata.analyzer.json.JSONSchemaAnalyzer;
 import gr.cite.commons.utils.hash.HashGenerationException;
+import gr.cite.femme.engine.metadata.xpath.core.MaterializedPathsNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
@@ -16,6 +17,7 @@ import gr.cite.femme.engine.metadata.xpath.grammar.XPathLexer;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
 import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.parser.visitors.MongoXPathVisitor;
+import gr.cite.femme.engine.metadata.xpath.path.materializer.PathMaterializer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -76,8 +78,12 @@ public class MetadataXPath {
             throw new UnsupportedOperationException("Metadata indexing is not yet supported for media type " + metadatum.getContentType());
         }
 
-        /*List<MaterializedPathsNode> nodes = PathMaterializer.materialize(metadatum.getId(), metadatumJson);
-        xPathDatastore.insertMany(nodes);*/
+        /*try {
+            List<MaterializedPathsNode> nodes = PathMaterializer.materialize(metadatum.getId(), metadatumJson);
+            xPathDatastore.insertMany(nodes);
+        } catch (IOException e) {
+            throw new MetadataIndexException(e.getMessage(), e);
+        }*/
 
         MetadataSchema metadataSchema;
         try {
@@ -106,6 +112,10 @@ public class MetadataXPath {
         this.metadataIndexDatastore.delete(metadatumId);
     }
 
+    public void deIndexAll(String elementId) throws UnsupportedOperationException, MetadataIndexException {
+        this.metadataIndexDatastore.deleteByElementId(elementId);
+    }
+
     public ReIndexingProcess beginReIndexing() throws MetadataIndexException {
         if (!this.reIndexingProcess.reIndexingInProgress()) {
             this.reIndexingProcess.begin();
@@ -125,57 +135,57 @@ public class MetadataXPath {
     }
 
     public List<Metadatum> xPath(String xPath) throws MetadataIndexException {
-        Instant start, end;
+        long start, end;
 
         CharStream stream = CharStreams.fromString(xPath);
         XPathLexer lexer = new XPathLexer(stream);
         XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
         ParseTree tree = parser.xpath();
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         MongoXPathVisitor visitor = new MongoXPathVisitor(metadataSchemaIndexDatastore);
         Tree<QueryNode> queryTree = visitor.visit(tree);
-        end = Instant.now();
-        logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] Query parse time: " + (end - start) + " ms");
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(queryTree);
-        end = Instant.now();
-        logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] ElasticSearch query time: " + (end - start) + " ms");
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         List<Metadatum> metadata = xPathResult.stream().map(indexableMetadatum -> {
             Metadatum metadatum = new Metadatum();
             metadatum.setId(indexableMetadatum.getMetadatumId());
             metadatum.setElementId(indexableMetadatum.getElementId());
             return metadatum;
         }).collect(Collectors.toList());
-        end = Instant.now();
-        logger.info("IndexableMetadatum to Metadatum transformation duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] IndexableMetadatum to Metadatum transformation time: " + (end - start) + " ms");
 
         return metadata;
     }
 
     public List<Metadatum> xPath(List<String> elementIds, String xPath, boolean lazyPayload) throws MetadataIndexException {
-        Instant start, end;
+        long start, end;
 
         CharStream stream = CharStreams.fromString(xPath);
         XPathLexer lexer = new XPathLexer(stream);
         XPathParser parser = new XPathParser(new CommonTokenStream(lexer));
         ParseTree tree = parser.xpath();
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         MongoXPathVisitor visitor = new MongoXPathVisitor(metadataSchemaIndexDatastore);
         Tree<QueryNode> queryTree = visitor.visit(tree);
-        end = Instant.now();
-        logger.info("Query parse duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] Query parse time: " + (end - start) + " ms");
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         List<IndexableMetadatum> xPathResult = this.metadataIndexDatastore.query(elementIds, queryTree, lazyPayload);
-        end = Instant.now();
-        logger.info("ElasticSearch query duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] ElasticSearch query time: " + (end - start) + " ms");
 
-        start = Instant.now();
+        start = System.currentTimeMillis();
         List<Metadatum> metadata = xPathResult.stream().map(indexableMetadatum -> {
             Metadatum metadatum = new Metadatum();
             metadatum.setId(indexableMetadatum.getMetadatumId());
@@ -184,8 +194,8 @@ public class MetadataXPath {
             metadatum.setValue(indexableMetadatum.getValue());
             return metadatum;
         }).collect(Collectors.toList());
-        end = Instant.now();
-        logger.info("IndexableMetadatum to Metadatum transformation duration: " + Duration.between(start, end).toMillis() + "ms");
+        end = System.currentTimeMillis();
+        logger.info("[" + xPath + "] IndexableMetadatum to Metadatum transformation time: " + (end - start) + " ms");
 
         return metadata;
     }

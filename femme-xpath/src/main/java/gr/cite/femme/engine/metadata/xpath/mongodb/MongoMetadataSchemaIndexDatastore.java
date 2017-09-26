@@ -46,7 +46,7 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 
 	@Override
 	public void index(MetadataSchema schema) {
-		MetadataSchema existingSchema = schemasCollection.find(Filters.eq("checksum", schema.getChecksum())).limit(1).first();
+		MetadataSchema existingSchema = this.schemasCollection.find(Filters.eq("checksum", schema.getChecksum())).limit(1).first();
 		if (existingSchema == null) {
 			this.schemasCollection.insertOne(schema);
 		} else {

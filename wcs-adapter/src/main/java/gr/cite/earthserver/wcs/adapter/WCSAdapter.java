@@ -38,8 +38,8 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 
 	@Override
-	public String beginImport(String endpoint) throws FemmeException {
-		return this.femmeClient.beginImport(endpoint);
+	public String beginImport(String endpointAlias, String endpoint) throws FemmeException {
+		return this.femmeClient.beginImport(endpointAlias, endpoint);
 	}
 
 	@Override

@@ -137,13 +137,13 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 			content = mapper.readValue(IOUtils.toString(this.indexResponse.getEntity().getContent(),
 					Charset.defaultCharset()), ElasticResponseContent.class);
 		} catch (IOException e) {
-			logger.error("ElasticSearch scroll response serialization failed", e);
+			logger.error("Elasticsearch scroll response serialization failed", e);
 			this.results = new ArrayList<>();
 			return;
 		}
 		this.scrollId = content.getScrollId();
 
-		logger.info("ElasticSearch scroll query duration: " + content.getTook() + "ms");
+		logger.info("Elasticsearch scroll query time: " + content.getTook() + " ms");
 
 		this.results = content.getHits().getHits().stream().map(hit -> {
 			hit.getSource().setId(hit.getId());
