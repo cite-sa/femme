@@ -1,0 +1,273 @@
+body {
+    padding-top: 50px;
+    background-color: #000;
+}
+
+#metadata-display {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    /*padding-left: 35px;*/
+    background-color: #203864;
+}
+
+#close-metadata-display {
+    position: absolute;
+    right: 0;
+    height: 45px;
+    width: 45px;
+    background-color: #203864;
+    text-align: center;
+    transition: background-color 0.3s 0s;
+}
+
+#close-metadata-display:hover {
+    background-color: rgb(43, 76, 136);
+    cursor: pointer;
+}
+
+#close-metadata-display > span {
+    padding: 11px 0px;
+    color: #ffffff;
+    font-size: 24px;
+}
+
+#coverageCanvas {
+	width: 100%;
+	height: 100%;
+}
+
+#metadata-container {
+    width: 370px;
+    margin-top: 20px;
+    position: absolute;
+    left: 0;
+    transition: left 0.3s 0s;
+
+    padding-bottom: 43px;
+    max-height: 100%;
+    //overflow: hidden;
+    background-color: #203864;
+
+}
+
+#metadata-container.closed {
+    left: -325px;
+}
+
+#metadata-container.closed > div:not(:first-child){
+    padding-right: 30px;
+    overflow: hidden;
+}
+
+/* ?? */
+#xpath-input {
+	margin-bottom: 30px;
+}
+
+.modal-header{
+    height: 30%;
+    width: 50;
+    margin: 0px;
+    padding: 3px 5px;
+}
+
+/* ?? */
+
+/*p {
+	color: #ffffff;
+}*/
+
+/*.panel-title {
+	background-color: #9a9a9a;
+}*/
+
+/* .collapsed{
+	color : #ffffff;
+} */
+
+/*.panel-body , .accordionbutton{
+	background-color: #b5b5b5;
+	margin-left: 1px;
+	margin-right: 1px;
+	margin-bottom: 1px;
+	margin-up: 1px;
+}
+
+
+/* textarea {
+    max-width: 100%; 
+    max-height: 100%;
+} */
+
+textarea { resize:none; } /* none|horizontal|vertical|both */
+
+body,html{
+	height:100%;
+}
+
+#femme,
+#femme-container,
+#femme-row,
+#view-on-map,
+#canvas-container {
+    width: 100%;
+    height: 100%;
+}
+
+.coverage-container ,.modal-body  {
+	max-height: 547px;
+	overflow: auto;
+	background-color: #203864
+}
+
+/*#metadata-panel-group .panel-heading {
+    background-color: #203864;
+}*/
+
+#metadata-panel-group .panel-collapse .panel-data-label {
+    font-weight: bold;
+}
+
+#metadata-panel-group {
+    margin-top: 5px;
+}
+
+#metadata-panel-group .panel {
+    border: none;
+}
+
+#metadata-panel-group .panel-heading {
+    color: #333;
+    background-color: #203864;
+    box-shadow: 0px 0px 6px 1px rgba(0,0,0,0.6);
+}
+
+#metadata-panel-group .panel-title {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background: none;
+    color: #ffffff;
+}
+
+#metadata-panel-group .panel-title > a {
+    width: 86%;
+}
+
+#metadata-panel-group .panel-title > a > div {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#metadata-panel-group .show-on-www {
+    color: #fff;
+    background-color: #203864;
+    border-color: #203864;
+}
+
+#metadata-panel-group .show-on-www.active {
+    background-color: #1A263C;
+}
+
+#metadata-panel-group .show-on-www:hover {
+    color: #fff;
+    background-color: #1c3054;
+     border-color: #1c3054;
+}
+
+#metadata-panel-group .panel-body {
+    background: none;
+    overflow-wrap: break-word;
+}
+
+#metadata-panel-group .panel-body > p {
+    color: #000;
+}
+
+#metadata-modal .modal-header,
+#metadata-modal .modal-footer {
+    background-color: #203864;
+}
+
+#metadata-modal .modal-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: none;
+    color: white;
+}
+
+#metadata-modal .modal-header > .close {
+    color: white;
+}
+
+#metadata-modal .modal-footer {
+    border-top: none;
+}
+
+#server-endpoint-dropdown .dropdown-toggle,
+#server-endpoint-dropdown .dropdown-menu {
+    width: 100%
+}
+
+#server-endpoint-dropdown .dropdown-menu > li > a {
+    padding: 8px 20px;
+}
+
+#query-container {
+    padding: 55px 0px 30px;
+    background-color: #203864;
+}
+
+#query-container label {
+    color: #ffffff;
+}
+
+#query-container #servers-form .asgInner {
+    width: 100%;
+}
+
+#query-container .bootstrap-tagsinput {
+    width: 100%;
+}
+
+#server-endpoint-dropdown .dropdown-menu .selected {
+    background-color: #203864;
+    color: #ffffff;
+}
+
+server-endpoint-dropdown-btn {
+    text-align: left;
+}
+
+server-endpoint-dropdown-btn .caret {
+    float: right;
+    margin-top: 8px;
+}
+
+#coverage-container > div > div:last-child {
+    height: 33px;
+    position: absolute;
+    top: 96.5%;
+    background-color: #203864;
+    box-shadow: -20px -1px 5px 1px rgba(0,0,0,0.3);
+}
+
+/* div span.tag label {
+	background-color: #ff0000;
+	color : #00ffff;
+} */ 
+
+/* @media screen and (max-width: 770px) {
+    #coverageCanvas {
+        background-color: lightgray;
+    }
+    #service-navbar,.nav navbar-nav {
+        visibility: hidden;
+    }
+} */
+
+
+
+

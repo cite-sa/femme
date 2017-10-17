@@ -9,7 +9,7 @@ public class ElasticResponseShardsFailure {
 	@JsonProperty("shard")
 	private Integer shard;
 
-	@JsonProperty("insert")
+	@JsonProperty("index")
 	private String index;
 
 	@JsonProperty("node")

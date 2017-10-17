@@ -1,0 +1,31 @@
+#index-container {
+    margin-top: 70px;
+}
+
+#index-container .service-link {
+    height: 75px;
+    text-align: center;
+}
+
+#index-container .service-link .service-label {
+    width: 100%;
+    height: 100%;
+    display: block;
+    padding: 24px;
+    border: 2px solid #203864;
+    background-color: #203864;
+    color: #ffffff;
+    border-radius: 6px;
+}
+
+p , h3 {
+    color:#FF0000;
+}
+
+.carousel-indicators li {
+    background-color: #0000ff;
+    box-shadow: inset 1px 1px 1px 1px rgba(0,0,0,0.5);    
+}
+.carousel-indicators .active {
+    background-color: #ADD8E6;
+}

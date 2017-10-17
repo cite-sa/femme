@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +43,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 
 	public void query(String query, Set<String> originalIncludes, List<String> metadataSchemaIds, boolean payloadLazy) throws IOException, XMLStreamException {
 		Set<String> includes = originalIncludes.stream().map(include -> "\"value." + include + "\"").collect(Collectors.toSet());
+		//Set<String> includes = payloadLazy ? new HashSet<>() : originalIncludes.stream().map(include -> "\"value." + include + "\"").collect(Collectors.toSet());
 		if (includes.size() > 0) {
 			includes.addAll(Stream.of("metadataSchemaId", "metadatumId", "elementId", "originalContentType").map(include -> "\"" + include + "\"").collect(Collectors.toSet()));
 		} else {
@@ -59,8 +61,8 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 				"\"size\":  1000" +
 			"}";
 
-		logger.debug("Scroll query: " + scrollQuery);
-		logger.debug("Scroll query URL: " + "/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s");
+		logger.info("Scroll query: " + scrollQuery);
+		logger.info("Scroll query URL: " + "/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s");
 
 		HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
 		this.indexResponse = this.client.get().performRequest(

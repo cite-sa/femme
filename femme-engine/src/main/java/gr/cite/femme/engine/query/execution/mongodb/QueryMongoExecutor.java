@@ -54,7 +54,16 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 	}*/
 
 	boolean isLazyMetadata() {
-		return lazyMetadata;
+		/*if (this.options != null) {
+			if (this.options.getInclude() != null && !this.options.getInclude().contains("metadata")) {
+				this.lazyMetadata = true;
+			}
+			if (this.options.getExclude() != null && this.options.getExclude().contains("metadata")) {
+				this.options.getExclude().remove("metadata");
+				this.lazyMetadata = true;
+			}
+		}*/
+		return this.lazyMetadata;
 	}
 
 	public QueryOptionsMessenger getOptions() {

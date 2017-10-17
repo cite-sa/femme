@@ -6,7 +6,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<mongodb.version>3.4.2</mongodb.version>
+		<mongodb.version>3.4.3</mongodb.version>
 	</properties>
 
 	<!--<repositories>-->

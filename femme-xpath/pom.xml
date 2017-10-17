@@ -12,7 +12,7 @@
 		<jersey.version>2.25.1</jersey.version>
 		<antlr.version>4.7</antlr.version>
 		<junit.version>4.12</junit.version>
-		<mongo-driver.version>3.4.2</mongo-driver.version>
+		<mongo-driver.version>3.4.3</mongo-driver.version>
 		<elasticsearch-client.version>5.3.0</elasticsearch-client.version>
 	</properties>
 

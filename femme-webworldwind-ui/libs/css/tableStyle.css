@@ -1,0 +1,24 @@
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #000000;
+  text-align: center;
+}
+th,td {
+  padding: 10px 15px;
+}
+thead,tfoot {
+  background: #395870;
+  color: #fff;
+}
+tbody tr:nth-child(even) {
+  background: #f0f0f2;
+}
+td {
+  border-bottom: 1px solid #cecfd5;
+  border-right: 1px solid #cecfd5;
+  background: #4f79b0;
+}
+td:first-child {
+  border-left: 1px solid #cecfd5;
+}

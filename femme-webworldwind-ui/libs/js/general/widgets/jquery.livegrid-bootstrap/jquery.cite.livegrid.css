@@ -1,0 +1,362 @@
+﻿.LiveGrid th input[type="checkbox"] 
+{
+	display: none;
+}
+
+.LiveGrid th input[type="checkbox"].liveGridColCheck 
+{
+	display: inline !important;
+}
+
+.LiveGrid.noborder .ui-jqgrid 
+{
+	border-width: 0 !important;
+}
+
+.LiveGrid.nohscroll .ui-jqgrid-bdiv
+{
+	overflow-x : hidden !important;
+}
+
+.selected-cell {
+	border: 1px solid black !important;
+}
+
+.btnLiveGridGroupAddItem 
+{
+	float: right;
+	cursor: pointer;
+}
+
+.btnLiveGridGroupText 
+{
+	float: left;
+}
+
+.liveGridDragHandle 
+{
+	cursor: move;
+}
+
+.liveGridCommandsIcon, .liveGridCommandEditIcon, .liveGridCommandDeleteIcon, .liveGridCommandCustom 
+{
+	cursor: pointer;
+	opacity: 0.6;
+	filter: alpha(opacity=60);
+}
+
+.liveGridCommandsIcon:hover, .liveGridCommandEditIcon:hover, .liveGridCommandDeleteIcon:hover, .liveGridCommandCustom:hover 
+{
+	opacity: 1;
+	filter: alpha(opacity=100);
+}
+
+.liveGridFiltersHeader 
+{
+	font-size: 120%;
+	width: 300px;
+	overflow: hidden;
+}
+
+.liveGridFiltersContainer 
+{
+	font-size: 90%;
+	position: relative;
+}
+
+/*.liveGridFiltersControls 
+{
+	z-index: 1;
+	display: none;
+	padding: 0px 4px;
+	background-color: #fbffff;
+	margin: 2px 0;
+}
+
+.liveGridFiltersControls .ui-button-text 
+{
+	padding: 0.2em;
+}
+
+.liveGridFiltersControls button {
+	margin: 0 2px;
+}*/
+
+/*.liveGridFiltersSection 
+{
+	display: none;
+	position: relative;
+	padding: 4px 0px;
+	border-bottom: 1px dotted #eee;
+	background-color: #fbffff;
+}
+
+.liveGridFiltersSectionIcon 
+{
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	padding: 15px 4px;
+    font-size: 12pt;
+}
+
+.LiveGrid.CGrid .liveGridFiltersSectionIcon 
+{
+	position: static;
+	float: left;
+}
+
+.liveGridFiltersSectionContent 
+{
+	margin: 0px 72px 0px 50px;
+	padding: 0px 5px;
+	border-left: 1px solid #dddddd;
+}*/
+
+/*.liveGridAdvancedFiltersSelector 
+{
+	display: none;
+	position: absolute;
+	background: #ffffff;
+	border: 1px solid #AAAAAA;
+	padding: 5px;
+	z-index: 1000;
+}
+.liveGridAdvancedFiltersSelector .ui-icon
+{
+	float: left;
+	vertical-align: middle;
+}*/
+
+.advancedFiltersButton > span 
+{
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.liveGridAdvancedFilterCheckCont 
+{
+	margin: 0 15px 0 24px;
+}
+
+.ui-state-default.btnSaveFilters, .ui-state-default.btnSaveAsFilters, .ui-state-default.btnCannedQueries
+{
+	width: 120px;
+	color: #166f94;
+}
+
+.ui-state-default.btnSaveFilters:hover, .ui-state-default.btnSaveAsFilters:hover, .ui-state-default.btnCannedQueries:hover {
+	color: #166f94;
+}
+
+.ui-jqgrid .ui-userdata {
+	height: 25px !important;
+}
+
+.LiveGrid.CGrid .ui-jqgrid .ui-userdata .ui-pg-table td.ui-pgbutton {
+	margin-left: 0;
+}
+
+.LiveGrid .ui-jqgrid-bdiv 
+{
+	position: relative;
+}
+
+.liveGridHeaderCheckLabel 
+{
+	vertical-align: top;
+}
+
+.LiveGrid .lgTempMeasure 
+{
+	display: inline-block;
+	padding: 3px;
+	border: 1px solid #000000;
+}
+
+.LiveGrid .inlineEditForm,
+.LiveGrid .inlineCellEditControl, 
+.LiveGrid .inlineFormEditButtonsContainer 
+{
+	display: none;
+}
+
+.ui-jqgrid tr.jqgrow.inlineFormEditTargetRow
+{
+	background: #888888 !important;
+    color: #ffffff !important;
+}
+
+.ui-jqgrid tr.jqgrow.inlineFormEditTargetRow > td 
+{
+	font-weight: bold !important;
+}
+
+.ui-jqgrid tr.jqgrow.inlineFormEditRow
+{
+	background: #dddddd /*#F7F7F7*/ !important;
+}
+
+.ui-jqgrid tr.jqgrow.inlineFormEditRow > td
+{
+	padding: 10px !important;
+	/* border-right: 1px solid #E8E8E8 !important; */
+	border: 1px solid #888888 !important;
+}
+
+.LiveGrid .inlineFormEditRow td 
+{
+	white-space: normal !important;
+	border-width: 0 !important;
+}
+
+.LiveGrid .inlineFormEditButtonsContainer 
+{
+	padding: 10px 0;
+}
+
+.LiveGrid .inlineFormEditButtonsContainer button
+{
+	font-weight: bold;
+}
+
+.liveGridOpenColumnSelectorButton 
+{
+	float: right;
+}
+
+.inlineFormCellEditContainer 
+{
+	border-radius: 3px;
+	background-color: #FFFAF0;
+    border: 1px solid #DDCCAA;
+    color: #000000;
+    padding: 5px 8px;
+    position: absolute;
+    display: none;
+}
+
+.ui-jqgrid-titlebar-close 
+{
+	display: none !important;
+}
+
+.ui-jqgrid .ui-pg-button span.ui-sssplitbutton-extend,
+.ui-jqgrid .ui-pg-button span.ui-ssbutton-text
+{
+	margin: 0 !important;
+	float: none !important;
+}
+
+.LiveGrid .navtable .ui-ssbutton,
+.LiveGrid .navtable .ui-ssbutton + .ui-sssplitbutton-extend {
+	border-color: transparent;
+	/* background-color: #87BDC1; */
+}
+
+.LiveGrid .navtable .ui-ssbutton + .ui-sssplitbutton-extend 
+{
+	border-width: 1px !important;
+	border-left-color: #bbbbbb !important;
+}
+
+.LiveGrid .navtable .ui-ssbutton:hover,
+.LiveGrid .navtable .ui-ssbutton.buttonHover,
+.LiveGrid .navtable .ui-ssbutton + .ui-sssplitbutton-extend:hover
+{
+	/*
+	border-color: #4DCBCE;
+	background-color: #4DCBCE; 
+	*/
+}
+
+.LiveGrid.SubGrid 
+{
+	display: none;
+}
+
+.LiveGrid.SubGrid .ui-jqgrid-bdiv > div
+{
+	background: #e5e5e5 !important;
+    color: #ffffff !important;
+}
+
+/*.LiveGrid .liveGridFiltersTopBar, .LiveGrid .liveGridFilters  {
+	float: left;
+	width: 100%;
+}
+
+.LiveGrid .liveGridFiltersTopBar > table {
+	border-collapse: collapse;
+}*/
+
+/*.ui-jqgrid .ui-pg-table .filterRowQuickLbl {
+	padding: 0 5px !important;
+}
+*/
+
+.ui-jqgrid .ui-pg-table .filterRowCustomLbl {
+	padding: 0 5px 0 10px !important;
+}
+
+/** 
+ *	BUILT-IN COLUMN CLASSES THAT CAN BE USED BY GRIDS 
+ **/
+.liveGrid-text-wrap 
+{
+	white-space: normal !important;
+}
+
+.dataTables_wrapper .dataTables_length {
+    float: right;
+}
+
+.liveGridToolbar button, .liveGridToolbar span {
+	margin: 0 2px;
+}
+
+.liveGridToolbar,
+.liveGridPageLength {
+	margin-top: 6px;
+}
+
+/* These classes are missing from dataTables.bootstrap.css, but exist on jquery.dataTables.css */
+/* Known bug, waiting for fix */
+.dataTables_wrapper .dataTables_processing {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 100%;
+	height: 40px;
+	margin-left: -50%;
+	margin-top: -25px;
+	padding-top: 20px;
+	text-align: center;
+	font-size: 1.2em;
+	background-color: white;
+	/*
+	background: -webkit-gradient(linear, left top, right top, color-stop(0, rgba(255, 255, 255, 0)), color-stop(25%, rgba(255, 255, 255, 0.9)), color-stop(75%, rgba(255, 255, 255, 0.9)), color-stop(100%, rgba(255, 255, 255, 0)));
+	background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
+	background: -moz-linear-gradient(left, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
+	background: -ms-linear-gradient(left, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
+	background: -o-linear-gradient(left, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
+	background: linear-gradient(to right, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.9) 75%, rgba(255, 255, 255, 0) 100%);
+	*/
+	border-width: 0;
+	background: none;
+}
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+	color: #333;
+}
+
+table.dataTable tbody tr.selected, table.dataTable tbody tr.selected td {
+  background-color: #B0BED9;
+}
+
+.LiveGrid table td {
+	vertical-align: middle !important;
+}

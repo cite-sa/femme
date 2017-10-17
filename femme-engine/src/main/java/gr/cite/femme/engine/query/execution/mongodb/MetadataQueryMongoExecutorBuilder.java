@@ -84,7 +84,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 				}
 
 				if (this.query == null || preFilteringIds.size() > 0) {
-					this.queryExecutor.xPath(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
+					this.queryExecutor.options(this.options).xPath(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
 				} else {
 					this.options = QueryOptionsMessenger.builder().limit(0).build();
 				}

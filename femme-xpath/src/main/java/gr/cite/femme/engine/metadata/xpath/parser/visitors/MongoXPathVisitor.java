@@ -95,7 +95,7 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 								});*/
 
 
-						this.metadataSchemaDatastore.findMetadataIndexPathByRegexAndGroupById(node.getData().getNodePath().toString() + this.filterBuilder.getNodePath().toString() + "$")
+						this.metadataSchemaDatastore.findMetadataIndexPathByRegexAndGroupById("(?:\\.|^)(" + node.getData().getNodePath().toString() + this.filterBuilder.getNodePath().toString() + ")$")
 								.forEach((path, ids) -> {
 									QueryNode childNodeData = new QueryNode();
 									childNodeData.setNodePath(new StringBuilder(path));

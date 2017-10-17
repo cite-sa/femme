@@ -1,0 +1,204 @@
+#query-form-container {
+    margin-top: 6em;
+}
+
+.query-form .row {
+    margin-top: 1em;
+}
+
+#query-form-container .error-message {
+    margin-top: 2em;
+}
+
+#query-form-container .mixedValue img {
+    max-width: 100%;
+    padding: 1em;
+}
+
+#query-form-container .mixedValue .panel-info {
+    border-color: #203864;
+}
+
+#query-form-container .mixedValue .panel-heading {
+    background-color: #203864;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.query-form .query-a  {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#query-form-container .results-info-body {
+    margin: 1em;
+    color: gray;
+}
+
+#query-form-container .query-result > div > pre {
+    border: 1px solid rgb(32, 56, 100);
+}
+
+
+#query-form-container .query-btn {
+    background-color: #203864;
+    color: white;
+    border-color: transparent;
+    border-radius: 4px;
+    /*box-shadow: 1px 1px 4px 0px rgba(0,0,0,0.4);*/
+    transition: background-color 0.3s ease 0s;
+}
+
+#query-form-container #submit-query-btn.query-btn {
+    margin-left: 10px;
+}
+
+#query-form-container #queries-dropdown-toggle.query-btn {
+    border-radius: 0px 4px 4px 0px;
+}
+
+#query-form-container .query-btn:hover,
+#query-form-container .query-btn:active,
+#query-form-container .query-btn:hover:focus{
+    background-color: #2F5597;
+}
+
+#query-form-container .query-btn:focus,
+#query-form-container .query-btn:active {
+    outline: none;
+}
+
+
+
+/* Navbar */
+#service-navbar {
+    height: 3.5em;
+    min-width: 350px;
+    border-bottom: 0px;
+    background-color: #203864;
+    box-shadow: 0px 0px 9px 1px rgba(0,0,0,0.9);
+    background-image: none;
+}
+
+#service-navbar .navbar-brand {
+    padding: 2px;
+    transition: transform 0.2s linear 0s;
+}
+
+#service-navbar .navbar-brand.earthserver-logo {
+    background-color: #FFFFFF;
+    margin-left: 1em;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    height: 2em;
+    border-radius: 0px 0px 11px 9px;
+    box-shadow: 0px 1px 4px 2px rgba(0, 0, 0, 0.7);
+}
+
+#service-navbar .navbar-brand.earthserver-logo:focus,
+#service-navbar .navbar-brand.service-logo:focus {
+    outline: none;
+}
+
+#service-navbar .navbar-brand.service-logo {
+    margin-left: 1px;
+}
+
+#service-navbar .navbar-brand > img {
+    height: 100%;
+    padding: 4px 0px;
+}
+
+#service-navbar .navbar-brand.earthserver-logo > img {
+    height: 100%;
+    padding: 4px 2px;
+}
+
+#service-navbar .navbar-icon {
+    padding: 15px;
+    line-height: 20px;
+    color: #FFFFFF;
+    transition: background-color 0.3s ease 0s;
+}
+
+#service-navbar .navbar-icon:hover,
+#service-navbar .navbar-icon:active,
+#service-navbar .navbar-icon:hover:focus {
+    cursor: pointer;
+    background-color: #2F5597;
+}
+
+#service-navbar .navbar-icon:focus {
+    background-color: transparent;
+}
+#service-navbar .navbar-icon:active {
+    box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.3) inset;
+}
+
+#service-navbar .navbar-icon:focus,
+#service-navbar .navbar-icon:active {
+    outline: none;
+}
+
+.navbar-icon > .navbar-user-arrow {
+    margin-left: 5px;
+    top: 0px;
+    font-size: 10px;
+}
+
+#service-navbar .navbar-icon > .navbar-home-link-arrow {
+    font-size: 0.9em;
+}
+
+#service-navbar .navbar-icon > .navbar-home-link-text {
+    margin-left: 0.5em;
+}
+
+
+
+#service-navbar .divider-container {
+    padding: 15px 5px;
+    line-height: 20px;
+    position: relative;
+    display: block;
+    color: #FFFFFF;
+}
+
+#service-navbar .divider-container > .divider {
+    border-left: 1px solid white;
+}
+
+#service-navbar #user-account #account-info-panel {
+    width: 10em;
+    height: 15em;
+    border-radius: 0;
+    position: absolute;
+    top: 4.2em;
+    right: 1em;
+    background-color: #203864;
+    box-shadow: 3px 3px 5px -1px rgba(0,0,0,0.5);
+    opacity: 0;
+}
+
+#service-navbar #user-account #account-info-panel.collapse {
+    transition: none;
+}
+
+#service-navbar #user-account #account-info-panel.collapsing {
+    transition: none;
+}
+
+textarea#queryInput {
+    min-height: 6em;
+}
+
+.query-input .input-group-btn {
+    vertical-align: top;
+}
+
+.query-input .dropdown-menu {
+    top: 2.5em;
+}

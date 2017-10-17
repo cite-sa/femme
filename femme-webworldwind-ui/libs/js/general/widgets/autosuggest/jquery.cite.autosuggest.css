@@ -1,0 +1,53 @@
+﻿.AutoSuggest 
+{
+	position: relative;
+	display: block;
+}
+
+.asgInner {
+	position: relative;
+	display: inline-block;
+}
+
+/*
+.AutoSuggest:before { 
+	content: ' ';
+	display: block; 
+}
+*/
+
+/*.asgbtn.ui-button { margin-left: -1px; float: left; }*/
+.asgbtn.ui-button-icon-only .ui-button-text { padding: 0.35em; } 
+.asgbtn.ui-autocomplete-input { margin: 0; padding: 0.48em 0 0.47em 0.45em; }
+
+.asgbtn.btn {
+	width: 2em !important;
+	position: absolute;
+	right: 0;
+	top: 0;
+	padding: 0;
+	border-radius: 0;
+	border-left-width: 0;
+	z-index: 2;
+}
+
+.AutoSuggest .asgdd,
+.AutoSuggest .asgfl,
+.AutoSuggest .asga {
+	right: 0;
+}
+
+.AutoSuggest ul.as-selections 
+{
+	position: relative;
+}
+
+.AutoSuggest .input-group-btn {
+	width: 1px;
+}
+
+.autosuggestFiltersContainer {
+	position: absolute;
+	display: none;
+	padding: 10px;
+}
