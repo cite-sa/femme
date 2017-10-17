@@ -22,6 +22,10 @@
         <module>../femme-client</module>
         <module>../wcs-adapter</module>
         <module>../femme-xpath</module>
+        <module>../femme-fulltext-core</module>
+        <module>../femme-fulltext-engine</module>
+        <module>../femme-fulltext-client</module>
+
     </modules>
 
 </project>
