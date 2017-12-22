@@ -1,6 +1,7 @@
 package gr.cite.earthserver.wcs.adapter.api;
 
 import java.util.List;
+import java.util.Set;
 
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
@@ -55,8 +56,12 @@ public interface WCSAdapterAPI {
 	
 	public Coverage getCoverageById(String id) throws FemmeException, FemmeClientException;
 
+	public Coverage getCoverageById(String id, Set<String> includes, Set<String> excludes) throws FemmeException;
+
 	public Coverage getCoverageById(String id, String xPath) throws FemmeException;
-	
+
+	public Coverage getCoverageById(String id, String xPath, Set<String> includes, Set<String> excludes) throws FemmeException;
+
 	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException;
 	
 	

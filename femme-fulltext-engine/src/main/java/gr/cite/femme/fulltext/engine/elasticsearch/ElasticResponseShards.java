@@ -14,6 +14,9 @@ public class ElasticResponseShards {
 	@JsonProperty("successful")
 	private Integer successful;
 
+	@JsonProperty("skipped")
+	private Integer skipped;
+
 	@JsonProperty("failed")
 	private Integer failed;
 
@@ -34,6 +37,14 @@ public class ElasticResponseShards {
 
 	public void setSuccessful(Integer successful) {
 		this.successful = successful;
+	}
+
+	public Integer getSkipped() {
+		return skipped;
+	}
+
+	public void setSkipped(Integer skipped) {
+		this.skipped = skipped;
 	}
 
 	public Integer getFailed() {

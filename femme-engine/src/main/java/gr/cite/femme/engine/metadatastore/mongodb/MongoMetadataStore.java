@@ -63,7 +63,7 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public void close() {
-		mongoMetadataStoreClient.close();
+		this.mongoMetadataStoreClient.close();
 	}
 
 	@Override

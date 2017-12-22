@@ -2,14 +2,16 @@ package gr.cite.femme.core.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.core.model.Element;
 
 public class ElementList<T extends Element> {
+	@JsonProperty("elements")
 	private List<T> elements;
+	@JsonProperty("size")
 	private int size;
 	
-	public ElementList() {
-	}
+	public ElementList() { }
 	
 	public ElementList(List<T> elements) {
 		this.elements = elements;
@@ -24,7 +26,7 @@ public class ElementList<T extends Element> {
 		this.elements = elements;
 	}
 
-	public Integer getSize() {
+	public int getSize() {
 		return this.elements.size();
 	}
 

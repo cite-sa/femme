@@ -3,6 +3,7 @@ package gr.cite.earthserver.wcs.adapter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
@@ -132,16 +133,29 @@ public class WCSAdapter implements WCSAdapterAPI {
 		return this.femmeClient.getDataElements(limit, offset, xPath).stream().map(WCSFemmeMapper::dataElementToCoverage)
 			.collect(Collectors.toList());
 	}
-	
+
+	@Override
 	public Coverage getCoverageById(String id) throws FemmeException {
 		return WCSFemmeMapper.dataElementToCoverage(this.femmeClient.getDataElementById(id));
 	}
 
+	@Override
+	public Coverage getCoverageById(String id, Set<String> includes, Set<String> excludes) throws FemmeException {
+		return WCSFemmeMapper.dataElementToCoverage(this.femmeClient.getDataElementById(id, includes, excludes));
+	}
+
+	@Override
 	public Coverage getCoverageById(String id, String xPath) throws FemmeException {
 		DataElement dataElement = this.femmeClient.getDataElementById(id, xPath);
-		return dataElement != null ? WCSFemmeMapper.dataElementToCoverage(dataElement) : null;
+		return WCSFemmeMapper.dataElementToCoverage(dataElement);
 	}
-	
+
+	@Override
+	public Coverage getCoverageById(String id, String xPath, Set<String> includes, Set<String> excludes) throws FemmeException {
+		DataElement dataElement = this.femmeClient.getDataElementById(id, xPath, includes, excludes);
+		return WCSFemmeMapper.dataElementToCoverage(dataElement);
+	}
+
 	@Override
 	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
 		return this.femmeClient.findDataElements(query, options, xPath)

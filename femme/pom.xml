@@ -12,9 +12,7 @@
         <module>../metadata-processing-pipeline</module>
         <module>../metadata-schema-analyzer</module>
         <module>../femme-core</module>
-        <module>../femme-api</module>
-        <!--<module>../femme-instores-api</module>
-        <module>../femme-index-mongodb</module>
+        <!--<module>../femme-index-mongodb</module>
         <module>../femme-index-application</module>
         <module>../femme-index-client</module>-->
         <module>../femme-engine</module>
@@ -22,9 +20,9 @@
         <module>../femme-client</module>
         <module>../wcs-adapter</module>
         <module>../femme-xpath</module>
-        <module>../femme-fulltext-core</module>
+        <!--<module>../femme-fulltext-core</module>
         <module>../femme-fulltext-engine</module>
-        <module>../femme-fulltext-client</module>
+        <module>../femme-fulltext-client</module>-->
 
     </modules>
 

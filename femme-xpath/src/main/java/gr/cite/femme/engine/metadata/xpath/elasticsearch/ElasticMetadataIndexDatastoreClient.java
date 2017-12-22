@@ -54,20 +54,20 @@ public class ElasticMetadataIndexDatastoreClient {
 		this.client = RestClient.builder(new HttpHost(hostName, port, "http")).build();
 		this.indexAliasCreated = new AtomicBoolean(aliasExists(this.indexAlias));
 
-		/*try {
+		try {
 			Response indexExistenceResponse = client.performRequest("HEAD", "/" + this.indexAlias);
 			if (indexExistenceResponse.getStatusLine().getStatusCode() == 404) {
-				*//*this.client.performRequest("PUT", "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_INDEX_ALIAS);*//*
+				/*this.client.performRequest("PUT", "/" + ElasticMetadataIndexDatastoreClient.ELASTICSEARCH_INDEX_ALIAS);*/
 				String indexName = createIndex();
 				createIndexAliasAssociation(indexName);
 			}
-			if (getIndexByAlias(this.indexAlias) == null) {
+			/*if (getIndexByAlias(this.indexAlias) == null) {
 				String indexName = createIndex();
 				createIndexAliasAssociation(indexName);
-			}
+			}*/
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
-		}*/
+		}
 	}
 
 	boolean isIndexAliasCreated() {

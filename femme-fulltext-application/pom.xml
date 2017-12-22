@@ -104,7 +104,7 @@
     </dependencies>
 
     <build>
-        <finalName>femme-application</finalName>
+        <finalName>fulltext-application</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -48,7 +48,7 @@ public abstract class ElementCodec<T extends Element> implements CollectibleCode
 		}
 		if (value instanceof DataElement) {
 			DataElement dataElement = (DataElement) value;
-			//writeEmdeddedDataElements(writer, encoderContext, dataElement.getDataElements());
+			//writeEmdeddedDataElements(writer, encoderContext, dataElement.getElements());
 
 			if (dataElement.getDataElements() != null && dataElement.getDataElements().size() > 0) {
 				writer.writeStartArray(FieldNames.DATA_ELEMENTS);
@@ -136,9 +136,9 @@ public abstract class ElementCodec<T extends Element> implements CollectibleCode
 	}
 	
 	private void writeEmdeddedDataElements(BsonWriter writer, EncoderContext encoderContext, Collection collection) {
-		if (collection.getDataElements() != null) {
+		if (collection.getElements() != null) {
 			writer.writeStartArray(COLLECTION_DATA_ELEMENTS_KEY);
-			for (DataElement dataElement: collection.getDataElements()) {
+			for (DataElement dataElement: collection.getElements()) {
 				encoderContext.encodeWithChildContext(codecRegistry.get(Element.class), writer, dataElement);
 			}
 			writer.writeEndArray();

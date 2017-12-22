@@ -101,7 +101,7 @@ function getCoverages(endpointId, coverageIds, xPath, includeMetadata) {
             dataType: "json",
             contentType: undefined,
             onSuccess: function (data) {
-                $.each(data.entity.body.dataElements, function (index, coverage) {
+                $.each(data.entity.body.elements, function (index, coverage) {
                     createCoverageAccordions(coverage, index);
                     coverages[coverage.name] = {};
                     coverages[coverage.name].coverage = coverage;
@@ -173,7 +173,7 @@ function createEndpointSuggest() {
                 dataType: "json",
                 contentType: undefined,
                 onSuccess: function (data) {
-                    $.each(data.entity.body.dataElements, function (index, coverage) {
+                    $.each(data.entity.body.elements, function (index, coverage) {
                         serverCoverages.push(coverage);
                     });
                     initCoverageTagsInput(serverCoverages);

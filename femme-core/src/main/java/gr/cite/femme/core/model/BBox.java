@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -52,8 +53,7 @@ public class BBox {
 
 class CustomBBoxSerializer extends JsonSerializer<BBox> {
 	@Override
-	public void serialize(BBox value, JsonGenerator jgen, SerializerProvider provider)
-			throws IOException, JsonProcessingException {
+	public void serialize(BBox value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
 		jgen.writeStartObject();
 		jgen.writeStringField("crs", value.getCrs());
 		jgen.writeFieldName("geoJson");
@@ -63,11 +63,12 @@ class CustomBBoxSerializer extends JsonSerializer<BBox> {
 }
 
 class CustomBBoxDeserializer extends JsonDeserializer<BBox> {
+	private static final ObjectMapper mapper = new ObjectMapper();
 	@Override
 	public BBox deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException, JsonProcessingException {
 		Map<String, Object> bbox = jsonParser.readValueAs(new TypeReference<Map<String, Object>>() {});
 		String crs = (String) bbox.get("crs");
-		String geoJson = (String) bbox.get("geoJson");
+		String geoJson = mapper.writeValueAsString(bbox.get("geoJson"));
 		return new BBox(crs,  geoJson);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -15,12 +16,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import gr.cite.femme.client.query.CriterionClient;
+import gr.cite.femme.core.dto.ElementList;
 import gr.cite.femme.core.dto.ImportEndpoint;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.core.dto.CollectionList;
 import gr.cite.femme.core.dto.DataElementList;
 import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
@@ -39,14 +42,14 @@ import gr.cite.femme.core.model.Collection;
 public class FemmeClient implements FemmeClientAPI {
 	
 	private static final Logger logger = LoggerFactory.getLogger(FemmeClient.class);
-	
+
 	private static final ObjectMapper mapper = new ObjectMapper();
 	
 	private static final String FEMME_URL = "http://localhost:8081/femme-application";
 //	private static final String FEMME_URL = "http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT";
 	
 	private Client client;
-	
+
 	private WebTarget webTarget;
 	
 	
@@ -196,7 +199,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.queryParam("xpath", xPath)
 				.request().get();
 
-		FemmeResponse<CollectionList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<CollectionList>>(){});
+		FemmeResponse<ElementList<Collection>> femmeResponse = response.readEntity(new GenericType<FemmeResponse<ElementList<Collection>>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return new ArrayList<>();
@@ -205,7 +208,7 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
-		return femmeResponse.getEntity().getBody().getCollections();
+		return femmeResponse.getEntity().getBody().getElements();
 	}
 	
 	@Override
@@ -259,13 +262,20 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	public List<DataElement> getDataElements(Integer limit, Integer offset, List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException {
-		return findDataElements(null,
-				QueryOptionsMessenger.builder()
-						.limit(limit).offset(offset)
-						.include(new HashSet<>(includes))
-						.exclude(new HashSet<>(excludes))
-						.build(),
-				xPath);
+		QueryOptionsMessenger.Builder queryOptionsBuilder = QueryOptionsMessenger.builder();
+		if (limit != null) {
+			queryOptionsBuilder.limit(limit);
+		}
+		if (offset != null) {
+			queryOptionsBuilder.offset(offset);
+		}
+		if (includes != null) {
+			queryOptionsBuilder.include(new HashSet<>(includes));
+		}
+		if (excludes != null) {
+			queryOptionsBuilder.exclude(new HashSet<>(excludes));
+		}
+		return findDataElements(null, queryOptionsBuilder.build(), xPath);
 	}
 
 	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
@@ -315,7 +325,7 @@ public class FemmeClient implements FemmeClientAPI {
 
 		Response response = target.request().get(Response.class);
 
-		FemmeResponse<DataElementList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+		FemmeResponse<ElementList<DataElement>> femmeResponse = response.readEntity(new GenericType<FemmeResponse<ElementList<DataElement>>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return new ArrayList<>();
@@ -324,7 +334,7 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
-		return femmeResponse.getEntity().getBody().getDataElements();
+		return femmeResponse.getEntity().getBody().getElements();
 		
 	}
 	
@@ -335,7 +345,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.path("dataElements")
 				.request().get();
 
-		FemmeResponse<DataElementList> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+		FemmeResponse<ElementList<DataElement>> femmeResponse = response.readEntity(new GenericType<FemmeResponse<ElementList<DataElement>>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
@@ -344,7 +354,7 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
-		return femmeResponse.getEntity().getBody().getDataElements();
+		return femmeResponse.getEntity().getBody().getElements();
 	}
 	
 	@Override
@@ -377,36 +387,43 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(response.getMessage());
 		}*/
 		
-		/*return response.getEntity().getBody().getDataElements();*/
+		/*return response.getEntity().getBody().getElements();*/
 		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
 	@Override
 	public DataElement getDataElementById(String id) throws FemmeException {
-		Response response = webTarget
-				.path("dataElements")
-				.path(id)
-				.request().get();
+		return getDataElementByIdWithOptions(id, null, null);
+	}
 
-		FemmeResponse<DataElement> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
-		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-			logger.debug(femmeResponse.getMessage());
-			return null;
-		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-			logger.error(femmeResponse.getMessage());
-			throw new FemmeException(femmeResponse.getMessage());
-		}
-		
-		return femmeResponse.getEntity().getBody();
+	@Override
+	public DataElement getDataElementById(String id, Set<String> includes, Set<String> excludes) throws FemmeException {
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(includes).exclude(excludes).build();
+		return getDataElementByIdWithOptions(id, null, options);
 	}
 
 	@Override
 	public DataElement getDataElementById(String id, String xPath) throws FemmeException {
-		Response response = webTarget
-				.path("dataElements")
-				.path(id)
-				.queryParam("xpath", xPath)
-				.request().get();
+		return getDataElementByIdWithOptions(id, xPath, null);
+	}
+
+	@Override
+	public DataElement getDataElementById(String id, String xPath, Set<String> includes, Set<String> excludes) throws FemmeException {
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(includes).exclude(excludes).build();
+		return getDataElementByIdWithOptions(id, xPath, options);
+	}
+
+	private DataElement getDataElementByIdWithOptions(String id, String xPath, QueryOptionsMessenger options) throws FemmeException {
+		WebTarget tempWebTarget = this.webTarget.path("dataElements").path(id);
+
+		if (xPath != null) {
+			tempWebTarget = tempWebTarget.queryParam("xpath", xPath);
+		}
+		if (options != null) {
+			tempWebTarget = tempWebTarget.queryParam("options", options);
+		}
+
+		Response response = tempWebTarget.request().get();
 
 		FemmeResponse<DataElement> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
@@ -447,7 +464,7 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(response.getMessage());
 		}*/
 		
-		/*return response.getEntity().getBody().getDataElements();*/
+		/*return response.getEntity().getBody().getElements();*/
 		return findDataElements(collectionQuery, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), null);
 	}
 	
@@ -466,7 +483,7 @@ public class FemmeClient implements FemmeClientAPI {
 			throw new FemmeException(femmeResponse.getMessage());
 		}
 		
-		return femmeResponse.getEntity().getBody().getDataElements();
+		return femmeResponse.getEntity().getBody().getElements();
 	}
 	
 }

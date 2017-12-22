@@ -330,7 +330,7 @@ public class FemmeAdminResource {
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 
 		try {
-			if (!this.femme.exists(elementId, elementSubtype)) {
+			if (!this.femme.exists(elementSubtype, elementId)) {
 				String message = elementSubtype.getSimpleName() + " " + elementId + " doesn't exist";
 				femmeResponse.setStatus(Response.Status.NOT_FOUND.getStatusCode()).setMessage(message);
 				logger.info(message);

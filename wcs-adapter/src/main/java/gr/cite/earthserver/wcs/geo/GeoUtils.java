@@ -66,8 +66,16 @@ public final class GeoUtils {
 		return new Pair<>(GeoUtils.DEFAULT_CRS, boundingBoxJSON);
 	}
 
+	private static boolean isLatitude(String axisLabel) {
+		return "lat".equals(axisLabel.toLowerCase()) || "n".equals(axisLabel.toLowerCase());
+	}
+
 	private static boolean isLatitude(Axis axis) {
 		return "lat".equals(axis.getLabel()) || "n".equals(axis.getLabel());
+	}
+
+	private static boolean isLongitude(String axisLabel) {
+		return "long".equals(axisLabel.toLowerCase()) || "e".equals(axisLabel.toLowerCase());
 	}
 
 	private static boolean isLongitude(Axis axis) {
@@ -78,12 +86,14 @@ public final class GeoUtils {
 		int crsDimension = GeoUtils.getCrsDimension(evaluator);
 		List<String> axisLabels = GeoUtils.getAxisLabels(evaluator);
 		List<String> crs = GeoUtils.getCrs(evaluator);
-		List<Double> lowerCorners = GeoUtils.getLowerCorners(evaluator);
-		List<Double> upperCorners = GeoUtils.getUpperCorners(evaluator);
+		List<String> lowerCorners = GeoUtils.getLowerCorners(evaluator);
+		List<String> upperCorners = GeoUtils.getUpperCorners(evaluator);
 
 		List<Axis> axes = new ArrayList<>();
 		for (int axesIndex = 0; axesIndex < crsDimension; axesIndex++) {
-			axes.add(new Axis(axisLabels.get(axesIndex), crs.get(0), lowerCorners.get(axesIndex), upperCorners.get(axesIndex)));
+			if (isLatitude(axisLabels.get(axesIndex)) || isLongitude(axisLabels.get(axesIndex))) {
+				axes.add(new Axis(axisLabels.get(axesIndex), crs.get(0), lowerCorners.get(axesIndex), upperCorners.get(axesIndex)));
+			}
 		}
 
 		return axes;
@@ -106,14 +116,14 @@ public final class GeoUtils {
 		return Arrays.stream(axisLabels.stream().findFirst().orElse("").split(" ")).map(String::toLowerCase).collect(Collectors.toList());
 	}
 
-	private static List<Double> getLowerCorners(XPathEvaluator evaluator) throws XPathEvaluationException {
+	private static List<String> getLowerCorners(XPathEvaluator evaluator) throws XPathEvaluationException {
 		List<String> lowerCorners = evaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/*[local-name()='lowerCorner']/text()");
-		return Arrays.stream(lowerCorners.stream().findFirst().orElse("").split(" ")).map(Double::parseDouble).collect(Collectors.toList());
+		return Arrays.stream(lowerCorners.stream().findFirst().orElse("").split(" ")).collect(Collectors.toList());
 	}
 
-	private static List<Double> getUpperCorners(XPathEvaluator evaluator) throws XPathEvaluationException {
+	private static List<String> getUpperCorners(XPathEvaluator evaluator) throws XPathEvaluationException {
 		List<String> upperCorners = evaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/*[local-name()='upperCorner']/text()");
-		return Arrays.stream(upperCorners.stream().findFirst().orElse("").split(" ")).map(Double::parseDouble).collect(Collectors.toList());
+		return Arrays.stream(upperCorners.stream().findFirst().orElse("").split(" ")).collect(Collectors.toList());
 	}
 
 	public static void main(String[] args) throws ParseException {

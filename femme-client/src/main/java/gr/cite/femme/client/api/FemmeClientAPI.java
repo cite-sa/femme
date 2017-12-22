@@ -1,6 +1,7 @@
 package gr.cite.femme.client.api;
 
 import java.util.List;
+import java.util.Set;
 
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
@@ -58,7 +59,11 @@ public interface FemmeClientAPI {
 	
 	public DataElement getDataElementById(String id) throws FemmeException;
 
+	public DataElement getDataElementById(String id, Set<String> includes, Set<String> excludes) throws FemmeException;
+
 	public DataElement getDataElementById(String id, String xPath) throws FemmeException;
+
+	public DataElement getDataElementById(String id, String xPath, Set<String> includes, Set<String> excludes) throws FemmeException;
 
 	public List<DataElement> getDataElementsByName(String name) throws FemmeException, FemmeClientException;
 	

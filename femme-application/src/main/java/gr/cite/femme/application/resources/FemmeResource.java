@@ -84,10 +84,11 @@ public class FemmeResource {
 	public Response getCollectionById(
 			@NotNull @PathParam("id") String id,
 			@QueryParam("xpath") String xPath,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("pretty") boolean pretty,
 			@DefaultValue("false") @QueryParam("loadInactiveMetadata") boolean loadInactiveMetadata) throws FemmeApplicationException {
 
-		return getElementById(Collection.class, id, xPath, pretty, loadInactiveMetadata);
+		return getElementById(Collection.class, id, xPath, options, pretty, loadInactiveMetadata);
 	}
 
 	@GET
@@ -168,10 +169,11 @@ public class FemmeResource {
 	public Response getDataElementById(
 			@NotNull @PathParam("id") String id,
 			@QueryParam("xpath") String xPath,
+			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("pretty") boolean pretty,
 			@DefaultValue("false") @QueryParam("loadInactiveMetadata") boolean loadInactiveMetadata) throws FemmeApplicationException {
 
-		return getElementById(DataElement.class, id, xPath, pretty, loadInactiveMetadata);
+		return getElementById(DataElement.class, id, xPath, options, pretty, loadInactiveMetadata);
 	}
 
 	private Response findElements(Class<? extends Element> elementType, QueryMongo query, QueryOptionsMessenger options, String xPath, boolean pretty) throws FemmeApplicationException {
@@ -271,11 +273,12 @@ public class FemmeResource {
 		return Response.ok().entity(femmeResponse).build();
 	}
 
-	private Response getElementById(Class<? extends Element> elementType, String id, String xPath, boolean pretty, boolean loadInactiveMetadata) throws FemmeApplicationException {
+	private Response getElementById(Class<? extends Element> elementType, String id, String xPath, QueryOptionsMessenger options, boolean pretty, boolean loadInactiveMetadata) throws FemmeApplicationException {
 		FemmeResponse<Element> femmeResponse = new FemmeResponse<>();
+		Element element;
 
 		try {
-			Element element = xPath == null ? this.femme.get(id, elementType, loadInactiveMetadata) : this.femme.get(id, xPath, elementType);
+			element = this.femme.get(elementType, id, xPath, options, loadInactiveMetadata);
 			if (pretty) {
 				FemmeResource.prettifyMetadata(element.getMetadata());
 			}
@@ -417,7 +420,7 @@ public class FemmeResource {
 		//FemmeResponseEntity<MetadataList> entity = new FemmeResponseEntity<>();
 
 		try {
-			Element element = this.femme.get(id, elementSubType);
+			Element element = this.femme.get(elementSubType, id);
 			if (element == null) {
 				throw new FemmeApplicationException("No " + elementSubType.getSimpleName() + " with id " + id + " found", Response.Status.NOT_FOUND.getStatusCode());
 			}
@@ -449,7 +452,7 @@ public class FemmeResource {
 		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
 
 		try {
-			Element element = this.femme.get(elementId, elementSubType);
+			Element element = this.femme.get(elementSubType, elementId);
 
 			if (element == null) {
 				throw new FemmeApplicationException("No " + elementSubType.getSimpleName() + " with id " + elementId + " found", Response.Status.NOT_FOUND.getStatusCode());
@@ -487,7 +490,7 @@ public class FemmeResource {
 
 		Metadatum metadatum;
 		try {
-			Element element = this.femme.get(elementId, elementSubType);
+			Element element = this.femme.get(elementSubType, elementId);
 			if (element == null) {
 				throw new FemmeApplicationException("No " + elementSubType.getSimpleName() + " with id " + elementId + " found", Response.Status.NOT_FOUND.getStatusCode());
 			}

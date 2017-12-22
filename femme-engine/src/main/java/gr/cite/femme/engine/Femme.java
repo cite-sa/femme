@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.ws.rs.QueryParam;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -284,32 +285,45 @@ public class Femme {
 		return null;
 	}
 
-	public boolean exists(String elementId, Class<? extends Element> elementSubtype) throws DatastoreException, MetadataStoreException {
+	public boolean exists(Class<? extends Element> elementSubtype, String elementId) throws DatastoreException, MetadataStoreException {
 		QueryMongo countQuery = QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(elementId)).end());
 		return query(elementSubtype).count(countQuery).execute() > 0;
 	}
 
-	public <T extends Element> T get(String id, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
-		return get(id, elementSubType, false);
+	public <T extends Element> T get(Class<T> elementSubType, String id) throws DatastoreException, MetadataStoreException {
+		return get(elementSubType, id, null, null, false);
 	}
 
-	public <T extends Element> T get(String id, Class<T> elementSubType, boolean loadInactiveMetadata) throws DatastoreException, MetadataStoreException {
+	public <T extends Element> T get(Class<T> elementSubType, String id, String xPath) throws DatastoreException, MetadataStoreException {
+		return get(elementSubType, id, xPath, null, false);
+	}
+
+	public <T extends Element> T get(Class<T> elementSubType, String id, String xPath, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
+		return get(elementSubType, id, xPath, options, false);
+	}
+
+	public <T extends Element> T get(Class<T> elementSubType, String id, String xPath, QueryOptionsMessenger options, boolean loadInactiveMetadata) throws DatastoreException, MetadataStoreException {
+		if (options != null) {
+			options.setLoadInactiveMetadata(Boolean.toString(loadInactiveMetadata));
+		} else {
+			options = QueryOptionsMessenger.builder().loadInactiveMetadata(loadInactiveMetadata).build();
+		}
+
 		try {
 			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()))
-					.options(QueryOptionsMessenger.builder().loadInactiveMetadata(loadInactiveMetadata).build())
-					.execute().first();
+					.options(options).xPath(xPath).execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
 	}
 
-	public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
+	/*public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
 			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end())).xPath(xPath).execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
-	}
+	}*/
 
 	/*public <T extends Element> MetadataQueryExecutor<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubType) {
 		return new QueryOptionsBuilderMongo<T>().getQueryExecutor(this.datastore, this.metadataStore, elementSubType).find(getQueryExecutor);
@@ -358,11 +372,11 @@ public class Femme {
 	}
 
 	public String generateId() {
-		return new ObjectId().toString();
+		return this.datastore.generateId();
 	}
 
 	public Object generateId(String id) {
-		return new ObjectId(id);
+		return this.datastore.generateId(id);
 	}
 
 }

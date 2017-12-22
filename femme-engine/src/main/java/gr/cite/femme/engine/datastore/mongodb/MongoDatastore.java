@@ -153,7 +153,7 @@ public class MongoDatastore implements Datastore {
 	/*private void insertCollection(Collection collection) throws DatastoreException {
 		Instant now = Instant.now();
 		
-		*//*for (DataElement dataElement : collection.getDataElements()) {
+		*//*for (DataElement dataElement : collection.getElements()) {
 			dataElement.addCollection(collection);
 			if (dataElement.getId() == null) {
 				dataElement.setId(new ObjectId().toString());
@@ -175,19 +175,19 @@ public class MongoDatastore implements Datastore {
 			
 		}
 
-		for (DataElement dataElement : collection.getDataElements()) {
+		for (DataElement dataElement : collection.getElements()) {
 			try {
 				*//*insertMetadata(dataElement.getMetadata(), dataElement.getId());*//*
 			} catch (MongoGridFSException e) {
 				logger.error(e.getMessage(), e);
 			}
 		}
-		if (collection.getDataElements().size() > 0) {
-			for (DataElement dataElement: collection.getDataElements()) {
+		if (collection.getElements().size() > 0) {
+			for (DataElement dataElement: collection.getElements()) {
 				dataElement.getSystemicMetadata().setCreated(now);
 				dataElement.getSystemicMetadata().setModified(now);
 			}
-			this.mongoClient.getDataElements().insertMany(collection.getDataElements());
+			this.mongoClient.getElements().insertMany(collection.getElements());
 
 		}
 	}*/
@@ -199,7 +199,7 @@ public class MongoDatastore implements Datastore {
 		dataElement.getSystemicMetadata().setModified(now);
 		
 		try {
-			this.mongoClient.getDataElements().insertOne(dataElement);
+			this.mongoClient.getElements().insertOne(dataElement);
 		} catch (MongoException e) {
 			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e);
 		}
@@ -248,7 +248,7 @@ public class MongoDatastore implements Datastore {
 				}
 
 				for (Collection collection : collectionList) {
-					for (DataElement dataElement : collection.getDataElements()) {
+					for (DataElement dataElement : collection.getElements()) {
 						dataElement.addCollection(collection);
 						dataElement.setId(new ObjectId().toString());
 						try {
@@ -257,13 +257,13 @@ public class MongoDatastore implements Datastore {
 							logger.error(e.getMessage(), e);
 						}
 					}
-					if (collection.getDataElements() != null && collection.getDataElements().size() > 0) {
-						this.mongoClient.getDataElements().insertMany(collection.getDataElements());
+					if (collection.getElements() != null && collection.getElements().size() > 0) {
+						this.mongoClient.getElements().insertMany(collection.getElements());
 					}
 				}
 			} else if (elements.get(0) instanceof DataElement) {
 				List<DataElement> dataElementList = (List<DataElement>) elements;
-				this.mongoClient.getDataElements().insertMany(dataElementList);
+				this.mongoClient.getElements().insertMany(dataElementList);
 
 				*//*
 				 * if (dataElement.getCollections() != null && dataElement.getCollections().size() > 0) {
@@ -457,7 +457,7 @@ public class MongoDatastore implements Datastore {
 			if (element instanceof DataElement) {
 				try {
 					logger.debug("Delete DataElement " + element.getId());
-					this.mongoClient.getDataElements().deleteOne(Filters.eq(FieldNames.ID, new ObjectId(element.getId())));
+					this.mongoClient.getElements().deleteOne(Filters.eq(FieldNames.ID, new ObjectId(element.getId())));
 					logger.debug("Delete completed");
 					deletedCount++;
 				} catch (MongoException e) {

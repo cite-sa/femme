@@ -6,40 +6,39 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.core.model.DataElement;
 
-//@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class DataElementList {
-	
-	//@JsonProperty
-	private List<DataElement> dataElements;
-	
-	//@JsonProperty
+
+	@JsonProperty("dataElements")
+	private List<DataElement> elements;
+
+	@JsonProperty("size")
 	private int size;
 
-	public DataElementList() {
-	}
-	
-	public DataElementList(List<DataElement> dataElements) {
-		this.dataElements = dataElements;
-		this.size = dataElements.size();
-	}
-	
-	public List<DataElement> getDataElements() {
-		return dataElements;
+	public DataElementList() { }
+
+	public DataElementList(List<DataElement> elements) {
+		this.elements = elements;
+		this.size = elements.size();
 	}
 
-	public void setDataElements(List<DataElement> dataElements) {
-		this.dataElements = dataElements;
+	public List<DataElement> getElements() {
+		return elements;
+	}
+
+	public void setElements(List<DataElement> elements) {
+		this.elements = elements;
 	}
 
 	public int getSize() {
-		return size;
+		return this.size;
 	}
 
 	public void setSize(int size) {
 		this.size = size;
 	}
-	
-	
-	
+
+
+
 	
 }

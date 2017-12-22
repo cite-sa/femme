@@ -13,6 +13,13 @@ public class Axis {
 		this.upperCorner = upperCorner;
 	}
 
+	public Axis(String label, String crs, String lowerCorner, String upperCorner) {
+		this.label = label;
+		this.crs = crs;
+		this.lowerCorner = Double.parseDouble(lowerCorner);
+		this.upperCorner = Double.parseDouble(upperCorner);
+	}
+
 	public String getLabel() {
 		return label;
 	}
@@ -37,12 +44,20 @@ public class Axis {
 		this.lowerCorner = lowerCorner;
 	}
 
+	public void setLowerCorner(String lowerCorner) {
+		this.lowerCorner = Double.parseDouble(lowerCorner);
+	}
+
 	public Double getUpperCorner() {
 		return upperCorner;
 	}
 
 	public void setUpperCorner(Double upperCorner) {
 		this.upperCorner = upperCorner;
+	}
+
+	public void setUpperCorner(String upperCorner) {
+		this.upperCorner = Double.parseDouble(upperCorner);
 	}
 
 	@Override

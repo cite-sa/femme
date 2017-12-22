@@ -57,10 +57,9 @@ public final class WCSFemmeMapper {
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
 
 		// TODO uncomment to transform geodata
-		/*try {
+		try {
 			Pair<String, String> bboxGeoJsonWithCRS = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(response.getResponse());
 			
-			//Map<String, Object> other = new HashMap<>();
 			Map<String, String> geo = new HashMap<>();
 			String bboxJson;
 			if (bboxGeoJsonWithCRS.getRight() != null) {
@@ -73,14 +72,38 @@ public final class WCSFemmeMapper {
 				}
 				geo.put("bbox", bboxJson);
 			}
-			//dataElement.getSystemicMetadata().setOther(other);
 			dataElement.getSystemicMetadata().setGeo(geo);
 			
-		} catch(ParseException e) {
+		} catch(Exception e) {
 			logger.error(e.getMessage());
-		}*/
+		}
 
 		return dataElement;
+	}
+	
+	public static Map<String, String> fromCoverageToBBox(WCSResponse response) throws ParseException {
+		// TODO uncomment to transform geodata
+		Map<String, String> geo = new HashMap<>();
+		try {
+			Pair<String, String> bboxGeoJsonWithCRS = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(response.getResponse());
+			
+			String bboxJson;
+			if (bboxGeoJsonWithCRS.getRight() != null) {
+				BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
+				
+				try {
+					bboxJson = mapper.writeValueAsString(bbox);
+				} catch (JsonProcessingException e) {
+					throw new ParseException(e.getMessage(), e);
+				}
+				geo.put("bbox", bboxJson);
+			}
+			
+		} catch(Exception e) {
+			logger.error(e.getMessage());
+		}
+		
+		return geo;
 	}
 
 	public static Metadatum fromWCSMetadata(WCSResponse response, String name) {
@@ -93,6 +116,8 @@ public final class WCSFemmeMapper {
 	}
 
 	public static Coverage dataElementToCoverage(DataElement dataElement) {
+		if (dataElement == null) return null;
+
 		Coverage coverage = new Coverage();
 		coverage.setId(dataElement.getId());
 		coverage.setCoverageId(dataElement.getName());

@@ -120,19 +120,19 @@ public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
 				status = Status.getEnum(reader.readInt32());
 			} else if (fieldName.equals("geo")) {
 				geo = new HashMap<>();
-			reader.readStartDocument();
-			while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-				String geoFieldName = reader.readName();
-				if ("bbox".equals(geoFieldName)) {
-					Document value = null;
-					if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
-						value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
+				reader.readStartDocument();
+				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+					String geoFieldName = reader.readName();
+					if ("bbox".equals(geoFieldName)) {
+						Document value = null;
+						if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+							value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
+						}
+						//BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
+						geo.put(geoFieldName, value.toJson());
 					}
-					//BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
-					geo.put(geoFieldName, value.toJson());
 				}
-			}
-			reader.readEndDocument();
+				reader.readEndDocument();
 		} else if (fieldName.equals("other")) {
 	        	other = new HashMap<>();
 	        	reader.readStartDocument();
