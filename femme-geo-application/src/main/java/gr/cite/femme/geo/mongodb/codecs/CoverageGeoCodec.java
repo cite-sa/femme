@@ -1,10 +1,14 @@
 package gr.cite.femme.geo.mongodb.codecs;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.geo.core.CoverageGeo;
 import org.bson.BsonReader;
@@ -20,7 +24,8 @@ import org.bson.codecs.configuration.CodecRegistry;
 
 import gr.cite.femme.core.model.BBox;
 import org.bson.types.ObjectId;
-/*import DateTime;*/
+import org.geojson.GeoJsonObject;
+		/*import DateTime;*/
 
 public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 	static private final ObjectMapper mapper = new ObjectMapper();
@@ -49,21 +54,32 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		if (coverageGeo.getServerId() != null) {
 			writer.writeObjectId("serverId", new ObjectId(coverageGeo.getServerId()));
 		}
-		if (coverageGeo.getGeo() != null && coverageGeo.getGeo().size() > 0) {
-			writer.writeName("geo");
+		if (coverageGeo.getGeo() != null) {
+			writer.writeName("loc");
 			writer.writeStartDocument();
-			
-			for (final Map.Entry<String, String> entry : coverageGeo.getGeo().entrySet()) {
-				writer.writeName(entry.getKey());
-				/*try {*/
-				//encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(mapper.writeValueAsString(entry.getValue())));
-				encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(entry.getValue()));
+			try {
+				String json= new ObjectMapper().writeValueAsString(coverageGeo.getGeo());
+			//	DBObject bson = ( DBObject ) JSON.parse( json );
+				writer.writeStartArray();
+				encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(json));
+				writer.writeEndDocument();
 
-				/*} catch (JsonProcessingException e) {
-					e.printStackTrace();
-				}*/
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
 			}
-			writer.writeEndDocument();
+
+//			for (final Map.Entry<String, Object> entry : coverageGeo.getGeo().entrySet()) {
+//				writer.writeName(entry.getKey());
+//				try {
+//				encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(mapper.writeValueAsString(entry.getValue())));
+//				//encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(entry.getValue()));
+//
+//				} catch (JsonProcessingException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//			writer.writeEndDocument();
+
 		}
 		writer.writeEndDocument();
 	}
@@ -85,8 +101,8 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 	public CoverageGeo decode(BsonReader reader, DecoderContext decoderContext) {
 		String id = null, serverId = null;
 		Instant created = null, modified = null;
-		Map<String, String> geo = null;
-		
+		//Map<String, Object> geo = null;
+		GeoJsonObject geo = null;
 		reader.readStartDocument();
 		
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -101,19 +117,30 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 			} else if (fieldName.equals("serverId")) {
 				serverId = reader.readObjectId().toString();
 			} else if (fieldName.equals("geo")) {
-				geo = new HashMap<>();
+				//geo = new HashMap<>();
 				reader.readStartDocument();
-				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-					String geoFieldName = reader.readName();
-					if ("bbox".equals(geoFieldName)) {
-						Document value = null;
-						if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
-							value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
-						}
-						//BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
-						geo.put(geoFieldName, value.toJson());
-					}
+				//************
+				Document value = null;
+				if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+					value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
 				}
+				try {
+					geo = mapper.readValue(value.toJson(), GeoJsonObject.class);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				//**********
+//				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+//					String geoFieldName = reader.readName();
+//					if ("bbox".equals(geoFieldName)) {
+//						Document value = null;
+//						if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
+//							value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
+//						}
+//						//BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
+//						geo.put(geoFieldName, value.toJson());
+//					}
+//				}
 				reader.readEndDocument();
 			}
 		}

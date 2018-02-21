@@ -37,6 +37,8 @@ public class MongoGeoDatastoreClient {
 	public MongoGeoDatastoreClient() {
 		this(MongoGeoDatastoreClient.DATABASE_HOST, MongoGeoDatastoreClient.DATABASE_PORT, MongoGeoDatastoreClient.DATABASE_NAME);
 	}
+
+
 	
 	public MongoGeoDatastoreClient(String host, int port, String name) {
 		

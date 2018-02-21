@@ -14,7 +14,11 @@
    <bean id="femmeClient" class="gr.cite.femme.client.FemmeClient">
 		<constructor-arg value="${gr.cite.femme.client.femme.url}"/>
 	</bean>
+	<bean id="geoService" class="gr.cite.femme.geo.service.GeoService">
+	</bean>
 	
 	<context:annotation-config/>
 	<context:component-scan base-package="gr.cite.femme.geo.application.FemmeGeoApplication"/>
+	<context:component-scan base-package="gr.cite.femme.geo.service.GeoService"/>
+
 </beans>
