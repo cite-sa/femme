@@ -20,8 +20,8 @@ import gr.cite.femme.core.dto.ElementList;
 import gr.cite.femme.core.dto.ImportEndpoint;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.QueryClient;
-import gr.cite.femme.core.dto.CollectionList;
-import gr.cite.femme.core.dto.DataElementList;
+//import gr.cite.femme.core.dto.CollectionList;
+//import gr.cite.femme.core.dto.DataElementList;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.construction.Criterion;
@@ -49,8 +49,8 @@ public class FemmeClient implements FemmeClientAPI {
 //	private static final String FEMME_URL = "http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT";
 	
 	private Client client;
-
 	private WebTarget webTarget;
+	private boolean indexModeOn = true;
 	
 	
 	public FemmeClient() {
@@ -61,6 +61,12 @@ public class FemmeClient implements FemmeClientAPI {
 	public FemmeClient(String femmeUrl) {
 		client = ClientBuilder.newClient().register(JacksonFeature.class);
 		webTarget = client.target(femmeUrl);
+	}
+	
+	public FemmeClient(String femmeUrl, boolean indexModeOn) {
+		client = ClientBuilder.newClient().register(JacksonFeature.class);
+		webTarget = client.target(femmeUrl);
+		this.indexModeOn = indexModeOn;
 	}
 
 	@Override
@@ -95,7 +101,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
-		if (response.getStatus() != 201) {
+		if (response.getStatus() != 200 && response.getStatus() != 201) {
 			logger.error(femmeResponse.getMessage());
 			throw new FemmeException(femmeResponse.getMessage());
 		}
@@ -109,7 +115,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
-		if (response.getStatus() != 201) {
+		if (response.getStatus() != 200 && response.getStatus() != 201) {
 			logger.error(femmeResponse.getMessage());
 			throw new FemmeException(femmeResponse.getMessage());
 		}
@@ -123,7 +129,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.request().post(Entity.entity(collection, MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
-		if (response.getStatus() != 201) {
+		if (response.getStatus() != 200 && response.getStatus() != 201) {
 			logger.error(femmeResponse.getMessage());
 			throw new FemmeException(femmeResponse.getMessage());
 		}
@@ -139,7 +145,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
-		if (response.getStatus() != 201) {
+		if (response.getStatus() != 200 && response.getStatus() != 201) {
 			logger.error(femmeResponse.getMessage());
 			throw new FemmeException(femmeResponse.getMessage());
 		}
@@ -155,7 +161,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.request().post(Entity.entity(dataElement, MediaType.APPLICATION_JSON));
 
 		FemmeResponse<String> femmeResponse = response.readEntity(new GenericType<FemmeResponse<String>>(){});
-		if (response.getStatus() != 201) {
+		if (response.getStatus() != 200 && response.getStatus() != 201) {
 			logger.error(femmeResponse.getMessage());
 			throw new FemmeException(femmeResponse.getMessage());
 		}
@@ -279,7 +285,24 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, String xPath) throws FemmeException, FemmeClientException {
-		return findDataElements(null, QueryOptionsMessenger.builder().limit(limit).offset(offset).build(), xPath, true);
+		return getDataElementsInMemoryXPath(limit, offset, null, null, xPath);
+	}
+	
+	public List<DataElement> getDataElementsInMemoryXPath(Integer limit, Integer offset, List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException {
+		QueryOptionsMessenger.Builder queryOptionsBuilder = QueryOptionsMessenger.builder();
+		if (limit != null) {
+			queryOptionsBuilder.limit(limit);
+		}
+		if (offset != null) {
+			queryOptionsBuilder.offset(offset);
+		}
+		if (includes != null) {
+			queryOptionsBuilder.include(new HashSet<>(includes));
+		}
+		if (excludes != null) {
+			queryOptionsBuilder.exclude(new HashSet<>(excludes));
+		}
+		return findDataElements(null, queryOptionsBuilder.build(), xPath, true);
 	}
 
 	@Override
@@ -288,8 +311,7 @@ public class FemmeClient implements FemmeClientAPI {
 	}
 
 	@Override
-	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath, boolean inMemoryXPath)
-			throws FemmeException, FemmeClientException {
+	public <T extends Criterion> List<DataElement> findDataElements(Query<T> query, QueryOptionsMessenger options, String xPath, boolean inMemoryXPath) throws FemmeException, FemmeClientException {
 		
 		String queryJson = null, optionsJson = null;
 		try {
@@ -474,7 +496,7 @@ public class FemmeClient implements FemmeClientAPI {
 				.path("dataElements").path(dataElementId)
 				.request().get();
 
-		FemmeResponse<DataElementList>femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElementList>>(){});
+		FemmeResponse<ElementList<DataElement>> femmeResponse = response.readEntity(new GenericType<FemmeResponse<ElementList<DataElement>>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
 			logger.debug(femmeResponse.getMessage());
 			return null;
