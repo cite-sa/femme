@@ -2,15 +2,10 @@ package gr.cite.femme.geo.mongodb.codecs;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-import gr.cite.femme.core.model.Status;
-import gr.cite.femme.geo.core.CoverageGeo;
+import gr.cite.femme.core.geo.CoverageGeo;
 import org.bson.BsonReader;
 import org.bson.BsonString;
 import org.bson.BsonType;
@@ -22,10 +17,8 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import gr.cite.femme.core.model.BBox;
 import org.bson.types.ObjectId;
 import org.geojson.GeoJsonObject;
-		/*import DateTime;*/
 
 public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 	static private final ObjectMapper mapper = new ObjectMapper();

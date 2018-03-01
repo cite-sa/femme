@@ -9,7 +9,7 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd">
    
-	<context:property-placeholder location="WEB-INF/geo.properties" />
+	<context:property-placeholder location="WEB-INF/geo.properties.devel" />
    
    <bean id="femmeClient" class="gr.cite.femme.client.FemmeClient">
 		<constructor-arg value="${gr.cite.femme.client.femme.url}"/>

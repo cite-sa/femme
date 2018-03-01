@@ -4,14 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.geo.api.GeoServiceApi;
-import gr.cite.femme.geo.core.CoverageGeo;
+import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import gr.cite.femme.geo.utils.GeoUtils;
 import org.geojson.GeoJsonObject;
 import org.opengis.referencing.FactoryException;
-import org.springframework.stereotype.Component;
-
-import javax.inject.Inject;
 import java.io.IOException;
 
 public class GeoService implements GeoServiceApi{

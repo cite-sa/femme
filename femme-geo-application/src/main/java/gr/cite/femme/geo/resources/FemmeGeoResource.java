@@ -1,7 +1,6 @@
 package gr.cite.femme.geo.resources;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,11 +13,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-//import gr.cite.earthserver.wcs.geo.GeoUtils;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
@@ -30,11 +27,8 @@ import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.geo.api.GeoServiceApi;
-import gr.cite.femme.geo.core.CoverageGeo;
-import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
-import org.geojson.GeoJsonObject;
+import gr.cite.femme.core.geo.CoverageGeo;
 import org.opengis.referencing.FactoryException;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Path("/")
 public class FemmeGeoResource {

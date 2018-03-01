@@ -241,11 +241,11 @@
 				<version>${tomcat-maven-plugin.version}</version>
 				<configuration>
 					<port>8084</port>
-					<path>/femme-geo-application-devel</path>
-					<!--<contextFile>src/main/webapp/WEB-INF/web.xml</contextFile>-->
-					<!--<mode>context</mode>-->
+					<path>/femme-geo</path>
 					<charset>UTF-8</charset>
-					<!--<warDirectory>target/${project.artifactId}-${project.version}</warDirectory>-->
+					<systemProperties>
+						<logback.configurationFile>logback-dev.xml</logback.configurationFile>
+					</systemProperties>
 				</configuration>
 			</plugin>
 		</plugins>
