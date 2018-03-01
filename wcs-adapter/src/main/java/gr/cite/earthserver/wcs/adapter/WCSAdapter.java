@@ -10,6 +10,8 @@ import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
 import gr.cite.earthserver.wcs.core.Coverage;
 import gr.cite.earthserver.wcs.core.Server;
 import gr.cite.earthserver.wcs.core.WCSResponse;
+import gr.cite.earthserver.wcs.geo.GeoRequests;
+import gr.cite.earthserver.wcs.geo.GeoUtils;
 import gr.cite.earthserver.wcs.utils.ParseException;
 import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
 import gr.cite.femme.client.FemmeClient;
@@ -29,13 +31,15 @@ import jersey.repackaged.com.google.common.collect.Sets;
 public class WCSAdapter implements WCSAdapterAPI {
 	
 	private FemmeClientAPI femmeClient;
-	
+	private GeoRequests geoRequests;
+
 	/*public WCSAdapter() {
 		this.femmeClient = new FemmeClient();
 	}*/
 	
 	public WCSAdapter(String femmeUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);
+		this.geoRequests = new GeoRequests();
 	}
 
 	@Override
@@ -65,7 +69,9 @@ public class WCSAdapter implements WCSAdapterAPI {
 
 	@Override
 	public String insertCoverage(WCSResponse coverage) throws ParseException, FemmeException {
-		return this.femmeClient.insert(WCSFemmeMapper.fromCoverage(coverage));
+		DataElement dataElement= WCSFemmeMapper.fromCoverage(coverage);
+		this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage,dataElement));
+		return this.femmeClient.insert(dataElement);
 	}
 	
 	@Override
