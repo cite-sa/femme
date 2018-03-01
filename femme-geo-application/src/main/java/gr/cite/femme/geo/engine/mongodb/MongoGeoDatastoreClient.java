@@ -3,8 +3,13 @@ package gr.cite.femme.geo.engine.mongodb;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import gr.cite.femme.core.geo.CoverageGeo;
+import gr.cite.femme.core.model.Collection;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.model.Element;
+
 import gr.cite.femme.geo.core.ServerGeo;
 import gr.cite.femme.geo.mongodb.codecs.CoverageGeoCodecProvider;
 import gr.cite.femme.geo.mongodb.codecs.ServerGeoCodecProvider;
@@ -20,7 +25,7 @@ public class MongoGeoDatastoreClient {
 	//	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
 	private static final String DATABASE_HOST = "localhost";
 	private static final int DATABASE_PORT = 27017;
-	private static final String DATABASE_NAME = "femme-geo-db-devel";
+	private static final String DATABASE_NAME = "femme-db-devel";
 	private static final String SERVER_COLLECTION_NAME = "servers";
 	private static final String COVERAGE_COLLECTION_NAME = "coverages";
 	

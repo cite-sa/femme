@@ -2,6 +2,8 @@ package gr.cite.femme.geo.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import gr.cite.femme.core.model.BBox;
 import org.geojson.GeoJsonObject;
 import org.geojson.GeoJsonObjectVisitor;
@@ -42,6 +44,7 @@ public class GeoUtils {
     public static GeoJsonObject getGeoJsonFromBBoxInput(double[] bBounds) throws FactoryException, IOException {
         CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
         //Revert bounds minX, minY, maxX, maxY to -> xMin,xMax,yMin,yMax
+
         ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[0],bBounds[2],bBounds[1],bBounds[3],
                 defaultCrs
         );
@@ -51,6 +54,19 @@ public class GeoUtils {
         String boundingBoxJSON = geomJSON.toString(geometry);
         GeoJsonObject geoJson = mapper.readValue(boundingBoxJSON, GeoJsonObject.class);
         return geoJson;
+    }
+
+    public static String buildGeoWithinQuery(String geoJson) throws IOException {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        ObjectNode geometry = JsonNodeFactory.instance.objectNode();
+        ObjectNode parent = JsonNodeFactory.instance.objectNode();
+
+        ObjectNode geo= (ObjectNode) mapper.readTree(geoJson);
+
+        geometry.set("$geometry",geo);
+        node.set("$geoWithin",geometry);
+        parent.set("loc",node);
+        return mapper.writeValueAsString(parent);
     }
 
 //    public static GeoJsonObject getGeoJsonFromString(String bBoxInput) throws JsonProcessingException {

@@ -1,11 +1,7 @@
 package gr.cite.femme.geo.resources;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -13,22 +9,26 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+//import gr.cite.earthserver.wcs.geo.GeoUtils;
 import gr.cite.femme.client.FemmeClientException;
 import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
 import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.core.exceptions.DatastoreException;
+import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.core.model.BBox;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.geo.api.GeoServiceApi;
-import gr.cite.femme.core.geo.CoverageGeo;
+import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import org.opengis.referencing.FactoryException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Path("/")
 public class FemmeGeoResource {
@@ -117,20 +117,35 @@ public class FemmeGeoResource {
 		return Response.ok(geoJson).build();
 	}
 
-	// BBOX = [minX, minY, maxX, maxY]
+	// BBOX = [minX, minY, maxX, maxY]- [minLongitude, minLatitude,maxLong, maxLat]
 	@GET
 	@Path("coverages/bbox")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCoverageByBBox(@QueryParam("bbox") String bbox) throws JsonParseException, JsonMappingException, IOException, FactoryException {
 
-		CoverageGeo coverageGeo = null;
+		List<CoverageGeo> coverageGeo = new ArrayList<>();
 		try {
-			coverageGeo = geoServiceApi.getCoverageByBboxString(bbox);
+			coverageGeo = geoServiceApi.getCoveragesByBboxString(bbox);
 		} catch (DatastoreException e) {
 			e.printStackTrace();
 		}
 
-
 		return Response.ok(coverageGeo).build();
 	}
+
+    @GET
+    @Path("coverages/point")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getCoverageByPoint(@QueryParam("lat") Double latitude, @QueryParam("lon") Double longitude, @DefaultValue("0") @QueryParam("radius") Double radius) throws JsonParseException, JsonMappingException, IOException, FactoryException {
+
+        List<CoverageGeo> coverageGeo = new ArrayList<>();
+        try {
+            coverageGeo = geoServiceApi.getCoveragesByPoint(longitude,latitude, radius);
+        } catch (DatastoreException e) {
+            e.printStackTrace();
+        }
+
+        return Response.ok(coverageGeo).build();
+    }
+
 }
