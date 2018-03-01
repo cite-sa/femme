@@ -18,7 +18,7 @@ import gr.cite.femme.core.model.BBox;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.utils.Pair;
-import gr.cite.femme.geo.core.CoverageGeo;
+import gr.cite.femme.core.geo.CoverageGeo;
 import org.geojson.GeoJsonObject;
 import org.geojson.Geometry;
 import org.geotools.geojson.geom.GeometryJSON;

@@ -4,7 +4,7 @@ import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.core.dto.FemmeResponse;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.geo.core.CoverageGeo;
+import gr.cite.femme.core.geo.CoverageGeo;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
