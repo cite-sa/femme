@@ -8,19 +8,24 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
 import gr.cite.femme.core.exceptions.DatastoreException;
+import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.core.model.BBox;
-import gr.cite.femme.geo.core.CoverageGeo;
 import gr.cite.femme.geo.core.ServerGeo;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import static gr.cite.femme.geo.utils.GeoUtils.buildGeoWithinQuery;
 
+@Component
 public class MongoGeoDatastore {
 	private static final Logger logger = LoggerFactory.getLogger(MongoGeoDatastore.class);
 	private MongoGeoDatastoreClient mongoClient;
@@ -55,16 +60,16 @@ public class MongoGeoDatastore {
 	
 	public String insert(CoverageGeo coverage) throws DatastoreException {
 
-		System.out.println("BSON:"+new BasicDBObject("geometries", "2dsphere"));
 		if ( coverage.getGeo()!= null){
-			this.mongoClient.getCoverages().createIndex( new BasicDBObject("geometries", "2dsphere"));
+			this.mongoClient.getCoverages().createIndex( new BasicDBObject("loc", "2dsphere"));
 		}
-		CoverageGeo coverageGeo = 	this.mongoClient.getCoverages().find().first();
+		CoverageGeo coverageGeo = 	this.mongoClient.getCoverages().find(new Document("_id", coverage.getCoverageId())).first();
+
 		if(coverageGeo!=null){
 			System.out.println("*********************** Coverage already present ***********************");
 			return "exists";
 		} else {
-			this.mongoClient.getCoverages().insertOne(coverageGeo);
+			this.mongoClient.getCoverages().insertOne(coverage);
 			return "inserted";
 		}
 	}
@@ -88,12 +93,18 @@ public class MongoGeoDatastore {
 		return null;
 	}
 
-	public CoverageGeo getCoverageByPolygon(GeoJsonObject geoJson) throws DatastoreException, JsonProcessingException {
+	public List<CoverageGeo> getCoveragesByPolygon(GeoJsonObject geoJson) throws DatastoreException, IOException {
 		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
 		String jsonString = mapper.writeValueAsString(geoJson);
+		String query = buildGeoWithinQuery(jsonString);
+		System.out.println("->"+query);
 
-		//collection.find(jsonString);
-		return null;
+		List<CoverageGeo> results = collection.find(Document.parse(query)).into(new ArrayList<CoverageGeo>());
+		Iterable<CoverageGeo> geoIterable = collection.find(); //Document.parse("{ \"_id\": ObjectId(\"5a93f64c446ae309c8e1bf19\")}")
+		for(CoverageGeo c : geoIterable){
+			System.out.println(c.getId());
+		}
+		return results;
 	}
 
 	public CoverageGeo getCoverageByBBox(GeoJsonObject geoJson) throws DatastoreException, JsonProcessingException {
@@ -104,11 +115,10 @@ public class MongoGeoDatastore {
 		return null;
 	}
 
-	public CoverageGeo getCoverageByCoords(double latitude, double longitude, double radius) throws DatastoreException {
+	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) throws DatastoreException {
 		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
-		Point refPoint = new Point(new Position(latitude, longitude));
-		//collection.find(Filters.near("contact.location", refPoint, radius, radius)).forEach();
-		return null;
+		Point refPoint = new Point(new Position(longitude, latitude));
+		return collection.find(Filters.near("loc", refPoint, radius, radius)).into(new ArrayList<CoverageGeo>());
 	}
 
 

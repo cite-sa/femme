@@ -1,18 +1,16 @@
 package gr.cite.femme.geo.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.femme.core.exceptions.DatastoreException;
+import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.geo.api.GeoServiceApi;
-import gr.cite.femme.geo.core.CoverageGeo;
 import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import gr.cite.femme.geo.utils.GeoUtils;
 import org.geojson.GeoJsonObject;
 import org.opengis.referencing.FactoryException;
-import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
 public class GeoService implements GeoServiceApi{
 
@@ -25,7 +23,7 @@ public class GeoService implements GeoServiceApi{
     }
 
     @Override
-    public CoverageGeo getCoverageByBboxString(String bBox) throws JsonProcessingException, DatastoreException {
+    public List<CoverageGeo> getCoveragesByBboxString(String bBox) throws IOException, DatastoreException {
         GeoJsonObject geoJsonObject = null;
         try {
             geoJsonObject = GeoUtils.getBBoxFromString(bBox);
@@ -34,9 +32,15 @@ public class GeoService implements GeoServiceApi{
         } catch (FactoryException e) {
             e.printStackTrace();
         }
-        CoverageGeo coverageGeo = mongoGeoDatastore.getCoverageByPolygon(geoJsonObject);
-        String json= mapper.writeValueAsString(geoJsonObject);
-        System.out.println("geoObject:"+json);
-        return coverageGeo;
+        return  mongoGeoDatastore.getCoveragesByPolygon(geoJsonObject);
+
     }
+
+    @Override
+    public List<CoverageGeo> getCoveragesByPoint(Double longitude, Double latitude, Double radius) throws IOException, DatastoreException {
+        return mongoGeoDatastore.getCoverageByCoords(longitude, latitude, radius);
+
+    }
+
+
 }

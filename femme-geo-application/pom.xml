@@ -134,11 +134,6 @@
 			<artifactId>mongo-java-driver</artifactId>
 			<version>${mongodb.version}</version>
 		</dependency>
-		<!--<dependency>
-			<groupId>gr.cite.femme</groupId>
-			<artifactId>femme-client</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>-->
 		
 		<!-- Test dependencies -->
 		<dependency>
@@ -148,16 +143,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>de.grundid.opendatalab</groupId>
-			<artifactId>geojson-jackson</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
-			<groupId>gr.cite.femme</groupId>
-			<artifactId>femme-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+
 		<dependency>
 			<groupId>gr.cite.femme</groupId>
 			<artifactId>femme-core</artifactId>
