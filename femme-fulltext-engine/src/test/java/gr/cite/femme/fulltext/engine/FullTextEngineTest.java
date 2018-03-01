@@ -242,7 +242,7 @@ public class FullTextEngineTest {
 	}
 
 	@Test
-	public void testInsert() throws IOException, FulltextIndexException, ProcessingPipelineException {
+	public void testInsert() throws IOException, FemmeFulltextException, ProcessingPipelineException {
 		FulltextDocument doc = new FulltextDocument();
 		doc.setElementId(UUID.randomUUID().toString());
 

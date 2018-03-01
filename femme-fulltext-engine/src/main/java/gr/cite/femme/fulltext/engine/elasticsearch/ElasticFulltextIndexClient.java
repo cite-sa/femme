@@ -2,8 +2,7 @@ package gr.cite.femme.fulltext.engine.elasticsearch;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gr.cite.femme.fulltext.core.FulltextDocument;
-import gr.cite.femme.fulltext.engine.FulltextIndexException;
+import gr.cite.femme.fulltext.engine.FemmeFulltextException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -84,44 +83,44 @@ public class ElasticFulltextIndexClient {
 		return indexName;
 	}
 
-	public void createIndex(String indexName) throws FulltextIndexException {
+	public void createIndex(String indexName) throws FemmeFulltextException {
 		try {
 			this.client.performRequest("PUT", "/" + indexName);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index " + indexName + " creation failed", e);
+			throw new FemmeFulltextException("Index " + indexName + " creation failed", e);
 		}
 	}
 
-	public void createIndex(String indexName, String mapping) throws FulltextIndexException {
+	public void createIndex(String indexName, String mapping) throws FemmeFulltextException {
 		try {
 			this.client.performRequest("PUT", "/" + indexName, Collections.emptyMap(), new NStringEntity(mapping, ContentType.APPLICATION_JSON));
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index " + indexName + " creation failed", e);
+			throw new FemmeFulltextException("Index " + indexName + " creation failed", e);
 		}
 	}
 
 
-	public boolean indexExists(String indexName) throws FulltextIndexException {
+	public boolean indexExists(String indexName) throws FemmeFulltextException {
 		Response indexExistenceResponse;
 		try {
 			indexExistenceResponse = this.client.performRequest("HEAD", "/" + indexName);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index " + indexName + " existence check failed", e);
+			throw new FemmeFulltextException("Index " + indexName + " existence check failed", e);
 		}
 		return indexExistenceResponse.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
 	}
 
-	boolean aliasExists(String indexAlias) throws FulltextIndexException {
+	boolean aliasExists(String indexAlias) throws FemmeFulltextException {
 		Response aliasExistenceResponse;
 		try {
 			aliasExistenceResponse = this.client.performRequest("HEAD", "/_alias/" + indexAlias);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index alias " + indexAlias + " existence check failed", e);
+			throw new FemmeFulltextException("Index alias " + indexAlias + " existence check failed", e);
 		}
 		return aliasExistenceResponse.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
 	}
 
-	void createIndexAliasAssociation(String indexName) throws FulltextIndexException {
+	void createIndexAliasAssociation(String indexName) throws FemmeFulltextException {
 		String indexAliasAssociationRequest = "{" +
 				"\"actions\":[" +
 					"{" +
@@ -135,13 +134,13 @@ public class ElasticFulltextIndexClient {
 		try {
 			this.client.performRequest("POST", "/_aliases", Collections.emptyMap(), entity);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index " + indexName + " association with alias " + this.indexAlias + " failed", e);
+			throw new FemmeFulltextException("Index " + indexName + " association with alias " + this.indexAlias + " failed", e);
 		}
 
 		this.indexAliasCreated.compareAndSet(false, true);
 	}
 
-	String swapIndex(String newIndexName) throws FulltextIndexException {
+	String swapIndex(String newIndexName) throws FemmeFulltextException {
 		String oldIndexName = getIndexByAlias(this.indexAlias);
 		String indexSwapRequest = "{" +
 				"\"actions\":[" +
@@ -162,7 +161,7 @@ public class ElasticFulltextIndexClient {
 		try {
 			this.client.performRequest("POST", "/_aliases", Collections.emptyMap(), entity);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Metadata insert swaping failed: " + oldIndexName + " -> " + newIndexName, e);
+			throw new FemmeFulltextException("Metadata insert swaping failed: " + oldIndexName + " -> " + newIndexName, e);
 		}
 
 		this.indexAliasCreated.compareAndSet(false, true);
@@ -170,7 +169,7 @@ public class ElasticFulltextIndexClient {
 		return oldIndexName;
 	}
 
-	void swapWithAliasOldIndices(Set<String> newIndices) throws FulltextIndexException {
+	void swapWithAliasOldIndices(Set<String> newIndices) throws FemmeFulltextException {
 		List<String> oldIndices = getIndicesByAlias(this.indexAlias);
 		String indexSwapRequest = "{\"actions\":[" +
 				newIndices.stream().map(newIndex -> "\"" + newIndex + "\"")
@@ -192,14 +191,14 @@ public class ElasticFulltextIndexClient {
 		try {
 			this.client.performRequest("POST", "/_aliases", Collections.emptyMap(), entity);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Indices swap failed: old indices: [" + String.join(",", oldIndices) + "], " +
+			throw new FemmeFulltextException("Indices swap failed: old indices: [" + String.join(",", oldIndices) + "], " +
 					"new indices: [" + String.join(",", newIndices) + "]", e);
 		}
 
 		this.indexAliasCreated.compareAndSet(false, true);
 	}
 
-	void swapWithAliasOldIndices(Set<String> oldIndices, Set<String> newIndices) throws FulltextIndexException {
+	void swapWithAliasOldIndices(Set<String> oldIndices, Set<String> newIndices) throws FemmeFulltextException {
 		//List<String> oldIndices = getIndicesByAlias(this.indexAlias);
 		String indexSwapRequest = "{\"actions\":[" +
 				"{\"add\": {" +
@@ -222,90 +221,90 @@ public class ElasticFulltextIndexClient {
 		try {
 			this.client.performRequest("POST", "/_aliases", Collections.emptyMap(), entity);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Indices swap failed: old indices: [" + String.join(",", oldIndices) + "], " +
+			throw new FemmeFulltextException("Indices swap failed: old indices: [" + String.join(",", oldIndices) + "], " +
 					"new indices: [" + String.join(",", newIndices) + "]", e);
 		}
 
 		this.indexAliasCreated.compareAndSet(false, true);
 	}
 
-	String getIndexByAlias(String indexAlias) throws FulltextIndexException {
+	String getIndexByAlias(String indexAlias) throws FemmeFulltextException {
 		Response indexNameResponse;
 		try {
 			indexNameResponse = this.client.performRequest("GET", "/_alias/" + indexAlias);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index association retrieval for insert alias " + indexAlias + " failed", e);
+			throw new FemmeFulltextException("Index association retrieval for insert alias " + indexAlias + " failed", e);
 		}
 
 		Map<String, Object> indexNameResponseMap;
 		try {
 			indexNameResponseMap = mapper.readValue(indexNameResponse.getEntity().getContent(), new TypeReference<Map<String, Object>>(){});
 		} catch (IOException e) {
-			throw new FulltextIndexException("Serialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
+			throw new FemmeFulltextException("Serialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
 		}
 
 		String aliasIndexName;
 		if (indexNameResponseMap == null || indexNameResponseMap.isEmpty()) {
-			throw new FulltextIndexException("No insert associated with insert alias " + indexAlias);
+			throw new FemmeFulltextException("No insert associated with insert alias " + indexAlias);
 		} else if (indexNameResponseMap.size() > 1) {
-			throw new FulltextIndexException("Multiple indices associated with insert alias " + indexAlias);
+			throw new FemmeFulltextException("Multiple indices associated with insert alias " + indexAlias);
 		} else {
 			aliasIndexName = new ArrayList<>(indexNameResponseMap.keySet()).stream().sorted().findFirst().get();
 		}
 		return aliasIndexName;
 	}
 
-	List<String> getIndicesByAlias(String indexAlias) throws FulltextIndexException {
+	List<String> getIndicesByAlias(String indexAlias) throws FemmeFulltextException {
 		Response indexNameResponse;
 		try {
 			indexNameResponse = this.client.performRequest("GET", "/*/_alias/" + indexAlias);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Indices association retrieval for insert alias " + indexAlias + " failed", e);
+			throw new FemmeFulltextException("Indices association retrieval for insert alias " + indexAlias + " failed", e);
 		}
 
 		Map<String, Object> indicesResponseMap;
 		try {
 			indicesResponseMap = mapper.readValue(indexNameResponse.getEntity().getContent(), new TypeReference<Map<String, Object>>(){});
 		} catch (IOException e) {
-			throw new FulltextIndexException("Deserialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
+			throw new FemmeFulltextException("Deserialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
 		}
 
 		return new ArrayList<>(indicesResponseMap.keySet());
 	}
 
-	String findIndex(String indexName) throws FulltextIndexException {
+	String findIndex(String indexName) throws FemmeFulltextException {
 		Response response;
 		try {
 			response = this.client.performRequest("GET", "/" + indexName + "*/_settings");
 		} catch (IOException e) {
-			throw new FulltextIndexException("Index search for " + indexName + " failed", e);
+			throw new FemmeFulltextException("Index search for " + indexName + " failed", e);
 		}
 		Map<String, Object> indices;
 		try {
 			indices = mapper.readValue(response.getEntity().getContent(), new TypeReference<Map<String, Object>>(){});
 		} catch (IOException e) {
-			throw new FulltextIndexException("Serialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
+			throw new FemmeFulltextException("Serialization of insert association retrieval response for insert alias " + indexAlias + " failed", e);
 		}
 		return indices.keySet().stream().findFirst().orElse(null);
 	}
 
-	public boolean mappingExists(String indexName) throws FulltextIndexException {
+	public boolean mappingExists(String indexName) throws FemmeFulltextException {
 		Response mapping;
 		try {
 			mapping = this.client.performRequest(
 				"HEAD",
 				"/" + indexName + "/_mapping/" + ElasticFulltextIndexClient.ELASTICSEARCH_TYPE);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Mapping existence check failed", e);
+			throw new FemmeFulltextException("Mapping existence check failed", e);
 		}
 		return mapping.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
 	}
 
-	public void insert(String document) throws FulltextIndexException {
+	public void insert(String document) throws FemmeFulltextException {
 		insert(document, ElasticFulltextIndexClient.ELASTICSEARCH_INDEX_ALIAS);
 	}
 
-	public void insert(String document, String indexName) throws FulltextIndexException {
+	public void insert(String document, String indexName) throws FemmeFulltextException {
 		Response indexedDocument;
 		try {
 			indexedDocument = this.client.performRequest(
@@ -314,27 +313,27 @@ public class ElasticFulltextIndexClient {
 					Collections.emptyMap(),
 					new NStringEntity(document, ContentType.APPLICATION_JSON));
 		} catch (IOException e) {
-			throw new FulltextIndexException("Indexing failed", e);
+			throw new FemmeFulltextException("Indexing failed", e);
 		}
 	}
 
-	public void delete(String id) throws FulltextIndexException {
+	public void delete(String id) throws FemmeFulltextException {
 		delete(id, ElasticFulltextIndexClient.ELASTICSEARCH_INDEX_ALIAS);
 	}
 
-	public void delete(String id, String indexName) throws FulltextIndexException {
+	public void delete(String id, String indexName) throws FemmeFulltextException {
 		try {
 			this.client.performRequest("DELETE", "/" + indexName + "/" + ElasticFulltextIndexClient.ELASTICSEARCH_TYPE + "/" + id);
 		} catch (IOException e) {
-			throw new FulltextIndexException("Document deletion failed [" + id + "]", e);
+			throw new FemmeFulltextException("Document deletion failed [" + id + "]", e);
 		}
 	}
 
-	public void deleteByQuery(String query) throws FulltextIndexException {
+	public void deleteByQuery(String query) throws FemmeFulltextException {
 		deleteByQuery(query, ElasticFulltextIndexClient.ELASTICSEARCH_INDEX_ALIAS);
 	}
 
-	public void deleteByQuery(String query, String indexName) throws FulltextIndexException {
+	public void deleteByQuery(String query, String indexName) throws FemmeFulltextException {
 		try {
 			this.client.performRequest(
 					"POST",
@@ -342,11 +341,11 @@ public class ElasticFulltextIndexClient {
 					Collections.emptyMap(),
 					new NStringEntity(query, ContentType.APPLICATION_JSON));
 		} catch (IOException e) {
-			throw new FulltextIndexException("Delete by elementId failed [" + query + "]", e);
+			throw new FemmeFulltextException("Delete by elementId failed [" + query + "]", e);
 		}
 	}
 
-	public List<ElasticResponseHit> search(String query, String indexName) throws FulltextIndexException {
+	public List<ElasticResponseHit> search(String query, String indexName) throws FemmeFulltextException {
 		try {
 			Response response = this.client.performRequest(
 					"POST",
@@ -361,7 +360,7 @@ public class ElasticFulltextIndexClient {
 			return content.getHits().getHits();
 			//response.
 		} catch (IOException e) {
-			throw new FulltextIndexException("Search failed [" + query + "]", e);
+			throw new FemmeFulltextException("Search failed [" + query + "]", e);
 		}
 
 
