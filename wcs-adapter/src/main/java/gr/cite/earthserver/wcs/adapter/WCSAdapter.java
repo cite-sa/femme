@@ -1,5 +1,6 @@
 package gr.cite.earthserver.wcs.adapter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -32,14 +33,17 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	private FemmeClientAPI femmeClient;
 	private GeoRequests geoRequests;
-
-	/*public WCSAdapter() {
-		this.femmeClient = new FemmeClient();
-	}*/
+	private boolean indexModeOn = true;
 	
 	public WCSAdapter(String femmeUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);
 		this.geoRequests = new GeoRequests();
+	}
+	
+	public WCSAdapter(String femmeUrl, boolean indexModeOn) {
+		this.femmeClient = new FemmeClient(femmeUrl);
+		this.geoRequests = new GeoRequests();
+		this.indexModeOn = indexModeOn;
 	}
 
 	@Override
@@ -119,14 +123,17 @@ public class WCSAdapter implements WCSAdapterAPI {
 
 	@Override
 	public List<Coverage> getCoverages(String xPath) throws FemmeException, FemmeClientException {
-		return this.femmeClient.getDataElements(null, null, xPath).stream()
-				.map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
+		return getCoverages(new ArrayList<>(), new ArrayList<>(), xPath);
 	}
 
 	@Override
 	public List<Coverage> getCoverages(List<String> includes, List<String> excludes, String xPath) throws FemmeException, FemmeClientException {
-		return this.femmeClient.getDataElements(null, null, includes, excludes, xPath).stream()
+		if (this.indexModeOn)
+			return this.femmeClient.getDataElements(null, null, includes, excludes, xPath).stream()
 				.map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
+		else
+			return this.femmeClient.getDataElementsInMemoryXPath(null, null, includes, excludes, xPath).stream()
+					.map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
 	}
 	
 	@Override
@@ -164,9 +171,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 
 	@Override
 	public <T extends Criterion> List<Coverage> findCoverages(Query<T> query, QueryOptionsMessenger options, String xPath) throws FemmeException, FemmeClientException {
-		return this.femmeClient.findDataElements(query, options, xPath)
-				.stream().map(WCSFemmeMapper::dataElementToCoverage)
-				.collect(Collectors.toList());
+		return this.femmeClient.findDataElements(query, options, xPath, this.indexModeOn).stream().map(WCSFemmeMapper::dataElementToCoverage).collect(Collectors.toList());
 	}
 	
 	
