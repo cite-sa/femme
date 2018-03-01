@@ -1,60 +1,107 @@
 package gr.cite.earthserver.wcs.geo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Polygon;
 import gr.cite.commons.utils.xml.XMLConverter;
 import gr.cite.commons.utils.xml.XPathEvaluator;
 import gr.cite.commons.utils.xml.exceptions.XMLConversionException;
 import gr.cite.commons.utils.xml.exceptions.XPathEvaluationException;
+import gr.cite.earthserver.wcs.core.Coverage;
+import gr.cite.earthserver.wcs.core.WCSResponse;
 import gr.cite.earthserver.wcs.utils.ParseException;
+import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
+import gr.cite.earthserver.wcs.utils.WCSParseUtils;
+import gr.cite.femme.client.FemmeException;
+import gr.cite.femme.core.model.BBox;
+import gr.cite.femme.core.model.DataElement;
+import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.utils.Pair;
+import gr.cite.femme.geo.core.CoverageGeo;
+import org.geojson.GeoJsonObject;
+import org.geojson.Geometry;
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
+import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.xml.crypto.Data;
 import javax.xml.xpath.XPathFactoryConfigurationException;
+import java.io.IOException;
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class GeoUtils {
-	private static final String DEFAULT_CRS = "EPSG:4326";
+	private static final ObjectMapper mapper = new ObjectMapper();
+
+	public static final String DEFAULT_CRS = "EPSG:4326";
 
 	public static Pair<String, String> getGeoJsonBoundingBoxFromDescribeCoverage(String describeCoverageXML) throws ParseException {
 		String boundingBoxJSON;
 		try {
 			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(describeCoverageXML, true));
 			List<Axis> axes = GeoUtils.getAxes(xPathEvaluator);
-
+			String currentCrsString =axes.stream().filter(GeoUtils::isLongitude).map(Axis::getCrs).findFirst().orElseThrow(() -> new ParseException(""));
 			CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
-			CoordinateReferenceSystem currentCrs = CRS.decode(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getCrs).findFirst().orElseThrow(() -> new ParseException("")));
+			CoordinateReferenceSystem currentCrs = CRS.decode(currentCrsString,true);
 			ReferencedEnvelope envelope;
 			try {
+				System.out.println("1:"+axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")));
 				envelope = new ReferencedEnvelope(
-						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
+						validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+						validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+						validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+						validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
 						currentCrs
 				);
 			} catch(MismatchedDimensionException e) {
 				throw new ParseException(e);
 			}
-
+            System.out.println("lower:"+ envelope.getLowerCorner());
+            System.out.println("upper:"+envelope.getUpperCorner());
+            Envelope quick = envelope;
 			if (!currentCrs.getName().equals(defaultCrs.getName())) {
-				envelope = envelope.transform(defaultCrs, true);
+			//	envelope = envelope.transform(defaultCrs, true,10);
+				DirectPosition dpLc = envelope.getLowerCorner();
+				DirectPosition dpUc = envelope.getUpperCorner();
+
+				DirectPosition destLc = new DirectPosition2D();
+				DirectPosition destUc = new DirectPosition2D();
+                MathTransform transform = CRS.findMathTransform(currentCrs, defaultCrs,false);
+				transform.transform(dpLc, destLc);
+				transform.transform(dpUc, destUc);
+
+                quick = JTS.transform(envelope, transform);
+				//System.out.println("transformed:" + quick.getMinX() + "," + quick.getMinY());
+				System.out.println( "transformed:"+((DirectPosition2D)destLc).x + " " + ((DirectPosition2D)destLc).y );
+
+				//   Envelope better = JTS.transform(envelope, null, transform, 10);
 			}
-			Polygon geometry = JTS.toGeometry(envelope);
+			Polygon geometry = JTS.toGeometry(quick);
 
 			GeometryJSON geomJSON = new GeometryJSON();
 			boundingBoxJSON = geomJSON.toString(geometry);
@@ -64,6 +111,29 @@ public final class GeoUtils {
 		}
 
 		return new Pair<>(GeoUtils.DEFAULT_CRS, boundingBoxJSON);
+	}
+
+	private static Double validateLongitude( Double longitude){
+
+		if( longitude < -180.0 ){
+			return -180.0;
+		}
+		else if( longitude > 180.0){
+			return 180.0;
+		}
+		return  longitude;
+	}
+
+
+	private static Double validateLatitude( Double longitude){
+
+		if( longitude < -90.0 ){
+			return -90.0;
+		}
+		else if( longitude > 90.0){
+			return 90.0;
+		}
+		return  longitude;
 	}
 
 	private static boolean isLatitude(String axisLabel) {
@@ -126,20 +196,64 @@ public final class GeoUtils {
 		return Arrays.stream(upperCorners.stream().findFirst().orElse("").split(" ")).collect(Collectors.toList());
 	}
 
-	public static void main(String[] args) throws ParseException {
+	/*************************************Geo Transformations**************************************************************************/
 
-		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target("http://eodataservice.org/rasdaman/ows");
 
+	public static CoverageGeo convertDataToCoverageGeo(WCSResponse coverage, DataElement dataElement){
+		CoverageGeo coverageGeo = new CoverageGeo();
+		try {
+			Pair<String, String> geoJson = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(coverage.getResponse());
+			GeoJsonObject object = mapper.readValue(geoJson.getRight(), GeoJsonObject.class);
+
+			coverageGeo.setGeo(object);
+			coverageGeo.setCoverageId(dataElement.getName());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return coverageGeo;
+	}
+
+
+
+
+	public static void main(String[] args) throws ParseException, KeyManagementException, NoSuchAlgorithmException {
+
+		SSLContext sslcontext = SSLContext.getInstance("TLS");
+
+		sslcontext.init(null, new TrustManager[]{new X509TrustManager() {
+			public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+			public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+			public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+		}}, new java.security.SecureRandom());
+
+		Client client = ClientBuilder.newBuilder()
+				.sslContext(sslcontext)
+				.hostnameVerifier((s1, s2) -> true)
+				.build();
+//		https://eodataservice.org/rasdaman/ows
+		//		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
+		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
 		String describeCoverageXML = webTarget
 				.queryParam("service", "WCS")
 				.queryParam("version", "2.0.1")
 				.queryParam("request", "DescribeCoverage")
-				.queryParam("coverageId", "L8_B5_32634_30")
+				.queryParam("coverageId", "ECMWF_SST_4326_05") //ECMWF_SST_4326_05 //L8_B10_32629_30
 				.request().get(String.class);
-
+		WCSResponse response = new WCSResponse();
+		response.setResponse(describeCoverageXML);
 		Pair<String, String> geoJson = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(describeCoverageXML);
-		System.out.println(geoJson.getLeft());
-		System.out.println(geoJson.getRight());
+		GeoRequests geoRequests = new GeoRequests();
+		DataElement dataElement = new DataElement();
+		dataElement.setId("test");
+		try {
+			geoRequests.insert(GeoUtils.convertDataToCoverageGeo(response,dataElement));
+		} catch (FemmeException e) {
+			e.printStackTrace();
+		}
+
+//		System.out.println(describeCoverageXML);
+//		System.out.println(geoJson.getRight());
 	}
 }
