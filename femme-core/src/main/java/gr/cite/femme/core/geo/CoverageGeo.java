@@ -1,14 +1,9 @@
-package gr.cite.femme.geo.core;
+package gr.cite.femme.core.geo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.client.model.geojson.GeoJsonObjectType;
-import com.mongodb.client.model.geojson.Geometry;
 import org.geojson.GeoJsonObject;
 
-
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 
 public class CoverageGeo {
 
