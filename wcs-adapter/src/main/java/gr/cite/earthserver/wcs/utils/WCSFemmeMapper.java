@@ -57,7 +57,7 @@ public final class WCSFemmeMapper {
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
 
 		// TODO uncomment to transform geodata
-		try {
+		/*try {
 			Pair<String, String> bboxGeoJsonWithCRS = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(response.getResponse());
 			
 			Map<String, String> geo = new HashMap<>();
@@ -76,7 +76,7 @@ public final class WCSFemmeMapper {
 			
 		} catch(Exception e) {
 			logger.error(e.getMessage());
-		}
+		}*/
 
 		return dataElement;
 	}
