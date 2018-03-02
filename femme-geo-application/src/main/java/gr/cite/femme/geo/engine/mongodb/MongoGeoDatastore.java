@@ -98,12 +98,8 @@ public class MongoGeoDatastore {
 		String jsonString = mapper.writeValueAsString(geoJson);
 		String query = buildGeoWithinQuery(jsonString);
 		System.out.println("->"+query);
-
 		List<CoverageGeo> results = collection.find(Document.parse(query)).into(new ArrayList<CoverageGeo>());
-		Iterable<CoverageGeo> geoIterable = collection.find(); //Document.parse("{ \"_id\": ObjectId(\"5a93f64c446ae309c8e1bf19\")}")
-		for(CoverageGeo c : geoIterable){
-			System.out.println(c.getId());
-		}
+
 		return results;
 	}
 
@@ -118,7 +114,7 @@ public class MongoGeoDatastore {
 	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) throws DatastoreException {
 		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
 		Point refPoint = new Point(new Position(longitude, latitude));
-		return collection.find(Filters.near("loc", refPoint, radius, radius)).into(new ArrayList<CoverageGeo>());
+		return collection.find(Filters.near("loc", refPoint, radius, 0.0)).into(new ArrayList<CoverageGeo>());
 	}
 
 

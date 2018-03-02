@@ -45,7 +45,7 @@ public class GeoUtils {
         CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
         //Revert bounds minX, minY, maxX, maxY to -> xMin,xMax,yMin,yMax
 
-        ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[0],bBounds[2],bBounds[1],bBounds[3],
+        ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[2],bBounds[0],bBounds[3],bBounds[1],
                 defaultCrs
         );
         com.vividsolutions.jts.geom.Polygon geometry = JTS.toGeometry(envelope);
