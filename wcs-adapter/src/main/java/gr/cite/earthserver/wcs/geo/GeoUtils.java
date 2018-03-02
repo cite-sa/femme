@@ -207,6 +207,8 @@ public final class GeoUtils {
 
 			coverageGeo.setGeo(object);
 			coverageGeo.setCoverageId(dataElement.getName());
+			coverageGeo.setServerId(dataElement.getEndpoint());
+            coverageGeo.setId(dataElement.getId());
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
