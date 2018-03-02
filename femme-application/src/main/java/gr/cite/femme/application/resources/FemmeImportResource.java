@@ -3,11 +3,9 @@ package gr.cite.femme.application.resources;
 import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.commons.utils.hash.HashGeneratorUtils;
 import gr.cite.femme.application.exception.FemmeApplicationException;
-import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.engine.Femme;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.dto.Import;
 import gr.cite.femme.core.dto.ImportEndpoint;
 import gr.cite.femme.core.dto.FemmeResponse;
@@ -16,11 +14,6 @@ import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.exceptions.FemmeException;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
-import gr.cite.femme.core.dto.QueryOptionsMessenger;
-import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
-import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
-import jersey.repackaged.com.google.common.collect.Sets;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -40,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +51,10 @@ public class FemmeImportResource {
 	private UriInfo uriInfo;
 	@Context
 	private ResourceContext resourceContext;
+	
 	private Femme femme;
 	private Map<String, Import> imports = new ConcurrentHashMap<>();
-
+	
 	@Inject
 	public FemmeImportResource(Femme femme) {
 		this.femme = femme;
@@ -81,7 +76,7 @@ public class FemmeImportResource {
 
 		Import requestedImport = this.imports.get(id);
 		entity.setBody(requestedImport);
-		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("Import " + id + " found").setEntity(entity);
+		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("Import [" + id + "] found").setEntity(entity);
 
 		return Response.ok(femmeResponse).build();
 	}
@@ -93,7 +88,7 @@ public class FemmeImportResource {
 		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
-
+		
 		Import newImport = new Import();
 		try {
 			newImport.setId(HashGeneratorUtils.generateMD5(importEndpoint.getEndpointAlias()));
@@ -104,14 +99,14 @@ public class FemmeImportResource {
 		newImport.setEndpoint(importEndpoint.getEndpoint());
 
 		if (this.imports.containsKey(newImport.getId())) {
-			throw new FemmeApplicationException("Import " + newImport.getId() + " for endpoint alias " + newImport.getEndpointAlias() + " already in progress", Response.Status.BAD_REQUEST.getStatusCode());
+			throw new FemmeApplicationException("Import [" + newImport.getId() + "] for endpoint alias [" + newImport.getEndpointAlias() + "] already in progress", Response.Status.BAD_REQUEST.getStatusCode());
 		}
 		this.imports.put(newImport.getId(), newImport);
 
 		location = this.uriInfo.getRequestUriBuilder().path(FemmeImportResource.IMPORTS_PATH).path(newImport.getId()).build();
 		entity.setHref(location.toASCIIString());
 		entity.setBody(newImport.getId());
-		String message = "New import " + newImport.getId() + " started";
+		String message = "New import [" + newImport.getId() + "] started";
 		femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
 		logger.info(message);
 
@@ -123,12 +118,12 @@ public class FemmeImportResource {
 	@Path(FemmeImportResource.IMPORTS_PATH + "/{id}/collections")
 	public Response importCollection(@PathParam("id") String id, Collection collection) throws FemmeApplicationException {
 		if (!this.imports.containsKey(id)) {
-			throw new FemmeApplicationException("No such import " + id + " currently in progress", Response.Status.NOT_FOUND.getStatusCode());
+			throw new FemmeApplicationException("No such import [" + id + "] currently in progress", Response.Status.NOT_FOUND.getStatusCode());
 		}
 
 		try {
 			if (!id.equals(HashGeneratorUtils.generateMD5(collection.getName()))) {
-				throw new FemmeApplicationException("Import id " + id + " and endpoint " + collection.getName() +  " do not match", Response.Status.BAD_REQUEST.getStatusCode());
+				throw new FemmeApplicationException("Import id [" + id + "] and endpoint [" + collection.getName() + "] do not match", Response.Status.BAD_REQUEST.getStatusCode());
 			}
 		} catch (HashGenerationException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
@@ -141,12 +136,9 @@ public class FemmeImportResource {
 		}
 
 		try {
-			List<DataElement> existingDataElements = this.femme.query(DataElement.class).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().inAnyCollection(
-					Collections.singletonList(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collection
-							.getId())).end()
-					)).end())).options(QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build()).execute().list();
+			List<DataElement> existingDataElements = this.femme.getDataElementsByCollection(collection.getId());
 			existingImport.setExistingDataElements(existingDataElements.stream().map(DataElement::getId).collect(Collectors.toList()));
-		} catch (DatastoreException | MetadataStoreException e) {
+		} catch (DatastoreException e) {
 			throw new FemmeApplicationException("Collection import failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
@@ -158,46 +150,58 @@ public class FemmeImportResource {
 	@Path(FemmeImportResource.IMPORTS_PATH + "/{id}/dataElements")
 	public Response importInCollection(@PathParam("id") String id, DataElement dataElement) throws FemmeApplicationException {
 		if (!this.imports.containsKey(id)) {
-			throw new FemmeApplicationException("No such import " + id + " currently in progress", Response.Status.NOT_FOUND.getStatusCode());
+			throw new FemmeApplicationException("No import process [" + id + "] currently in progress", Response.Status.NOT_FOUND.getStatusCode());
+		}
+		
+		if (dataElement.getSystemicMetadata() == null) {
+			dataElement.setSystemicMetadata(new SystemicMetadata());
 		}
 
-		if (dataElement.getSystemicMetadata() != null) {
-			dataElement.getSystemicMetadata().setStatus(Status.PENDING);
-		} else {
-			dataElement.setSystemicMetadata(new SystemicMetadata());
-			dataElement.getSystemicMetadata().setStatus(Status.PENDING);
-		}
+		dataElement.getSystemicMetadata().setStatus(Status.ACTIVE);
+		
+		/*if (dataElement.getName().equals("o3")) {
+			Metadatum metadatum = new Metadatum();
+			//metadatum.setValue("<a>test update</a>");
+			metadatum.setName("Test");
+			//metadatum.setContentType(MediaType.TEXT_XML);
+			dataElement.setMetadata(Collections.singletonList(metadatum));
+		}*/
 
 		Response response = this.resourceContext.getResource(FemmeAdminResource.class).addToCollection(this.imports.get(id).getCollectionId(), dataElement);
-		if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
+		if (response.getStatus() == Response.Status.CREATED.getStatusCode() || response.getStatus() == Response.Status.OK.getStatusCode()) {
 			this.imports.get(id).getNewDataElements().add(dataElement.getId());
+		} else {
+			logger.error("ERROR: " + dataElement.getName());
 		}
 		return response;
 	}
 
 	@DELETE
 	@Path(FemmeImportResource.IMPORTS_PATH + "/{id}")
-	synchronized public Response endImport(@PathParam("id") String id) throws FemmeApplicationException {
+	public Response endImport(@PathParam("id") String id) throws FemmeApplicationException {
 		if (!this.imports.containsKey(id)) {
-			throw new FemmeApplicationException("No such import " + id + " currently in progress", Response.Status.NOT_FOUND.getStatusCode());
+			throw new FemmeApplicationException("No such import [" + id + "] currently in progress", Response.Status.NOT_FOUND.getStatusCode());
 		}
 
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		// TODO Make inactive old DataElments
 		Import importToBeDeleted = this.imports.get(id);
 
-		List<String> deactivate = importToBeDeleted.getExistingDataElements().stream()
-				.filter(existingDataElement -> ! importToBeDeleted.getNewDataElements().contains(existingDataElement)).collect(Collectors.toList());
-		for (String deactivateId: deactivate) {
-			try {
-				this.femme.softDeleteElement(deactivateId, DataElement.class);
-			} catch (FemmeException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		importToBeDeleted.getExistingDataElements().stream()
+				.filter(existingDataElement -> ! importToBeDeleted.getNewDataElements().contains(existingDataElement))
+				.forEach(dataElementIdToBeDeleted -> {
+					try {
+						this.femme.deleteElement(dataElementIdToBeDeleted, DataElement.class);
+					} catch (FemmeException e) {
+						logger.error(e.getMessage(), e);
+					}
+					logger.info("DataElement [" + dataElementIdToBeDeleted + "] successfully deleted");
+				});
 
 		Import deletedImport = this.imports.remove(id);
-		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("Import " + deletedImport.getId() + " ended successfully");
+		
+		String message = "Import [" + deletedImport.getId() + "] finished successfully";
+		logger.info(message);
+		femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message);
 
 		return Response.ok(femmeResponse).build();
 	}

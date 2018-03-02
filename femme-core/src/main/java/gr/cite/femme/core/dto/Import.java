@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Import {
@@ -25,7 +27,7 @@ public class Import {
 	private List<String> existingDataElements = new ArrayList<>();
 
 	@JsonProperty("newDataElements")
-	private List<String> newDataElements = new ArrayList<>();
+	private Queue<String> newDataElements = new ConcurrentLinkedQueue<>();
 
 	public String getId() {
 		return id;
@@ -67,11 +69,11 @@ public class Import {
 		this.existingDataElements = existingDataElements;
 	}
 
-	public List<String> getNewDataElements() {
+	public Queue<String> getNewDataElements() {
 		return newDataElements;
 	}
 
-	public void setNewDataElements(List<String> newDataElements) {
+	public void setNewDataElements(Queue<String> newDataElements) {
 		this.newDataElements = newDataElements;
 	}
 }

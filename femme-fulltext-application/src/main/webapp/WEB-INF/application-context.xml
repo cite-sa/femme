@@ -8,9 +8,9 @@
 	<context:property-placeholder location="WEB-INF/fulltext.properties.devel" />
 
 	<bean id="fulltextIndexEngine" class="gr.cite.femme.fulltext.engine.FulltextIndexEngine">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.fulltext.elasticsearch.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.elasticsearch.indexName}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
 	</bean>
 
 	<bean id="fulltextIndexResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexResource">
@@ -22,4 +22,5 @@
 
 	<context:annotation-config/>
 	<context:component-scan base-package="gr.cite.femme.fulltext.application"/>
+
 </beans>

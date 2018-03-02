@@ -5,8 +5,7 @@
 	<artifactId>femme-geo-application</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>Femme Geo Application</name>
-	
+
 	<properties>
 		<spring.version>4.3.2.RELEASE</spring.version>
 		<jersey.version>2.23.2</jersey.version>
@@ -226,12 +225,12 @@
 				<artifactId>tomcat7-maven-plugin</artifactId>
 				<version>${tomcat-maven-plugin.version}</version>
 				<configuration>
-					<port>8084</port>
-					<path>/femme-geo-application-devel</path>
-					<!--<contextFile>src/main/webapp/WEB-INF/web.xml</contextFile>-->
-					<!--<mode>context</mode>-->
+					<port>8083</port>
+					<path>/femme-geo</path>
 					<charset>UTF-8</charset>
-					<!--<warDirectory>target/${project.artifactId}-${project.version}</warDirectory>-->
+					<systemProperties>
+						<logback.configurationFile>logback-dev.xml</logback.configurationFile>
+					</systemProperties>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -1,13 +1,9 @@
 package gr.cite.femme.geo.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import gr.cite.femme.core.model.BBox;
 import org.geojson.GeoJsonObject;
-import org.geojson.GeoJsonObjectVisitor;
-import org.geojson.Polygon;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -16,58 +12,49 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Arrays;
 
-
-
 public class GeoUtils {
-    private static final ObjectMapper mapper = new ObjectMapper();
-    public static final String DEFAULT_CRS = "EPSG:4326";
+	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final String DEFAULT_CRS = "EPSG:4326";
 
 
-    public static GeoJsonObject getBBoxFromString(String bBoxInput) throws IOException, FactoryException {
-        String[] bounds = bBoxInput.split(",");
-        GeoJsonObject geoJson = null;
-        if(bounds.length == 4){
-            double[] bBounds = Arrays.stream(bounds)
-                    .mapToDouble(Double::parseDouble)
-                    .toArray();
+	public static GeoJsonObject getBBoxFromString(String bBoxInput) throws IOException, FactoryException {
+		String[] bounds = bBoxInput.split(",");
 
-            return  getGeoJsonFromBBoxInput(bBounds);
-        }
+		if (bounds.length == 4) {
+			double[] bBounds = Arrays.stream(bounds).mapToDouble(Double::parseDouble).toArray();
+			return getGeoJsonFromBBoxInput(bBounds);
+		}
 
-        return geoJson;
+		return null;
+	}
 
-    }
+	public static GeoJsonObject getGeoJsonFromBBoxInput(double[] bBounds) throws FactoryException, IOException {
+		CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
+		//Revert bounds minX, minY, maxX, maxY to -> xMin,xMax,yMin,yMax
+		ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[0], bBounds[2], bBounds[1], bBounds[3], defaultCrs);
+		com.vividsolutions.jts.geom.Polygon geometry = JTS.toGeometry(envelope);
 
-    public static GeoJsonObject getGeoJsonFromBBoxInput(double[] bBounds) throws FactoryException, IOException {
-        CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
-        //Revert bounds minX, minY, maxX, maxY to -> xMin,xMax,yMin,yMax
+		GeometryJSON geomJSON = new GeometryJSON();
+		String boundingBoxJSON = geomJSON.toString(geometry);
 
-        ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[2],bBounds[0],bBounds[3],bBounds[1],
-                defaultCrs
-        );
-        com.vividsolutions.jts.geom.Polygon geometry = JTS.toGeometry(envelope);
+		return mapper.readValue(boundingBoxJSON, GeoJsonObject.class);
+	}
 
-        GeometryJSON geomJSON = new GeometryJSON();
-        String boundingBoxJSON = geomJSON.toString(geometry);
-        GeoJsonObject geoJson = mapper.readValue(boundingBoxJSON, GeoJsonObject.class);
-        return geoJson;
-    }
+	public static String buildGeoWithinQuery(String geoJson) throws IOException {
+		ObjectNode node = JsonNodeFactory.instance.objectNode();
+		ObjectNode geometry = JsonNodeFactory.instance.objectNode();
+		ObjectNode parent = JsonNodeFactory.instance.objectNode();
 
-    public static String buildGeoWithinQuery(String geoJson) throws IOException {
-        ObjectNode node = JsonNodeFactory.instance.objectNode();
-        ObjectNode geometry = JsonNodeFactory.instance.objectNode();
-        ObjectNode parent = JsonNodeFactory.instance.objectNode();
+		ObjectNode geo = (ObjectNode) mapper.readTree(geoJson);
 
-        ObjectNode geo= (ObjectNode) mapper.readTree(geoJson);
+		geometry.set("$geometry", geo);
+		node.set("$geoWithin", geometry);
+		parent.set("loc", node);
 
-        geometry.set("$geometry",geo);
-        node.set("$geoWithin",geometry);
-        parent.set("loc",node);
-        return mapper.writeValueAsString(parent);
-    }
+		return mapper.writeValueAsString(parent);
+	}
 
 //    public static GeoJsonObject getGeoJsonFromString(String bBoxInput) throws JsonProcessingException {
 //        GeoJsonObject geoJson = new GeoJsonObject();

@@ -72,10 +72,10 @@ public final class GeoUtils {
 			try {
 				System.out.println("1:"+axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")));
 				envelope = new ReferencedEnvelope(
-						validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
-						validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
-						validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
-						validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
+						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
+						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
+						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
 						currentCrs
 				);
 			} catch(MismatchedDimensionException e) {
@@ -125,15 +125,15 @@ public final class GeoUtils {
 	}
 
 
-	private static Double validateLatitude( Double longitude){
+	private static Double validateLatitude( Double latitude){
 
-		if( longitude < -90.0 ){
+		if( latitude < -90.0 ){
 			return -90.0;
 		}
-		else if( longitude > 90.0){
+		else if( latitude > 90.0){
 			return 90.0;
 		}
-		return  longitude;
+		return  latitude;
 	}
 
 	private static boolean isLatitude(String axisLabel) {
@@ -234,17 +234,17 @@ public final class GeoUtils {
 				.build();
 //		https://eodataservice.org/rasdaman/ows
 		//		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
-		WebTarget webTarget = client.target("http://earthserver.ecmwf.int/rasdaman/ows");
+		WebTarget webTarget = client.target("https://eodataservice.org/rasdaman/ows");
 		String describeCoverageXML = webTarget
 				.queryParam("service", "WCS")
 				.queryParam("version", "2.0.1")
 				.queryParam("request", "DescribeCoverage")
-				.queryParam("coverageId", "ECMWF_SST_4326_05") //ECMWF_SST_4326_05 //L8_B10_32629_30
+				.queryParam("coverageId", "L8_B10_32629_30") //ECMWF_SST_4326_05 //L8_B10_32629_30
 				.request().get(String.class);
 		WCSResponse response = new WCSResponse();
 		response.setResponse(describeCoverageXML);
 		Pair<String, String> geoJson = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(describeCoverageXML);
-		GeoRequests geoRequests = new GeoRequests();
+		GeoRequests geoRequests = new GeoRequests("http://localhost:8083/femme-geo");
 		DataElement dataElement = new DataElement();
 		dataElement.setId("test");
 		try {

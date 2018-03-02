@@ -25,7 +25,7 @@ public class MongoGeoDatastoreClient {
 	//	private static final String DATABASE_HOST = "es-devel1.local.cite.gr:27017";
 	private static final String DATABASE_HOST = "localhost";
 	private static final int DATABASE_PORT = 27017;
-	private static final String DATABASE_NAME = "femme-db-devel";
+	private static final String DATABASE_NAME = "femme-geo-db-devel";
 	private static final String SERVER_COLLECTION_NAME = "servers";
 	private static final String COVERAGE_COLLECTION_NAME = "coverages";
 	

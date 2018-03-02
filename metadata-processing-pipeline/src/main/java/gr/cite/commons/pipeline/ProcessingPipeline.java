@@ -30,8 +30,6 @@ public class ProcessingPipeline {
 	}
 
 	public Map<String, Object> process(String input, String format) throws ProcessingPipelineException {
-		Map<String, Object> output = new HashMap<>();
-
 		if (applyFilter(input, format, this.config.getFilter())) {
 			for (MapOperation mapOperation: this.config.getMap()) {
 				try {

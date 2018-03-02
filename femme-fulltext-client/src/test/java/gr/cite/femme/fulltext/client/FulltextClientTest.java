@@ -16,7 +16,7 @@ public class FulltextClientTest {
 	}
 
 	@Test
-	public void testInsert() {
+	public void testInsert() throws FulltextException {
 		//FulltextDocument doc = new FulltextDocument();
 		String elementId = UUID.randomUUID().toString();
 		String metadatumId = UUID.randomUUID().toString();

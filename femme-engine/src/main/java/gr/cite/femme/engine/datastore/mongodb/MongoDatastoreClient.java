@@ -112,7 +112,7 @@ public class MongoDatastoreClient {
 		/*this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
 				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_ENDPOINT)), uniqueIndexOptions);*/
 		this.database.getCollection(MongoDatastoreClient.DATA_ELEMENTS_COLLECTION_NAME).createIndex(Indexes.compoundIndex(
-				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.DATA_ELEMENT_COLLECTION_NAME)), uniqueIndexOptions);
+				Indexes.ascending(FieldNames.NAME), Indexes.ascending(FieldNames.COLLECTIONS)), uniqueIndexOptions);
 		
 		/*this.database.getCollection(METADATA_BUCKET_NAME + "." + "files").createIndex(Indices.ascending(FieldNames.METADATA_ELEMENT_ID_EMBEDDED));*/
 	}

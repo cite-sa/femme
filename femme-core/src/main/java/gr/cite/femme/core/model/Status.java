@@ -4,8 +4,7 @@ public enum Status {
 	DELETED(-1),
 	INACTIVE(0),
 	ACTIVE(1),
-	ACTIVE_FOR_QUERY(2),
-	PENDING(3);
+	PENDING(2);
 	
 	private int statusCode;
 	
@@ -25,8 +24,6 @@ public enum Status {
 			return Status.INACTIVE;
 		case 1:
 			return Status.ACTIVE;
-		case 3:
-			return Status.ACTIVE_FOR_QUERY;
 		case 4:
 			return Status.PENDING;
 		

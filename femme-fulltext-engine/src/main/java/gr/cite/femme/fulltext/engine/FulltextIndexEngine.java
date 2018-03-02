@@ -28,7 +28,7 @@ public class FulltextIndexEngine {
 		this.indexName = indexName;
 	}
 
-	public void insert(FulltextDocument doc) throws FulltextIndexException {
+	public void insert(FulltextDocument doc) throws FemmeFulltextException {
 		if (!this.indexClient.indexExists(this.indexName)) {
 			String settings =  "\"settings\": {" +
 					"\"analysis\": {" +
@@ -79,25 +79,25 @@ public class FulltextIndexEngine {
 		try {
 			jsonDoc = mapper.writeValueAsString(doc);
 		} catch (JsonProcessingException e) {
-			throw new FulltextIndexException(e.getMessage(), e);
+			throw new FemmeFulltextException(e.getMessage(), e);
 		}
 
 		this.indexClient.insert(jsonDoc, this.indexName);
 	}
 
-	public void delete(String id) throws FulltextIndexException {
+	public void delete(String id) throws FemmeFulltextException {
 		this.indexClient.delete(id, this.indexName);
 	}
 
-	public void deleteByElementId(String elementId) throws FulltextIndexException {
+	public void deleteByElementId(String elementId) throws FemmeFulltextException {
 		deleteByQuery("elementId", elementId);
 	}
 
-	public void deleteByMetadatumId(String metadatumId) throws FulltextIndexException {
+	public void deleteByMetadatumId(String metadatumId) throws FemmeFulltextException {
 		deleteByQuery("metadatumId", metadatumId);
 	}
 
-	private void deleteByQuery(String field, String value) throws FulltextIndexException {
+	private void deleteByQuery(String field, String value) throws FemmeFulltextException {
 		String deleteQuery = "{" +
 				"\"query\":{" +
 					"\"constant_score\":{" +
@@ -112,7 +112,7 @@ public class FulltextIndexEngine {
 		this.indexClient.deleteByQuery(deleteQuery, this.indexName);
 	}
 
-	public List<FulltextDocument> search(FulltextSearchQueryMessenger query) throws FulltextIndexException {
+	public List<FulltextDocument> search(FulltextSearchQueryMessenger query) throws FemmeFulltextException {
 			return this.indexClient.search(buildElasticSearchQuery(query), this.indexName)
 					.stream().map(ElasticResponseHit::getSource).collect(Collectors.toList());
 	}

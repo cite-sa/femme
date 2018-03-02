@@ -23,11 +23,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDatastore {
-
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataSchemaIndexDatastore.class);
 
 	private MongoMetadataIndexDatastoreClient mongoClient;
-
 	private MongoCollection<MetadataSchema> schemasCollection;
 
 	public MongoMetadataSchemaIndexDatastore() {

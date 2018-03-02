@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.core.model.Element;
 
 public class ElementList<T extends Element> {
+	
 	@JsonProperty("elements")
 	private List<T> elements;
+	
 	@JsonProperty("size")
 	private int size;
 	

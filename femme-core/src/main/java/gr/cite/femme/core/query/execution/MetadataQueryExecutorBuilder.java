@@ -7,14 +7,18 @@ import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
 
+import java.util.List;
+
 public interface MetadataQueryExecutorBuilder<T extends Element> {
+	FindQueryExecutorBuilder<T> find();
 	FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query);
 	CountQueryExecutorBuilder<T> count(Query<? extends Criterion> query);
 
 	interface FindQueryExecutorBuilder<U extends Element> {
+		FindQueryExecutorBuilder<U> find();
 		FindQueryExecutorBuilder<U> find(Query<? extends Criterion> query);
 		FindQueryExecutorBuilder<U> options(QueryOptionsMessenger options);
-		FindQueryExecutorBuilder<U> xPath(String xPath) throws MetadataStoreException, DatastoreException;
+		FindQueryExecutorBuilder<U> xPath(String xPath);
 		FindQueryExecutorBuilder<U> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException;
 		MetadataQueryExecutor<U> execute() throws MetadataStoreException, DatastoreException;
 	}
