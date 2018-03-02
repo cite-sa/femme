@@ -95,7 +95,7 @@ public class MongoGeoDatastore {
 		String jsonString = mapper.writeValueAsString(geoJson);
 		String query = GeoUtils.buildGeoWithinQuery(jsonString);
 		logger.debug("->" + query);
-		
+        System.out.println("->" + query);
 		List<CoverageGeo> results = new ArrayList<>();
 		collection.find(Document.parse(query)).into(results);
 		

@@ -47,7 +47,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 			writer.writeObjectId("_id", new ObjectId(coverageGeo.getId()));
 		}
 		else if(coverageGeo.getCoverageId() != null ){
-			writer.writeString("coverageId");
+			writer.writeString("coverageId",coverageGeo.getCoverageId());
 		}
 		if (coverageGeo.getCreated() != null) {
 			writer.writeDateTime("created", coverageGeo.getCreated().toEpochMilli());
