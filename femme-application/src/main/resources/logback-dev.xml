@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<!--<Pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSS"} [%thread] %-5level %logger{36} - %msg%n</Pattern>-->
+			<Pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %message%n</Pattern>
+		</encoder>
+	</appender>
+	<logger name="gr.cite.femme.application" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="gr.cite.femme.engine" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="gr.cite.femme.engine.datastore" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="gr.cite.femme.engine.metadatastore" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="gr.cite.femme.engine.queries" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="gr.cite.femme.engine.metadata.xpath" level="DEBUG" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<logger name="org.mongodb.driver" level="INFO" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</logger>
+	<root level="INFO">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>gr.cite.femme.fulltext</groupId>
-    <artifactId>femme-fulltext-application</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>gr.cite.femme</groupId>
+    <artifactId>femme-semantic-search</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <properties>
@@ -30,11 +30,6 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-        <!--<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -104,7 +99,7 @@
     </dependencies>
 
     <build>
-        <finalName>femme-fulltext</finalName>
+        <finalName>semantic-search</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -143,7 +138,7 @@
                 <version>${tomcat-maven-plugin.version}</version>
                 <configuration>
                     <port>8081</port>
-                    <path>/femme-fulltext</path>
+                    <path>/femme-semantic-search</path>
                     <charset>UTF-8</charset>
                     <systemProperties>
                         <logback.configurationFile>logback-dev.xml</logback.configurationFile>
@@ -152,5 +147,5 @@
             </plugin>
         </plugins>
     </build>
-
+    
 </project>

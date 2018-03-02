@@ -26,7 +26,7 @@ public class WCSAdapterTest {
 	
 //	@Before
 	public void init() {
-		this.wcsAdapter = new WCSAdapter("http://localhost:8081/femme-application");
+		this.wcsAdapter = new WCSAdapter("http://localhost:8081/femme", "http://localhost:8081/femme-geo");
 //		this.wcsAdapter = new WCSAdapter("http://es-devel1.local.cite.gr:8080/femme-application-0.0.1-SNAPSHOT");
 	}
 

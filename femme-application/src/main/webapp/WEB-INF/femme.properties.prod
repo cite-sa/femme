@@ -1,6 +1,6 @@
 gr.cite.femme.datastore.db.host=localhost
 gr.cite.femme.datastore.db.port=27017
-gr.cite.femme.datastore.db.name=femme-db-pa
+gr.cite.femme.datastore.db.name=femme-db
 
 gr.cite.femme.datastore.metadata.db.host=localhost
 gr.cite.femme.datastore.metadata.db.port=27017
@@ -9,8 +9,10 @@ gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
 
 gr.cite.femme.datastore.metadata.index.db.host=localhost
 gr.cite.femme.datastore.metadata.index.db.port=9200
-gr.cite.femme.datastore.metadata.index.db.name=metadataindexpa
+gr.cite.femme.datastore.metadata.index.db.name=metadataindex
 
 gr.cite.femme.datastore.metadata.schema.index.db.host=localhost
 gr.cite.femme.datastore.metadata.schema.index.db.port=27017
-gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db-pa
+gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db
+
+gr.cite.femme.fulltext.endpoint=http://localhost:8081/femme-fulltext

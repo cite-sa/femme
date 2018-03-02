@@ -36,6 +36,16 @@ public class WCSAdapter implements WCSAdapterAPI {
 	private GeoRequests geoRequests;
 	private boolean indexModeOn = true;
 	
+	public WCSAdapter(String femmeUrl) {
+		this.femmeClient = new FemmeClient(femmeUrl);
+		this.indexModeOn = true;
+	}
+	
+	public WCSAdapter(String femmeUrl, boolean indexModeOn) {
+		this.femmeClient = new FemmeClient(femmeUrl);
+		this.indexModeOn = indexModeOn;
+	}
+	
 	public WCSAdapter(String femmeUrl, String femmeGeoUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);
 		this.geoRequests = new GeoRequests(femmeGeoUrl);
@@ -73,7 +83,9 @@ public class WCSAdapter implements WCSAdapterAPI {
 		String dataElementId = this.femmeClient.importInCollection(importId, dataElement);
 		dataElement.setId(dataElementId);
 		
-		this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
+		if (this.geoRequests != null) {
+			this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
+		}
 		
 		return dataElementId;
 	}
