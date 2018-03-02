@@ -1,7 +1,7 @@
 package gr.cite.femme.fulltext.engine;
 
-import gr.cite.commons.pipeline.ProcessingPipeline;
-import gr.cite.commons.pipeline.ProcessingPipelineException;
+/*import gr.cite.commons.pipeline.ProcessingPipeline;
+import gr.cite.commons.pipeline.ProcessingPipelineException;*/
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import org.junit.Before;
 import org.junit.Test;
@@ -241,7 +241,7 @@ public class FullTextEngineTest {
 		this.engine = new FulltextIndexEngine("localhost", 9200, "fulltext_search");
 	}
 
-	@Test
+	/*@Test
 	public void testInsert() throws IOException, FemmeFulltextException, ProcessingPipelineException {
 		FulltextDocument doc = new FulltextDocument();
 		doc.setElementId(UUID.randomUUID().toString());
@@ -253,5 +253,5 @@ public class FullTextEngineTest {
 			doc.setFulltextFields(fields);
 			this.engine.insert(doc);
 		}
-	}
+	}*/
 }

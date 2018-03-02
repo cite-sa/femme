@@ -179,7 +179,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			throw new MetadataIndexException("ElasticSearch scroll query failed", e);
 		}
 
-		logger.debug("Total metadadata found: " + results.size());
+		logger.debug("Total metadata found: " + results.size());
 
 		return results;
 	}
@@ -188,10 +188,10 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		List<ElasticSearchQuery> finalQueries = new ArrayList<>();
 		List<ElasticSearchQuery> shoulds = buildShoulds(queryTree.getRoot());
 
-		String elementIdsFilter = !elementIds.isEmpty()
-			? elementIds.stream().map(elementId -> "\"" + elementId +"\"")
-				.collect(Collectors.joining(",", "{\"terms\":{\"elementId\":[", "]}},"))
-			: "";
+		String elementIdsFilter = !elementIds.isEmpty() ?
+				elementIds.stream().map(elementId -> "\"" + elementId +"\"")
+						.collect(Collectors.joining(",", "{\"terms\":{\"elementId\":[", "]}},"))
+				: "";
 
 		shoulds.forEach(query -> {
 			ElasticSearchQuery finalQuery = new ElasticSearchQuery();
@@ -278,17 +278,21 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			}*/
 		}
 
-		if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null) {
+		if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null || node.getData().getFilterNodes().size() > 0) {
 			ElasticSearchQuery query = buildTermOrNested(node.getData());
 			return query;
-		//} else if (node.getData().isFilterPayload()) {
+		//} else if (node.getData().getFilterNodes().size() > 0) {
+		
 		} else if (node.isLeaf()) {
 			//includes.add(node.getData().getNodePath().toString());
 			ElasticSearchQuery query = new ElasticSearchQuery();
+			
 			query.getIncludes().add(node.getData().getNodePath().toString());
+			
 			Map<String, List<String>> indices = new HashMap<>();
 			indices.put("", node.getData().getMetadataSchemaIds());
 			query.setIndicesPerQuery(indices);
+			
 			return query;
 		}
 
@@ -382,12 +386,32 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			//ElasticSearchQuery query = new ElasticSearchQuery();
 
 			//query.setIndices(node.getMetadataSchemaIds());
-		query.addQuery("{" +
+		/*query.addQuery("{" +
 				"\"term\":{" +
 					"\"value." + node.getNodePath().toString() + ("".equals(node.getFilterPath().toString()) ? "" : ".") +
 						node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
 				"}" +
+			"}", nodeMetadataSchemaIds);*/
+		
+		
+		
+		query.addQuery("{" +
+				"\"bool\": {" +
+					"\"filter\": [" +
+						node.getFilterNodes().stream().map(filterNode ->
+							"{" +
+								"\"term\": {" +
+									"\"value." + node.getNodePath().toString() + ("".equals(filterNode.getFilterPath().toString()) ? "" : ".") +
+										filterNode.getFilterPath().toString() + ".keyword\"" + ":\"" + filterNode.getValue() + "\"" +
+								"}" +
+							"}"
+						).collect(Collectors.joining(",")) +
+					"]" +
+				"}" +
 			"}", nodeMetadataSchemaIds);
+		
+		
+		
 		if (node.isFilterPayload()) {
 			query.getIncludes().add(node.getNodePath().toString());
 		}

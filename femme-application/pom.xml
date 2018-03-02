@@ -179,7 +179,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>femme-application</finalName>
+		<finalName>femme</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -219,11 +219,11 @@
 				<version>${tomcat-maven-plugin.version}</version>
 				<configuration>
 					<port>8080</port>
-					<path>/femme-application-devel</path>
-					<!--<contextFile>src/main/webapp/WEB-INF/web.xml</contextFile>-->
-					<!--<mode>context</mode>-->
+					<path>/femme</path>
 					<charset>UTF-8</charset>
-					<!--<warDirectory>target/${project.artifactId}-${project.version}</warDirectory>-->
+					<systemProperties>
+						<logback.configurationFile>logback-dev.xml</logback.configurationFile>
+					</systemProperties>
 				</configuration>
 			</plugin>
 		</plugins>

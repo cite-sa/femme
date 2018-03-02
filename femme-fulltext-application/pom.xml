@@ -143,8 +143,11 @@
                 <version>${tomcat-maven-plugin.version}</version>
                 <configuration>
                     <port>8081</port>
-                    <path>/fulltext-application-devel</path>
+                    <path>/femme-fulltext</path>
                     <charset>UTF-8</charset>
+                    <systemProperties>
+                        <logback.configurationFile>logback-dev.xml</logback.configurationFile>
+                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>

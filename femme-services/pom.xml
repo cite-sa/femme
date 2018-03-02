@@ -4,15 +4,15 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>gr.cite.femme.geo</groupId>
-	<artifactId>femme-geo</artifactId>
+	<groupId>gr.cite.femme</groupId>
+	<artifactId>femme-services</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<packaging>pom</packaging>
 
 	<modules>
-		<!--<module>../femme-core</module>-->
-		<module>../femme-geo-engine</module>
-		<module>../femme-geo-application</module>
+		<module>../femme</module>
+		<module>../femme-fulltext</module>
+		<module>../femme-geo</module>
 	</modules>
-
 </project>

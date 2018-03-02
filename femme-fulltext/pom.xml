@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>../metadata-processing-pipeline</module>
+        <!--<module>../metadata-processing-pipeline</module>-->
         <module>../femme-fulltext-core</module>
         <module>../femme-fulltext-engine</module>
         <module>../femme-fulltext-application</module>

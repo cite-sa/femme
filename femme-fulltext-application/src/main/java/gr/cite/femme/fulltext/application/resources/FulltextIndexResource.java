@@ -2,8 +2,8 @@ package gr.cite.femme.fulltext.application.resources;
 
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.core.FulltextSearchQueryMessenger;
+import gr.cite.femme.fulltext.engine.FemmeFulltextException;
 import gr.cite.femme.fulltext.engine.FulltextIndexEngine;
-import gr.cite.femme.fulltext.engine.FulltextIndexException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,14 +38,11 @@ public class FulltextIndexResource {
 	@POST
 	@Path("elements")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response search(FulltextSearchQueryMessenger query) {
-		List<FulltextDocument> results = null;
-		try {
-			results = this.engine.search(query);
-		} catch (FulltextIndexException e) {
-			logger.error(e.getMessage(), e);
-			throw new WebApplicationException(e);
-		}
+	public Response search(FulltextSearchQueryMessenger query) throws FemmeFulltextException {
+		if (query == null) throw new FemmeFulltextException("Query body is required", Response.Status.BAD_REQUEST.getStatusCode());
+
+		List<FulltextDocument> results = this.engine.search(query);
+		
 		return Response.ok(results).build();
 	}
 

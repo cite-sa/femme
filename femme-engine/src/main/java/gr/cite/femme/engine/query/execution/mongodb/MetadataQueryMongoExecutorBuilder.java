@@ -28,7 +28,11 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		this.metadataStore = metadataStore;
 		this.elementSubtype = elementSubtype;
 	}
-
+	
+	public FindQueryExecutorBuilder<T> find() {
+		return new FindQueryMongoExecutorBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).find();
+	}
+	
 	public FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query) {
 		return new FindQueryMongoExecutorBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).find(query);
 	}
@@ -47,13 +51,18 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		private Query<? extends Criterion> query;
 		private QueryOptionsMessenger options;
 		private String xPath;
+		private boolean xPathInMemory;
 
 		private FindQueryMongoExecutorBuilder(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
 			this.datastore = datastore;
 			this.elementSubtype = elementSubtype;
 			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastore, metadataStore, elementSubtype);
 		}
-
+		
+		public FindQueryExecutorBuilder<T> find() {
+			return this;
+		}
+		
 		public FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query) {
 			this.query = query;
 			return this;
@@ -64,13 +73,16 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 			return this;
 		}
 
-		public FindQueryMongoExecutorBuilder<T> xPath(String xPath) throws MetadataStoreException, DatastoreException {
+		public FindQueryMongoExecutorBuilder<T> xPath(String xPath) {
 			this.xPath = xPath;
+			this.xPathInMemory = false;
 			return this;
 		}
-
-		public FindQueryMongoExecutorBuilder<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
-			queryExecutor.xPathInMemory(xPath);
+		
+		public FindQueryMongoExecutorBuilder<T> xPathInMemory(String xPath) throws MetadataStoreException {
+			//queryExecutor.xPathInMemory(xPath);
+			this.xPath = xPath;
+			this.xPathInMemory = true;
 			return this;
 		}
 
@@ -84,10 +96,14 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 				}
 
 				if (this.query == null || preFilteringIds.size() > 0) {
-					this.queryExecutor.options(this.options).xPath(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
+					if (xPathInMemory)
+						this.queryExecutor.options(this.options).xPathInMemory(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
+					else
+						this.queryExecutor.options(this.options).xPath(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
 				} else {
 					this.options = QueryOptionsMessenger.builder().limit(0).build();
 				}
+				
 				this.query = null;
 			}
 
@@ -118,12 +134,12 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 			return this;
 		}
 
-		public CountQueryMongoExecutionBuilder<T> xPath(String xPath) throws MetadataStoreException, DatastoreException {
+		public CountQueryMongoExecutionBuilder<T> xPath(String xPath) {
 			this.xPath = xPath;
 			return this;
 		}
 
-		public CountQueryMongoExecutionBuilder<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
+		public CountQueryMongoExecutionBuilder<T> xPathInMemory(String xPath) throws MetadataStoreException {
 			queryExecutor.xPathInMemory(xPath);
 			return this;
 		}

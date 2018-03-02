@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface FulltextIndexClientAPI {
-	void insert(String elementId, String metadatumId, Map<String, Object> fields);
+	void insert(String elementId, String metadatumId, Map<String, Object> fields) throws FulltextException;
 	void delete(String id);
 	void deleteByElementId(String elementId);
 	void deleteByMetadatumId(String metadatumId);

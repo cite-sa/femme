@@ -97,7 +97,22 @@ public class MetadataJsonCollection implements MongoMetadataCollection {
 	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException {
 		return null;
 	}
-
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds) throws MetadataStoreException {
+		return null;
+	}
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds, boolean lazy) throws MetadataStoreException {
+		return null;
+	}
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds, boolean lazy, boolean loadInactive) throws MetadataStoreException {
+		return null;
+	}
+	
 	@Override
 	public void delete(String metadatumId) {
 		// TODO Auto-generated method stub

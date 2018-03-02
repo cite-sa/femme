@@ -9,18 +9,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import gr.cite.earthserver.wcs.adapter.WCSAdapter;
-import gr.cite.earthserver.wcs.adapter.api.WCSAdapterAPI;
-import gr.cite.earthserver.wcs.core.WCSRequest;
-import gr.cite.earthserver.wcs.core.WCSRequestBuilder;
-import gr.cite.earthserver.wcs.core.WCSRequestException;
-import gr.cite.earthserver.wcs.core.WCSResponse;
-import gr.cite.earthserver.wcs.utils.ParseException;
-import gr.cite.earthserver.wcs.utils.WCSFemmeMapper;
-import gr.cite.earthserver.wcs.utils.WCSParseUtils;
 import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeException;
 import gr.cite.femme.client.api.FemmeClientAPI;
+import gr.cite.femme.core.dto.ElementList;
 import org.apache.commons.lang3.RandomUtils;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.uri.UriComponent;
@@ -28,8 +20,6 @@ import org.glassfish.jersey.uri.UriComponent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.cite.femme.core.dto.CollectionList;
-import gr.cite.femme.core.dto.DataElementList;
 import gr.cite.femme.core.dto.FemmeResponse;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
@@ -40,18 +30,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class FemmeApplicationTest {
-	private static final String FEMME_URL = "http://localhost:8090/femme-application-devel";
+	private static final String FEMME_URL = "http://localhost:8090/femme";
+	private static final String FEMME_GEO_URL = "http://localhost:8090/femme-geo";
 
 	private WebTarget webTarget;
 	private FemmeClientAPI femmeClient;
-	private WCSAdapterAPI wcsAdapter;
+	//private WCSAdapterAPI wcsAdapter;
 	
 	
 	@Before
 	public void init() {
 		this.webTarget = ClientBuilder.newClient().register(JacksonFeature.class).target(FemmeApplicationTest.FEMME_URL);
 		this.femmeClient = new FemmeClient(FemmeApplicationTest.FEMME_URL);
-		this.wcsAdapter = new WCSAdapter(FemmeApplicationTest.FEMME_URL);
+		//this.wcsAdapter = new WCSAdapter(FemmeApplicationTest.FEMME_URL, FemmeApplicationTest.FEMME_GEO_URL);
 	}
 
 	@Test
@@ -59,7 +50,7 @@ public class FemmeApplicationTest {
 		Assert.assertEquals(webTarget.path("ping").request().get(String.class), "pong");
 	}
 
-	@Test
+	/*@Test
 	public void importer() throws FemmeException, WCSRequestException, ParseException {
 		String endpoint = "http://earthserver.ecmwf.int/rasdaman/ows";
 		String name = "ECMWF";
@@ -89,14 +80,14 @@ public class FemmeApplicationTest {
 
 		this.femmeClient.endImport(importId);
 
-	}
+	}*/
 
 	//@Test
 	public void query() {
-		FemmeResponse<DataElementList> response = webTarget
+		FemmeResponse<ElementList<DataElement>> response = webTarget
 				.path("dataElements")
 				.queryParam("xpath", "//RectifiedGrid[@dimension=2]")
-				.request().get(new GenericType<FemmeResponse<DataElementList>>(){});
+				.request().get(new GenericType<FemmeResponse<ElementList<DataElement>>>(){});
 
 		System.out.println(response);
 	}
@@ -115,11 +106,11 @@ public class FemmeApplicationTest {
 		String optionsJson = mapper.writeValueAsString(options);
 
 		
-		FemmeResponse<CollectionList> response = webTarget
+		FemmeResponse<ElementList<Collection>> response = webTarget
 			.path("collections")
 			.queryParam("options", UriComponent.encode(optionsJson, UriComponent.Type.QUERY_PARAM_SPACE_ENCODED))
 			.request()
-			.get(new GenericType<FemmeResponse<CollectionList>>(){});
+			.get(new GenericType<FemmeResponse<ElementList<Collection>>>(){});
 		
 		System.out.println(response);
 	}

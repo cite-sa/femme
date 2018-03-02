@@ -28,7 +28,7 @@ public interface Datastore {
 	
 	public DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException;
 
-	public <T extends Element> T update(Element element) throws DatastoreException;
+	public <T extends Element> T update(T element) throws DatastoreException;
 
 	public <T extends Element> T  update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException;
 
@@ -57,11 +57,17 @@ public interface Datastore {
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
 	public DataElement getDataElementByName(String id) throws DatastoreException;
+	
+	public List<DataElement> getDataElementsByCollection(String collectionId) throws DatastoreException;
 
 	/*public void reIndexAll() throws DatastoreException;*/
 
 	public String generateId();
 
 	public Object generateId(String id);
+	
+	
+	public Collection getCollectionByNameAndEndpoint(String name, String endpoint);
+	public DataElement getDataElementByNameEndpointAndCollections(String name, String endpoint, List<Collection> collectionIds);
 	
 }

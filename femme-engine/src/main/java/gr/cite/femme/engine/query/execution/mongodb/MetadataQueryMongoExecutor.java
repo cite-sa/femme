@@ -50,8 +50,8 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	}
 
 	@Override
-	public MetadataQueryExecutor<T> xPath(List<String> elementIds, String xPath) throws DatastoreException, MetadataStoreException {
-		if (xPath != null && !xPath.trim().equals("")) {
+	public MetadataQueryExecutor<T> xPath(List<String> elementIds, String xPath) throws MetadataStoreException {
+		if (xPath != null && !xPath.trim().isEmpty()) {
 			//List<Metadatum> metadataXPathResults;
 
 			long xPathQueryStart = System.currentTimeMillis();
@@ -69,20 +69,15 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 											.distinct().collect(Collectors.toList())));
 			//logger.debug(xPathSatisfyingElementsQuery.toString());
 
-			super.setQueryDocument(getQueryDocument() == null
-					? xPathSatisfyingElementsQuery
-					: new Document().append("$and", Arrays.asList(
-						getQueryDocument(),
-						xPathSatisfyingElementsQuery
-					)
-			));
+			super.setQueryDocument(getQueryDocument() == null ?
+					xPathSatisfyingElementsQuery : new Document().append("$and", Arrays.asList(getQueryDocument(), xPathSatisfyingElementsQuery)));
 		}
 		return this;
 	}
 
 	@Override
-	public MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException {
-		if (xPath != null && !xPath.trim().equals("")) {
+	public MetadataQueryExecutor<T> xPathInMemory(String xPath) throws MetadataStoreException {
+		if (xPath != null && ! xPath.trim().isEmpty()) {
 
 			long xPathQueryStart = System.currentTimeMillis();
 
@@ -93,74 +88,95 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 			logger.info("[" + xPath + "] XPath in memory metadata query time: " + (xPathQueryEnd - xPathQueryStart) + " ms");
 
 			Document retrieveXPathSatisfyElementsQuery = new Document()
-					.append(FieldNames.ID,
-							new Document().append("$in",
-									this.metadataXPathResults.stream()
-											.map(metadatum -> new ObjectId(metadatum.getElementId()))
-											.distinct().collect(Collectors.toList())));
+					.append(FieldNames.ID, new Document().append("$in",
+							this.metadataXPathResults.stream().map(metadatum -> new ObjectId(metadatum.getElementId())).distinct().collect(Collectors.toList())));
 									//this.metadataXPathResults.keySet().stream().map(ObjectId::new).collect(Collectors.toList())));
 			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
 
-			super.setQueryDocument(super.getQueryDocument() == null
-					? retrieveXPathSatisfyElementsQuery
-					: new Document().append("$and", Arrays.asList(
-						super.getQueryDocument(),
-						retrieveXPathSatisfyElementsQuery
-					)
-				));
+			super.setQueryDocument(super.getQueryDocument() == null ?
+					retrieveXPathSatisfyElementsQuery : new Document().append("$and", Arrays.asList(super.getQueryDocument(), retrieveXPathSatisfyElementsQuery)));
 		}
 
+		return this;
+	}
+	
+	public MetadataQueryExecutor<T> xPathInMemory(List<String> elementIds, String xPath) throws DatastoreException, MetadataStoreException {
+		if (xPath != null && ! xPath.trim().isEmpty()) {
+			
+			long xPathQueryStart = System.currentTimeMillis();
+			
+			this.metadataXPathResults = this.metadataStore.xPathInMemory(elementIds, xPath);
+			
+			long xPathQueryEnd = System.currentTimeMillis();
+			
+			logger.info("[" + xPath + "] XPath in memory metadata query time: " + (xPathQueryEnd - xPathQueryStart) + " ms");
+			
+			Document retrieveXPathSatisfyElementsQuery = new Document()
+					.append(FieldNames.ID, new Document().append("$in",
+							this.metadataXPathResults.stream().map(metadatum -> new ObjectId(metadatum.getElementId())).distinct().collect(Collectors.toList())));
+			//this.metadataXPathResults.keySet().stream().map(ObjectId::new).collect(Collectors.toList())));
+			logger.debug(retrieveXPathSatisfyElementsQuery.toString());
+			
+			super.setQueryDocument(super.getQueryDocument() == null ?
+					retrieveXPathSatisfyElementsQuery : new Document().append("$and", Arrays.asList(super.getQueryDocument(), retrieveXPathSatisfyElementsQuery)));
+		}
+		
 		return this;
 	}
 
 	@Override
 	public List<T> list() throws DatastoreException, MetadataStoreException {
-		List<T> elements;
-		elements = super.list();
+		List<T> elements = super.list();
 		if (!isLazyMetadata()) {
 			try {
-				elements = elements.stream().map(element -> {
-					if (this.metadataXPathResults != null) {
-						List<Metadatum> xPathResult = this.metadataXPathResults.stream()
-								.filter(metadatum -> metadatum.getElementId().equals(element.getId()))
-								.map(metadatum -> {
-									if (metadatum.getValue() == null) {
-										try {
-											return this.metadataStore.get(metadatum, false);
-										} catch (MetadataStoreException e) {
-											throw new RuntimeException(e.getMessage(), e);
-										}
-									} else {
-										Metadatum originalMetadatum;
-										try {
-											originalMetadatum = this.metadataStore.get(metadatum, true);
-										} catch (MetadataStoreException e) {
-											throw new RuntimeException(e.getMessage(), e);
-										}
-
-										originalMetadatum.setValue(metadatum.getValue());
-										return originalMetadatum;
-									}
-								}).collect(Collectors.toList());
-
-						if (this.metadataXPathResults.size() > 0) {
-							element.setMetadata(xPathResult);
-						}
-					} else {
-						try {
-							element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata(), Boolean.valueOf(getOptions().isLoadInactiveMetadata())));
-						} catch (MetadataStoreException e) {
-							throw new RuntimeException(e.getMessage(), e);
-						}
-					}
-					return element;
-				}).collect(Collectors.toList());
+				setReturnedMetadata(elements);
 			} catch (RuntimeException e) {
 				throw new MetadataStoreException(e.getMessage(), e);
 			}
 		}
 
 		return elements;
+	}
+	
+	private void setReturnedMetadata(List<T> elements) {
+		elements.forEach(element -> {
+			if (this.metadataXPathResults != null) {
+				List<Metadatum> xPathResult = filterElementMetadataByXPathResults(element);
+				if (this.metadataXPathResults.size() > 0) {
+					element.setMetadata(xPathResult);
+				}
+			} else {
+				try {
+					element.setMetadata(this.metadataStore.find(element.getId(), isLazyMetadata(), Boolean.valueOf(getOptions().isLoadInactiveMetadata())));
+				} catch (MetadataStoreException e) {
+					throw new RuntimeException(e.getMessage(), e);
+				}
+			}
+		});
+	}
+	
+	private List<Metadatum> filterElementMetadataByXPathResults(T element) {
+		return this.metadataXPathResults.stream()
+				.filter(metadatum -> metadatum.getElementId().equals(element.getId()))
+				.map(metadatum -> {
+					if (metadatum.getValue() == null) {
+						try {
+							return this.metadataStore.get(metadatum, false);
+						} catch (MetadataStoreException e) {
+							throw new RuntimeException(e.getMessage(), e);
+						}
+					} else {
+						Metadatum originalMetadatum;
+						try {
+							originalMetadatum = this.metadataStore.get(metadatum, true);
+						} catch (MetadataStoreException e) {
+							throw new RuntimeException(e.getMessage(), e);
+						}
+						
+						originalMetadatum.setValue(metadatum.getValue());
+						return originalMetadatum;
+					}
+				}).collect(Collectors.toList());
 	}
 
 	@Override

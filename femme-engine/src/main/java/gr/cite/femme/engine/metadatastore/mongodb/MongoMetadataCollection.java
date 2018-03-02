@@ -31,6 +31,12 @@ public interface MongoMetadataCollection {
 	public List<Metadatum> find(String elementId, boolean lazy) throws MetadataStoreException;
 
 	public List<Metadatum> find(String elementId, boolean lazy, boolean loadInactive) throws MetadataStoreException;
+	
+	public List<Metadatum> find(List<String> elementIds) throws MetadataStoreException;
+	
+	public List<Metadatum> find(List<String> elementIds, boolean lazy) throws MetadataStoreException;
+	
+	public List<Metadatum> find(List<String> elementIds, boolean lazy, boolean loadInactive) throws MetadataStoreException;
 
 	public MongoCursor<Metadatum> findAllBeforeTimestamp(Instant timestamp) throws MetadataStoreException;
 

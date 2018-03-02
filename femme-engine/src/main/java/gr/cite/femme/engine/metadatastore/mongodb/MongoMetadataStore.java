@@ -3,6 +3,7 @@ package gr.cite.femme.engine.metadatastore.mongodb;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,8 +83,8 @@ public class MongoMetadataStore implements MetadataStore {
 		Metadatum updatedMetadatum = this.metadataGridFS.update(metadatum);
 
 		if (updatedMetadatum != null) {
-			deIndexMetadatum(metadatum.getId());
 			index(metadatum);
+			deIndexMetadatum(metadatum.getId());
 		}
 		return updatedMetadatum;
 	}
@@ -228,32 +229,25 @@ public class MongoMetadataStore implements MetadataStore {
 
 	@Override
 	public List<Metadatum> xPathInMemory(List<String> elementIds, String xPath) throws MetadataStoreException {
-		//Map<String, List<Metadatum>> metadataPerElementId = new HashMap<>();
-		List<Metadatum> metadata = new ArrayList<>();
-
-		try (MongoCursor<Metadatum> metadataCursor = this.metadataGridFS.findAll(false)) {
-			while (metadataCursor.hasNext()) {
-				Metadatum metadatum = metadataCursor.next();
-
-				if (metadatum.getValue() != null) {
+		List<Metadatum> xPathedMetadata = new ArrayList<>();
+		List<Metadatum> metadata = this.metadataGridFS.find(elementIds, false);
+		
+		for (Metadatum metadatum: metadata) {
+			if (metadatum.getValue() != null) {
+				try {
 					String xPathResult = new XPathEvaluator(XMLConverter.stringToNode(metadatum.getValue())).evaluate(xPath).stream().collect(Collectors.joining());
-
+					
 					if (xPathResult.length() > 0) {
 						metadatum.setValue(xPathResult);
-						metadata.add(metadatum);
-
-					/*if (!metadataPerElementId.containsKey(metadatum.getElementId())) {
-						metadataPerElementId.put(metadatum.getElementId(), new ArrayList<>());
+						xPathedMetadata.add(metadatum);
 					}
-					metadataPerElementId.get(metadatum.getElementId()).add(metadatum);*/
-					}
+				} catch (XPathEvaluationException | XMLConversionException | XPathFactoryConfigurationException e) {
+					logger.error("In memory XPath: " + e.getMessage());
 				}
 			}
-		} catch (XPathEvaluationException | XMLConversionException | XPathFactoryConfigurationException e) {
-			throw new MetadataStoreException("XPath in memory failed", e);
 		}
-
-		return metadata;
+		
+		return xPathedMetadata;
 	}
 	
 	@Override
@@ -290,7 +284,7 @@ public class MongoMetadataStore implements MetadataStore {
 
 	private MongoMetadataCollection getMetadataStore(Metadatum metadatum) throws MetadataStoreException {
 		if (metadatum.getContentType() != null) {
-			if (metadatum.getContentType().toLowerCase().equals("json") || metadatum.getContentType().toLowerCase().contains("json")) {
+			if (metadatum.getContentType().toLowerCase().contains("json")) {
 				return metadataMongoCollection;
 			} else {
 				return metadataGridFS;

@@ -62,9 +62,11 @@ public class DataElementCodec extends ElementCodec<DataElement> {
 
 				reader.readStartArray();
 				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-					reader.readStartDocument();
+					//reader.readStartDocument();
 					Collection collection = new Collection();
-					while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+					collection.setId(reader.readString());
+					
+					/*while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
 						String collectionFieldName = reader.readName();
 
 						if (collectionFieldName.equals(FieldNames.ID)) {
@@ -74,8 +76,8 @@ public class DataElementCodec extends ElementCodec<DataElement> {
 						} else if (collectionFieldName.equals(FieldNames.ENDPOINT)) {
 							collection.setEndpoint(reader.readString());
 						}
-					}
-					reader.readEndDocument();
+					}*/
+					//reader.readEndDocument();
 					dataElementCollections.add(collection);
 				}
 				reader.readEndArray();

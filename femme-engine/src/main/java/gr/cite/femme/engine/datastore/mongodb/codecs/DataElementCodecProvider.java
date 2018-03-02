@@ -12,7 +12,6 @@ public class DataElementCodecProvider implements CodecProvider {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
-		//if (clazz.equals(Element.class) || clazz.equals(DataElement.class) || clazz.equals(Collection.class) || clazz.equals(DataElementMongo.class)) {
 		if (clazz.equals(DataElement.class)) {
 			return (Codec<T>) new DataElementCodec(registry);
 		} else {

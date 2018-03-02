@@ -27,6 +27,7 @@ import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
+import gr.cite.femme.fulltext.client.FulltextException;
 import gr.cite.femme.fulltext.client.FulltextIndexClientAPI;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -35,10 +36,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.QueryParam;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class Femme {
 	private static final Logger logger = LoggerFactory.getLogger(Femme.class);
@@ -53,8 +56,8 @@ public class Femme {
 	private FulltextIndexClientAPI fulltextClient;
 
 	private Map<String, PipelineConfiguration> pipelineConfiguration;
-
-	//@Inject
+	
+	@Inject
 	public Femme(Datastore datastore, MetadataStore metadataStore) throws IOException {
 		this.datastore = datastore;
 		this.metadataStore = metadataStore;
@@ -64,45 +67,46 @@ public class Femme {
 			this.pipelineConfiguration = mapper.readValue(config, new TypeReference<Map<String, PipelineConfiguration>>() {});
 		}
 	}
-
+	
 	@Inject
-	public Femme(Datastore datastore, MetadataStore metadataStore, FulltextIndexClientAPI fulltextClient) throws IOException {
-		this.datastore = datastore;
-		this.metadataStore = metadataStore;
+	public void setFulltextClient(FulltextIndexClientAPI fulltextClient) {
 		this.fulltextClient = fulltextClient;
-
-		String config = Resources.toString(Resources.getResource(Femme.PIPELINE_CONFIG_FILE), Charsets.UTF_8);
-		if (!config.trim().isEmpty()) {
-			this.pipelineConfiguration = mapper.readValue(config, new TypeReference<Map<String, PipelineConfiguration>>() {});
-		}
 	}
-
-	public String insert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
+	
+	public String insertOrUpdateElement(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
+		Element updatedElement = null;
 		String id = exists(element);
+		
 		if (id != null) {
 			element.setId(id);
-			update(element);
+			updatedElement = updateElement(element);
 		} else {
-			prepareAndInsertElement(element);
-
-			if (element instanceof Collection) {
-				insertCollectionDataElements((Collection) element);
-				// TODO check how subDataElements are stored in MongoDB
-			} else if (element instanceof DataElement) {
-				insertDataElementDataElements((DataElement) element);
-			}
-
-			insertElementMetadata(element);
-
+			insertElement(element);
+			
 			if (this.fulltextClient != null) {
 				insertInFulltextIndex(element);
 			}
 		}
 
-		return element.getId();
+		return updatedElement != null ? null : element.getId();
+	}
+	
+	private String exists(Element element) throws FemmeException {
+		Element existingElement = null;
+		try {
+			if (element instanceof DataElement) {
+				existingElement = this.datastore.getDataElementByNameEndpointAndCollections(element.getName(), element.getEndpoint(), ((DataElement) element).getCollections());
+			} else if (element instanceof Collection) {
+				existingElement = this.datastore.getCollectionByNameAndEndpoint(element.getName(), element.getEndpoint());
+			}
+		} catch (Exception e) {
+			throw new FemmeException("Error on " + element.getClass().getSimpleName() + " existence check");
+		}
+		
+		return existingElement != null ? existingElement.getId() : null;
 	}
 
-	private void prepareAndInsertElement(Element element) throws DatastoreException {
+	private void insertElement(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
 		if (element.getId() == null) {
 			element.setId(this.datastore.generateId());
 		}
@@ -115,6 +119,15 @@ public class Femme {
 		element.getSystemicMetadata().setStatus(Status.ACTIVE);
 
 		this.datastore.insert(element);
+		
+		if (element instanceof Collection) {
+			insertCollectionDataElements((Collection) element);
+			// TODO check how subDataElements are stored in MongoDB
+		} else if (element instanceof DataElement) {
+			insertDataElementDataElements((DataElement) element);
+		}
+		
+		insertElementMetadata(element);
 	}
 
 	private void insertCollectionDataElements(Collection collection) throws DatastoreException, MetadataStoreException, FemmeException {
@@ -123,75 +136,56 @@ public class Femme {
 			if (dataElement.getId() == null) {
 				dataElement.setId(this.datastore.generateId());
 			}
-			insert(dataElement);
+			insertElement(dataElement);
 		}
 	}
 
 	private void insertDataElementDataElements(DataElement dataElement) throws DatastoreException, MetadataStoreException, FemmeException {
 		for (DataElement subDataElement: dataElement.getDataElements()) {
-			insert(subDataElement);
+			insertElement(subDataElement);
 		}
 	}
 
-	private void insertElementMetadata(Element element) {
+	private void insertElementMetadata(Element element) throws MetadataStoreException {
 		for (Metadatum metadatum : element.getMetadata()) {
 			try {
 				this.metadataStore.insert(metadatum);
-			} catch (MetadataStoreException e) {
-				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
 			} catch (MetadataIndexException e) {
 				logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
 			}
 		}
 	}
-
-	public String insert(Metadatum metadatum) throws FemmeException {
+	
+	public List<String> insertMetadata(List<Metadatum> metadata) throws MetadataStoreException {
+		List<String> metadataIds = new ArrayList<>();
+		
+		for (Metadatum metadatum: metadata) {
+			insertMetadatum(metadatum);
+			metadataIds.add(metadatum.getId());
+		}
+		
+		return metadataIds;
+	}
+	
+	public String insertMetadatum(Metadatum metadatum) throws MetadataStoreException {
 		try {
 			this.metadataStore.insert(metadatum);
-			return metadatum.getId();
-		} catch (MetadataStoreException | MetadataIndexException e) {
-			throw new FemmeException("Metadatum insertion failed", e);
+		} catch (MetadataIndexException e) {
+			logger.warn("Metadatum [" + metadatum.getId() + "] indexing failed", e);
 		}
+		
+		return metadatum.getId();
 	}
 
-	private String exists(Element element) throws DatastoreException, MetadataStoreException {
-		Element existingElement = null;
-		if (element instanceof DataElement) {
-			existingElement = this.datastore
-					.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().and(Arrays.asList(
-							CriterionBuilderMongo.root().inAnyCollection(Collections.singletonList(
-									CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(((DataElement) element).getCollections().get(0).getId())).end()
-							)).end(),
-							CriterionBuilderMongo.root().eq(FieldNames.NAME, element.getName()).end(),
-							CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, element.getEndpoint()).end()
-					)).end()), element.getClass())
-					.options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).first();
-		} else if (element instanceof Collection) {
-			existingElement = this.datastore
-					.find(QueryMongo.query()
-							.addCriterion(CriterionBuilderMongo.root().and(Arrays.asList(
-									CriterionBuilderMongo.root().eq(FieldNames.NAME, element.getName()).end(),
-									CriterionBuilderMongo.root().eq(FieldNames.ENDPOINT, element.getEndpoint()).end()
-							)).end()), element.getClass())
-					.options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).first();
-		}
-		return existingElement != null ? existingElement.getId() : null;
-	}
-
-	public <T extends Element> T update(Element element) throws DatastoreException, MetadataStoreException {
+	public <T extends Element> T updateElement(T element) throws DatastoreException, MetadataStoreException {
 		T updatedElement = null;
 		if (element.getId() != null) {
-			/*try {
-				updateElement = this.datastore.get(element.getId(), element.getClass(), this.metadataStore, null);
-			} catch (DatastoreException e) {
-				throw new FemmeException(element.getClass().getSimpleName() + " " + element.getId() + " update failed", e);
-			}*/
-
 			updatedElement = this.datastore.update(element);
 
-			List<Metadatum> existingMetadata = this.metadataStore.find(element.getId());
-			updateElementMetadata(element, existingMetadata);
-			deleteObsoleteElementMetadata(element, existingMetadata);
+			List<Metadatum> existingMetadataToBeDeleted = this.metadataStore.find(element.getId());
+			
+			updateElementMetadata(element, existingMetadataToBeDeleted);
+			deleteMetadata(existingMetadataToBeDeleted);
 		}
 
 		return updatedElement;
@@ -201,11 +195,9 @@ public class Femme {
 		for (Metadatum metadatum : element.getMetadata()) {
 			metadatum.setElementId(element.getId());
 			try {
-				Metadatum updatedMetadatum = this.metadataStore.update(metadatum);
-
-				if (updatedMetadatum != null) {
-					existingMetadata.removeIf(existing -> existing.getId().equals(updatedMetadatum.getId()));
-				}
+				this.metadataStore.update(metadatum);
+				existingMetadata.removeIf(existing -> existing.getId().equals(metadatum.getId()));
+				
 			} catch (MetadataStoreException e) {
 				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
 			} catch (MetadataIndexException e) {
@@ -215,7 +207,7 @@ public class Femme {
 		}
 	}
 
-	public Metadatum update(Metadatum metadatum) throws FemmeException {
+	public Metadatum updateMetadatum(Metadatum metadatum) throws FemmeException {
 		try {
 			return this.metadataStore.update(metadatum);
 		} catch (MetadataStoreException | MetadataIndexException e) {
@@ -223,27 +215,47 @@ public class Femme {
 		}
 	}
 
-	public void delete(String elementId, Class<? extends Element> elementSubTytpe) throws FemmeException {
+	public void deleteElement(String elementId, Class<? extends Element> elementSubtype) throws FemmeException {
 		try {
+			this.datastore.delete(elementId, elementSubtype);
 			this.metadataStore.deleteAll(elementId);
-			this.datastore.delete(elementId, elementSubTytpe);
+			
+			if (elementSubtype.equals(Collection.class)) {
+				List<DataElement> collectionDataElements = this.datastore.getDataElementsByCollection(elementId);
+				for (DataElement dataElement: collectionDataElements) {
+					deleteElement(dataElement.getId(), DataElement.class);
+				}
+			}
+			
+			deleteElementFromAuxiliaryServices(elementId);
+			
 		} catch (MetadataIndexException | MetadataStoreException e) {
-			throw new FemmeException("Delete metadata of " + elementSubTytpe.getSimpleName() + " " + elementId + " failed", e);
+			throw new FemmeException("Delete metadata of " + elementSubtype.getSimpleName() + " [" + elementId + "] failed", e);
 		} catch (DatastoreException e) {
-			throw new FemmeException("Delete " + elementSubTytpe.getSimpleName() + " " + elementId + " failed", e);
+			throw new FemmeException("Delete " + elementSubtype.getSimpleName() + " [" + elementId + "] failed", e);
 		}
 	}
-
-	private void deleteObsoleteElementMetadata(Element element, List<Metadatum> existingMetadata) {
+	
+	private void deleteElementFromAuxiliaryServices(String elementId) {
+		if (this.fulltextClient != null) {
+			this.fulltextClient.deleteByElementId(elementId);
+		}
+		// TODO Delete from geo service
+	}
+	
+	private void deleteMetadata(List<Metadatum> existingMetadata) throws MetadataStoreException {
 		for (Metadatum obsoleteMetadatum : existingMetadata) {
 			try {
-				this.metadataStore.softDelete(obsoleteMetadatum.getId());
-			} catch (MetadataStoreException e) {
-				logger.error(element.getClass().getSimpleName() + " " + element.getId() + " metadatum insertion failed", e);
+				this.metadataStore.delete(obsoleteMetadatum);
 			} catch (MetadataIndexException e) {
-				logger.warn(element.getClass().getSimpleName() + " " + element.getId() + " metadatum indexing failed", e);
+				logger.warn("Metadatum de-indexing failed", e);
 			}
 		}
+	}
+	
+	private void deleteMetadatum(Metadatum metadatum) throws MetadataIndexException, MetadataStoreException {
+		if (metadatum == null) return;
+		this.metadataStore.delete(metadatum);
 	}
 
 	public void softDeleteElement(String id, Class<? extends Element> elementSubType) throws FemmeException {
@@ -270,7 +282,7 @@ public class Femme {
 		}
 
 		dataElement.setCollections(Collections.singletonList(collection));
-		return insert(dataElement);
+		return insertOrUpdateElement(dataElement);
 	}
 
 	public String addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException, FemmeException {
@@ -279,7 +291,7 @@ public class Femme {
 
 		if (collections != null && collections.size() > 0) {
 			dataElement.setCollections(collections);
-			return insert(dataElement);
+			return insertOrUpdateElement(dataElement);
 		}
 
 		return null;
@@ -316,6 +328,15 @@ public class Femme {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}
 	}
+	
+	public List<DataElement> getDataElementsByCollection(String collectionId) throws DatastoreException {
+		return this.datastore.getDataElementsByCollection(collectionId);
+		
+	}
+	
+	public List<Metadatum> getElementMetadata(String elementId) throws MetadataStoreException {
+		return this.metadataStore.find(elementId);
+	}
 
 	/*public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
@@ -348,7 +369,7 @@ public class Femme {
 		this.metadataStore.reIndexAll();
 	}
 
-	private void insertInFulltextIndex(Element element) throws FemmeException {
+	private void insertInFulltextIndex(Element element) {
 		if (this.pipelineConfiguration != null) {
 			ProcessingPipeline pipeline;
 			pipeline = new ProcessingPipeline(this.pipelineConfiguration.get(Femme.FULLTEXT_PIPELINE_CONFIG));
@@ -356,8 +377,8 @@ public class Femme {
 			for (Metadatum metadatum : element.getMetadata()) {
 				try {
 					this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue(), metadatum.getContentType().toLowerCase().split("/")[1]));
-				} catch (ProcessingPipelineException e) {
-					throw new FemmeException(e.getMessage(), e);
+				} catch (ProcessingPipelineException | FulltextException e) {
+					logger.error(e.getMessage(), e);
 				}
 			}
 		}

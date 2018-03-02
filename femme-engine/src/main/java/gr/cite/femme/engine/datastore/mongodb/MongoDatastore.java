@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.Updates;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
@@ -44,16 +45,13 @@ public class MongoDatastore implements Datastore {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDatastore.class);
 
 	private MongoDatastoreClient mongoClient;
-	/*private MetadataStore metadataStore;*/
 
 	public MongoDatastore() {
 		this.mongoClient = new MongoDatastoreClient();
-		/*this.metadataStore = new MongoMetadataStore();*/
 	}
 
 	public MongoDatastore(String host, int port, String name) {
 		this.mongoClient = new MongoDatastoreClient(host, port, name);
-		/*this.metadataStore = new MongoMetadataStore();*/
 	}
 
 	public <T extends Element> MongoCollection<T> getCollection(Class<T> elementSubType) {
@@ -73,25 +71,6 @@ public class MongoDatastore implements Datastore {
 		this.mongoClient.close();
 	}
 
-	/*public MetadataStore getMetadataStore() {
-		return this.metadataStore;
-	}
-
-	public List<Metadatum> insertMetadata(List<Metadatum> metadata, String elementId) {
-		for (Metadatum metadatum : metadata) {
-			try {
-				metadatum.setElementId(elementId);
-				this.metadataStore.insert(metadatum);
-			} catch (MetadataStoreException e) {
-				logger.error("Element " + elementId + " metadatum insertion failed", e);
-				//throw new DatastoreException("Element " + elementId + "metadatum insertion failed.");
-			} catch (MetadataIndexException e) {
-				logger.warn("Element " + elementId + " metadatum indexing failed", e);
-			}
-		}
-		return metadata;
-	}*/
-
 	@Override
 	public String insert(Element element) throws DatastoreException {
 		/*element.setId(new ObjectId().toString());
@@ -106,16 +85,16 @@ public class MongoDatastore implements Datastore {
 			} catch (MongoException e) {
 				// Duplicate key error. Collection already exists
 				if (11000 == e.getCode()) {
-					logger.info("Collection " + element.getEndpoint() + " already exists. " + e.getMessage());
+					logger.info("Collection [" + element.getEndpoint() + "] already exists.");
 				} else {
-					throw new DatastoreException("Collection " + element.getName() + " insertion failed", e);
+					throw new DatastoreException("Collection [" + element.getName() + "] insertion failed", e);
 				}
 			}
 		} else if (element instanceof DataElement) {
 			try {
 				this.mongoClient.getDataElements().insertOne((DataElement) element);
 			} catch (MongoException e) {
-				throw new DatastoreException("DataElement " + element.getName() + " insertion failed", e);
+				throw new DatastoreException("DataElement [" + element.getName() + "] insertion failed", e);
 			}
 		}
 		return element.getId();
@@ -149,141 +128,6 @@ public class MongoDatastore implements Datastore {
 
 		return elements != null && elements.size() > 0 ? elements.stream().map(Element::getId).collect(Collectors.toList()) : new ArrayList<>();
 	}
-	
-	/*private void insertCollection(Collection collection) throws DatastoreException {
-		Instant now = Instant.now();
-		
-		*//*for (DataElement dataElement : collection.getElements()) {
-			dataElement.addCollection(collection);
-			if (dataElement.getId() == null) {
-				dataElement.setId(new ObjectId().toString());
-			}
-		}*//*
-
-		try {
-			collection.getSystemicMetadata().setCreated(now);
-			collection.getSystemicMetadata().setModified(now);
-			this.mongoClient.getCollections().insertOne(collection);
-		} catch (MongoException e) {
-			// Duplicate key error. Collection already exists
-			if (11000 == e.getCode()) {
-				logger.info("Collection " + collection.getName() + " already exists. " + e.getMessage());
-			} else {
-				logger.info("Collection " + collection.getName() + " insertion failed. ", e);
-				throw new DatastoreException("Collection " + collection.getName() + " insertion failed. " + e.getMessage(), e);				
-			}
-			
-		}
-
-		for (DataElement dataElement : collection.getElements()) {
-			try {
-				*//*insertMetadata(dataElement.getMetadata(), dataElement.getId());*//*
-			} catch (MongoGridFSException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-		if (collection.getElements().size() > 0) {
-			for (DataElement dataElement: collection.getElements()) {
-				dataElement.getSystemicMetadata().setCreated(now);
-				dataElement.getSystemicMetadata().setModified(now);
-			}
-			this.mongoClient.getElements().insertMany(collection.getElements());
-
-		}
-	}*/
-	
-	/*private void insertDataElement(DataElement dataElement) throws DatastoreException {
-		
-		Instant now = Instant.now();
-		dataElement.getSystemicMetadata().setCreated(now);
-		dataElement.getSystemicMetadata().setModified(now);
-		
-		try {
-			this.mongoClient.getElements().insertOne(dataElement);
-		} catch (MongoException e) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e);
-		}
-		
-		
-		*//*UpdateResult updateResult = null;
-		try {
-			updateResult = dataElements.updateOne(
-					new Document().append(FieldNames.ID, new ObjectId(dataElement.getId())),
-					new Document().append("$set", dataElement),
-					new UpdateOptions().upsert(true));
-		} catch (MongoWriteException e1) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e1);
-		}  catch (MongoWriteConcernException e2) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e2);
-		}  catch(MongoException e3) {
-			throw new DatastoreException("DataElement" + dataElement.getEndpoint() + " insertion failed", e3);
-		}
-		logger.info(updateResult.toString());*//*
-		
-	}*/
-
-	/*public <T extends Element> List<String> insert(List<T> elements) throws DatastoreException {
-		for (Element element : elements) {
-			if (element.getId() != null) {
-				element.setId(new ObjectId(element.getId()).toString());
-			} else {
-				element.setId(new ObjectId().toString());
-			}
-			
-			try {
-				insertMetadata(element.getMetadata(), element.getId());
-			} catch (MongoGridFSException e) {
-				throw new DatastoreException("Bulk insertion failed.", e);
-			}
-		}
-
-		try {
-			if (elements.get(0) instanceof Collection) {
-				List<Collection> collectionList = (List<Collection>) elements;
-
-				try {
-					this.mongoClient.getCollections().insertMany(collectionList);
-				} catch (MongoException e) {
-					throw new DatastoreException("Collection bulk insertion failed.", e);
-				}
-
-				for (Collection collection : collectionList) {
-					for (DataElement dataElement : collection.getElements()) {
-						dataElement.addCollection(collection);
-						dataElement.setId(new ObjectId().toString());
-						try {
-							insertMetadata(dataElement.getMetadata(), dataElement.getId());
-						} catch (MongoGridFSException e) {
-							logger.error(e.getMessage(), e);
-						}
-					}
-					if (collection.getElements() != null && collection.getElements().size() > 0) {
-						this.mongoClient.getElements().insertMany(collection.getElements());
-					}
-				}
-			} else if (elements.get(0) instanceof DataElement) {
-				List<DataElement> dataElementList = (List<DataElement>) elements;
-				this.mongoClient.getElements().insertMany(dataElementList);
-
-				*//*
-				 * if (dataElement.getCollections() != null && dataElement.getCollections().size() > 0) {
-				 * 		collections.insertMany(dataElement.getCollections());
-				 * }
-				 *//*
-			}
-		} catch (MongoException e) {
-			for (Element element : elements) {
-				try {
-					this.metadataStore.deleteAll(element.getId());
-				} catch (MetadataStoreException e1) {
-					logger.error(e1.getMessage(), e1);
-				}
-			}
-			throw new DatastoreException("Bulk insertion failed.", e);
-		}
-
-		return elements.stream().map(element -> element.getId()).collect(Collectors.toList());
-	}*/
 
 	@Override
 	public DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException {
@@ -310,25 +154,6 @@ public class MongoDatastore implements Datastore {
 		}
 		return dataElement;
 	}
-
-	/*@Override
-	public DataElement addToCollection(DataElement dataElement, QueryMongo getQueryExecutor) throws DatastoreException {
-		logger.debug("addToCollection criteria getQueryExecutor: " + getQueryExecutor.execute());
-		Collection collection = this.mongoClient.getCollections().get(getQueryExecutor.execute()).limit(1).first();
-
-		if (collection != null) {
-			Collection dataElementCollection = new Collection();
-			dataElementCollection.setId(collection.getId());
-			dataElementCollection.setName(collection.getName());
-			dataElementCollection.setEndpoint(collection.getEndpoint());
-			dataElement.setCollections(Arrays.asList(collection));
-			
-			insert(dataElement);
-		} else {
-			logger.info("No collection updated");
-		}
-		return dataElement;
-	}*/
 
 	/*@Override
 	public Collection addToCollection(List<DataElement> dataElementsList, QueryMongo getQueryExecutor) throws DatastoreException {
@@ -361,21 +186,22 @@ public class MongoDatastore implements Datastore {
 	}*/
 
 	@Override
-	public Element update(Element element) throws DatastoreException {
-		Element updated = null;
+	public <T extends Element> T update(T element) throws DatastoreException {
+		T updated = null;
 
 		if (element.getId() != null) {
 			if (element.getSystemicMetadata() != null) {
 				element.getSystemicMetadata().setModified(Instant.now());
 			}
 
-			//Document forUpdate = Documentizer.toDocument(element);
-			updated = this.mongoClient.getCollection(element.getClass())
-					.findOneAndUpdate(
-							Filters.eq(FieldNames.ID, new ObjectId(element.getId())),
-							new Document().append("$set", element),
-							new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-					);
+			try {
+				updated = (T) this.mongoClient.getCollection(element.getClass()).findOneAndUpdate(
+						Filters.eq(FieldNames.ID, new ObjectId(element.getId())),
+						new Document().append("$set", element),
+						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+			} catch (Exception e) {
+				throw new DatastoreException("Error on " + element.getClass() + " [" + element.getId() + "] update", e);
+			}
 		}
 		return updated;
 	}
@@ -436,12 +262,10 @@ public class MongoDatastore implements Datastore {
 
 		updates.add(Updates.currentDate(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.MODIFIED));
 
-		return this.mongoClient.getCollection(elementSubType)
-				.findOneAndUpdate(
-					Filters.eq(FieldNames.ID, new ObjectId(id)),
-					Updates.combine(updates),
-					new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-				);
+		return this.mongoClient.getCollection(elementSubType).findOneAndUpdate(
+				Filters.eq(FieldNames.ID, new ObjectId(id)),
+				Updates.combine(updates),
+				new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
 	}
 
 	/*@Override
@@ -509,12 +333,11 @@ public class MongoDatastore implements Datastore {
 	
 	@Override
 	public DataElement getDataElementByName(String name) throws DatastoreException {
-		DataElement dataElement;
-		dataElement = this.mongoClient.getDataElements().find(Filters.eq(FieldNames.NAME, name)).limit(1).first();
-		/*if (dataElement != null) {
-			dataElement.setMetadata(getMetadata(dataElement));
-		}*/
-		return dataElement;
+		try {
+			return this.mongoClient.getDataElements().find(Filters.eq(FieldNames.NAME, name)).limit(1).first();
+		} catch (Exception e) {
+			throw new DatastoreException("Error on DataElement [" + name + "] retrieval", e);
+		}
 	}
 
 	@Override
@@ -534,19 +357,32 @@ public class MongoDatastore implements Datastore {
 			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id [" + id + "]", e);
 		}
 	}
-
+	
 	@Override
 	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		QueryMongo queryMongo = (QueryMongo) query;
 		return QueryExecutorFactory.getQueryExecutor(this, elementSubtype).find(queryMongo);
 	}
-
+	
+	@Override
+	public List<DataElement> getDataElementsByCollection(String collectionId) throws DatastoreException {
+		List<DataElement> dataElements = new ArrayList<>();
+		
+		try {
+			this.mongoClient.getDataElements().find(Filters.all(FieldNames.COLLECTIONS, collectionId))
+					.projection(Projections.include(FieldNames.ID)).into(dataElements);
+		} catch (Exception e) {
+			throw new DatastoreException("Retrieval of collection's [" + collectionId + "] data elements failed", e);
+		}
+		
+		return dataElements;
+	}
+	
 	@Override
 	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype) {
 		return QueryExecutorFactory.getQueryExecutor(this, elementSubtype).count(query);
 	}
 	
-
 	@Override
 	public void remove(DataElement dataElement, Collection collection) throws DatastoreException {
 
@@ -561,4 +397,27 @@ public class MongoDatastore implements Datastore {
 	public Object generateId(String id) {
 		return new ObjectId(id);
 	}
+	
+	
+	@Override
+	public Collection getCollectionByNameAndEndpoint(String name, String endpoint) {
+		Bson filterByName = Filters.eq(FieldNames.NAME, name);
+		Bson filterByEndpoint = Filters.eq(FieldNames.ENDPOINT, endpoint);
+		
+		return this.mongoClient.getCollection(Collection.class).find(Filters.and(filterByName, filterByEndpoint)).limit(1).first();
+	}
+	
+	@Override
+	public DataElement getDataElementByNameEndpointAndCollections(String name, String endpoint, List<Collection> collections) {
+		if (name == null || endpoint == null || collections == null) return null;
+		
+		List<String> collectionsIds = collections.stream().map(Element::getId).collect(Collectors.toList());
+		
+		Bson filterByName = Filters.eq(FieldNames.NAME, name);
+		Bson filterByEndpoint = Filters.eq(FieldNames.ENDPOINT, endpoint);
+		Bson filterByCollections = Filters.all(FieldNames.COLLECTIONS, collectionsIds);
+		
+		return this.mongoClient.getCollection(DataElement.class).find(Filters.and(filterByName, filterByEndpoint, filterByCollections)).limit(1).first();
+	}
+	
 }

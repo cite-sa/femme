@@ -15,4 +15,5 @@ public interface MetadataQueryExecutor<T extends Element> extends QueryExecutor<
 	MetadataQueryExecutor<T> xPath(String xPath) throws DatastoreException, MetadataStoreException;
 	MetadataQueryExecutor<T> xPath(List<String> elementIds, String xPath) throws DatastoreException, MetadataStoreException;
 	MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException;
+	MetadataQueryExecutor<T> xPathInMemory(List<String> elementIds, String xPath) throws DatastoreException, MetadataStoreException;
 }

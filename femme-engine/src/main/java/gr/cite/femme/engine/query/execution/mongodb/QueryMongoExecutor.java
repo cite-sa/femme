@@ -199,11 +199,10 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public T first() throws DatastoreException, MetadataStoreException {
-		if (this.options == null || this.options.getLimit() == null || this.options.getLimit() > 0){
+		if (this.options == null || this.options.getLimit() == null || this.options.getLimit() > 0) {
 			this.results = this.collection.find(
 					this.queryDocument == null
 							? Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode())
-
 							: Filters.and(Filters.ne(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.STATUS, Status.INACTIVE.getStatusCode()), this.queryDocument)
 			).limit(1);
 			return this.results.first();
@@ -233,9 +232,9 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 				inclusionOperatorDocument.remove("$in_any_collection");
 				System.out.println(queryDocument);
 
-				List<ObjectId> collectionIds = collections.stream().map(collection -> new ObjectId(collection.getId())).collect(Collectors.toList());
+				List<String> collectionIds = collections.stream().map(Element::getId).collect(Collectors.toList());
 
-				inclusionOperatorDocument.append(FieldNames.DATA_ELEMENT_COLLECTION_ID, new Document("$in", collectionIds));
+				inclusionOperatorDocument.append(FieldNames.COLLECTIONS, new Document("$all", collectionIds));
 			}
 		}
 

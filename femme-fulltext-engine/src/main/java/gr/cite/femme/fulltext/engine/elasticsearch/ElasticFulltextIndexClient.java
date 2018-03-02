@@ -105,6 +105,7 @@ public class ElasticFulltextIndexClient {
 		try {
 			indexExistenceResponse = this.client.performRequest("HEAD", "/" + indexName);
 		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
 			throw new FemmeFulltextException("Index " + indexName + " existence check failed", e);
 		}
 		return indexExistenceResponse.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();

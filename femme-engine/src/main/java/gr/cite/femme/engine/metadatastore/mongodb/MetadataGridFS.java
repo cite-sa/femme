@@ -124,11 +124,7 @@ public class MetadataGridFS implements MongoMetadataCollection {
 
 	@Override
 	public Metadatum update(Metadatum metadatum) throws MetadataStoreException {
-		//Metadatum currentMetadatum;
-		//if (metadatum.getId() != null) {
-		//	currentMetadatum = get(metadatum.getId());
-		//}
-		Metadatum updatedMetadatum = null;
+		Metadatum newMetadatum = null;
 		if (metadatum.getValue() != null) {
 			try {
 				removeWhiteSpaceAndCalculateChecksum(metadatum);
@@ -142,30 +138,28 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			// Insert new
 			} else if (existsById(metadatum)) {
 				String oldMetadatumId = metadatum.getId();
+				
 				insert(metadatum);
+				newMetadatum = metadatum;
+				
 				updateStatus(oldMetadatumId, Status.INACTIVE);
-				updatedMetadatum = metadatum;
-
-				/*Metadatum oldMetadatum = new Metadatum();
-				metadatum.setId(oldMetadatumId);
-				delete(oldMetadatum);*/
+				
 			// No duplicate metadata
 			} else if (existsByElementIdAndChecksum(metadatum)) {
-				/*updatedMetadatum = */updateMetadata(metadatum);
-				//updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
+				updateMetadata(metadatum);
 			// Insert new
 			} else {
 				insert(metadatum);
-				updatedMetadatum = metadatum;
+				newMetadatum = metadatum;
 
 			}
 		// Update metadata of metadatum
 		} else {
-			/*updatedMetadatum = */updateMetadata(metadatum);
+			 updateMetadata(metadatum);
 			//updatedMetadatum = updatedMetadatum == null ? metadatum : updatedMetadatum;
 		}
 
-		return updatedMetadatum;
+		return newMetadatum;
 	}
 
 	@Override
@@ -200,8 +194,14 @@ public class MetadataGridFS implements MongoMetadataCollection {
 	}
 
 	private boolean existsByChecksum(Metadatum metadatum) {
-		return metadatum.getChecksum() != null &&
-				existsByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum()));
+		if (metadatum.getChecksum() == null) return false;
+		
+		String existingMetadatumId = findByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum()));
+		if (existingMetadatumId != null) {
+			metadatum.setId(existingMetadatumId);
+		}
+		
+		return existingMetadatumId != null;
 	}
 
 	private boolean existsByIdAndChecksum(Metadatum metadatum) {
@@ -209,19 +209,31 @@ public class MetadataGridFS implements MongoMetadataCollection {
 				&& existsByFilter(Filters.and(
 						Filters.eq(FieldNames.ID, new ObjectId(metadatum.getId())),
 						Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
-		));
+			));
 	}
 
 	private boolean existsByElementIdAndChecksum(Metadatum metadatum) {
-		return metadatum.getElementId() != null && metadatum.getChecksum() != null
-				&& existsByFilter(Filters.and(
-						Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId())),
-						Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
-		));
+		if (metadatum.getElementId() == null) return false;
+		if (metadatum.getChecksum() == null) return false;
+		
+		String existingMetadatumId = findByFilter(Filters.and(
+				Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(metadatum.getElementId())),
+				Filters.eq(FieldNames.METADATA + "." + FieldNames.CHECKSUM, metadatum.getChecksum())
+			));
+		if (existingMetadatumId != null) {
+			metadatum.setId(existingMetadatumId);
+		}
+		return existingMetadatumId != null;
 	}
 
 	private boolean existsByFilter(Bson filter) {
 		return this.gridFsFilesCollection.find(filter).projection(Projections.include(FieldNames.ID)).limit(1).first() != null;
+	}
+	
+	private String findByFilter(Bson filter) {
+		MetadataGridFSFile file = this.gridFsFilesCollection.find(filter).projection(Projections.include(FieldNames.ID)).limit(1).first();
+		return file != null ? file.getId() : null;
+		
 	}
 
 	@Override
@@ -325,6 +337,53 @@ public class MetadataGridFS implements MongoMetadataCollection {
 			throw new MetadataStoreException(e.getMessage(), e);
 		}*/
 
+		return metadata;
+	}
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds) throws MetadataStoreException {
+		return find(elementIds, true);
+	}
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds, boolean lazy) throws MetadataStoreException {
+		return find(elementIds, lazy, false);
+	}
+	
+	@Override
+	public List<Metadatum> find(List<String> elementIds, boolean lazy, boolean loadInactive) throws MetadataStoreException {
+		List<Metadatum> metadata = new ArrayList<>();
+		try {
+			List<ObjectId> elementObjectIds = elementIds.stream().map(ObjectId::new).collect(Collectors.toList());
+			
+			Bson metadatumByElementIdFilter = Filters.in(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, elementObjectIds);
+			this.gridFsFilesCollection.find(
+					loadInactive ? metadatumByElementIdFilter :
+							Filters.and(metadatumByElementIdFilter, Filters.eq(FieldNames.METADATA + "." + FieldNames.STATUS, Status.ACTIVE.getStatusCode()))
+			).map(metadataGridFSFile -> {
+				Metadatum metadatum = metadataGridFSFile.getMetadata();
+				if (!lazy) {
+					try {
+						metadatum.setValue(download(metadataGridFSFile.getId()).getValue());
+					} catch (MetadataStoreException e) {
+						throw new RuntimeException(e.getMessage(), e);
+					}
+				}
+				return metadatum;
+			}).into(metadata);
+		} catch (RuntimeException e) {
+			throw new MetadataStoreException("Metadata retrieval failed. Element ids: [" + elementIds + "]" , e);
+		}
+
+
+		/*List<Metadatum> metadata = new ArrayList<>();
+		try {
+			this.gridFSBucket.get(Filters.eq(FieldNames.METADATA + "." + FieldNames.METADATA_ELEMENT_ID, new ObjectId(elementId)))
+					.map(gridFsFileToMetadatumTransformation(lazy)).into(metadata);
+		} catch (RuntimeException e) {
+			throw new MetadataStoreException(e.getMessage(), e);
+		}*/
+		
 		return metadata;
 	}
 	

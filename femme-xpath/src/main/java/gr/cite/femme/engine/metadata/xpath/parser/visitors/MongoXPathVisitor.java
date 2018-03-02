@@ -1,6 +1,7 @@
 package gr.cite.femme.engine.metadata.xpath.parser.visitors;
 
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
+import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.FilterNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Node;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
@@ -16,9 +17,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 	private Tree<QueryNode> queryTree;
 	private List<Node<QueryNode>> currentLevelNodes;
 	private Set<String> metadataIndices;
+	
 	private boolean predicateMode = false;
 	private boolean attributeMode = false;
 	private boolean textPredicateMode = false;
+	private boolean andExprMode = false;
 
 	public MongoXPathVisitor(MetadataSchemaIndexDatastore metadataSchemaDatastore) {
 		this.metadataSchemaDatastore = metadataSchemaDatastore;
@@ -66,11 +69,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 				}
 			} else if ("text()".equals(ctx.getChild(i).getText())) {
 				this.currentLevelNodes.forEach(node -> {
-					if (!predicateMode) {
+					if (predicateMode) {
+						this.filterBuilder.getFilterPath().append("#text");
+					} else {
 						node.getData().getNodePath().append(".#text");
 						node.getData().setFilterPayload(true);
-					} else {
-						this.filterBuilder.getFilterPath().append("#text");
 					}
 				});
 			} else {
@@ -102,6 +105,8 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 									childNodeData.setFilterPath(new StringBuilder(this.filterBuilder.getFilterPath()));
 									childNodeData.setOperator(this.filterBuilder.getOperator());
 									childNodeData.setValue(this.filterBuilder.getValue());
+									
+									childNodeData.setFilterNodes(this.filterBuilder.getFilterNodes());
 
 									childNodeData.setMetadataSchemaIds(ids);
 
@@ -114,9 +119,7 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 						});
 
 					if (i == ctx.getChildCount() - 1) {
-						newLevelNodes.forEach(node -> {
-							node.getData().setFilterPayload(true);
-						});
+						newLevelNodes.forEach(node -> node.getData().setFilterPayload(true));
 					}
 
 					this.currentLevelNodes = newLevelNodes;
@@ -124,7 +127,18 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
 				} else {
 					// TODO multiple filter paths (node1[node2//node3='value'])
-					System.out.println(this.filterBuilder.getFilterPath().toString());
+					//if (this.andExprMode) this.filterBuilder = new QueryNode();
+					/*if (andExprMode) {
+						FilterNode filterNode = new FilterNode();
+						filterNode.setFilterPath(this.filterBuilder.getFilterPath());
+						filterNode.setOperator(this.filterBuilder.getOperator());
+						filterNode.setValue(this.filterBuilder.getValue());
+						
+						this.filterBuilder.getFilterNodes().add(filterNode);
+						System.out.println(this.filterBuilder.getFilterPath().toString());
+						
+						this.filterBuilder.setFilterPath(new StringBuilder());
+					}*/
 				}
 			}
 		}
@@ -171,6 +185,32 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 		visitChildren(ctx);
 		predicateMode = false;
 
+		return this.queryTree;
+	}
+	
+	@Override
+	public Tree<QueryNode> visitAndExpr(XPathParser.AndExprContext ctx) {
+		if (ctx.getChildCount() > 1) this.andExprMode = true;
+		
+		if (ctx.getChildCount() > 1) this.andExprMode = false;
+		for (int i = 0; i < ctx.getChildCount(); i ++) {
+			visit(ctx.getChild(i));
+			
+			if (! "and".equals(ctx.getChild(i).getText())) {
+				FilterNode filterNode = new FilterNode();
+				filterNode.setFilterPath(this.filterBuilder.getFilterPath());
+				filterNode.setOperator(this.filterBuilder.getOperator());
+				filterNode.setValue(this.filterBuilder.getValue());
+				
+				this.filterBuilder.getFilterNodes().add(filterNode);
+				System.out.println(this.filterBuilder.getFilterPath().toString());
+				
+				this.filterBuilder.setFilterPath(new StringBuilder());
+				this.filterBuilder.setOperator(null);
+				this.filterBuilder.setValue(null);
+			}
+		}
+		
 		return this.queryTree;
 	}
 

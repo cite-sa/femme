@@ -26,13 +26,18 @@ import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
 import gr.cite.femme.geo.api.GeoServiceApi;
+import gr.cite.femme.geo.core.FemmeGeoException;
 import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import org.opengis.referencing.FactoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Path("/")
 public class FemmeGeoResource {
+	private static final Logger logger = LoggerFactory.getLogger(FemmeGeoResource.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
+	
 	private FemmeClientAPI femmeClient;
 	private GeoServiceApi geoServiceApi;
 	
@@ -96,7 +101,7 @@ public class FemmeGeoResource {
 	@GET
 	@Path("coverages/{dataElementId}/bbox")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getBBox(@PathParam("dataElementId") String dataElementId) throws JsonParseException, JsonMappingException, IOException {
+	public Response getBBox(@PathParam("dataElementId") String dataElementId) {
 
 		Object geoJson = null;
 		/*QueryClient query = QueryClient.query()
@@ -111,7 +116,8 @@ public class FemmeGeoResource {
 					geoJson = bbox.getGeoJson();
 				}
 			}
-		} catch (FemmeException e) {
+		} catch (IOException | FemmeException e) {
+			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e.getMessage(), e);
 		}
 		return Response.ok(geoJson).build();
@@ -121,31 +127,31 @@ public class FemmeGeoResource {
 	@GET
 	@Path("coverages/bbox")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCoverageByBBox(@QueryParam("bbox") String bbox) throws JsonParseException, JsonMappingException, IOException, FactoryException {
-
-		List<CoverageGeo> coverageGeo = new ArrayList<>();
+	public Response getCoverageByBBox(@QueryParam("bbox") String bbox) {
+		if (bbox == null) return Response.status(Response.Status.BAD_REQUEST).build();
+		
 		try {
-			coverageGeo = geoServiceApi.getCoveragesByBboxString(bbox);
-		} catch (DatastoreException e) {
-			e.printStackTrace();
+			List<CoverageGeo> coverageGeo = geoServiceApi.getCoveragesByBboxString(bbox);
+			return Response.ok(coverageGeo).build();
+		} catch (FemmeGeoException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage(), e);
 		}
-
-		return Response.ok(coverageGeo).build();
 	}
 
     @GET
     @Path("coverages/point")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getCoverageByPoint(@QueryParam("lat") Double latitude, @QueryParam("lon") Double longitude, @DefaultValue("0") @QueryParam("radius") Double radius) throws JsonParseException, JsonMappingException, IOException, FactoryException {
-
-        List<CoverageGeo> coverageGeo = new ArrayList<>();
+    public Response getCoverageByPoint(@QueryParam("lat") Double latitude, @QueryParam("lon") Double longitude, @DefaultValue("0") @QueryParam("radius") Double radius) {
         try {
-            coverageGeo = geoServiceApi.getCoveragesByPoint(longitude,latitude, radius);
-        } catch (DatastoreException e) {
-            e.printStackTrace();
+			List<CoverageGeo> coverageGeo = geoServiceApi.getCoveragesByPoint(longitude,latitude, radius);
+			return Response.ok(coverageGeo).build();
+        } catch (FemmeGeoException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage(), e);
         }
 
-        return Response.ok(coverageGeo).build();
+        
     }
 
 }

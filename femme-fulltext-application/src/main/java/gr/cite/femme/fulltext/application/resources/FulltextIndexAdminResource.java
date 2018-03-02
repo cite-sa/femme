@@ -2,7 +2,7 @@ package gr.cite.femme.fulltext.application.resources;
 
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.engine.FulltextIndexEngine;
-import gr.cite.femme.fulltext.engine.FulltextIndexException;
+import gr.cite.femme.fulltext.engine.FemmeFulltextException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -37,7 +37,8 @@ public class FulltextIndexAdminResource {
 	public Response insert(FulltextDocument doc) {
 		try {
 			this.engine.insert(doc);
-		} catch (FulltextIndexException e) {
+			logger.info(doc.getElementId() + " successfully indexed");
+		} catch (FemmeFulltextException e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e);
 		}
@@ -49,7 +50,7 @@ public class FulltextIndexAdminResource {
 	public Response delete(@PathParam("id") String id) {
 		try {
 			this.engine.delete(id);
-		} catch (FulltextIndexException e) {
+		} catch (FemmeFulltextException e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e);
 		}
@@ -69,7 +70,7 @@ public class FulltextIndexAdminResource {
 			} else {
 				this.engine.deleteByElementId(elementId);
 			}
-		} catch (FulltextIndexException e) {
+		} catch (FemmeFulltextException e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e);
 		}

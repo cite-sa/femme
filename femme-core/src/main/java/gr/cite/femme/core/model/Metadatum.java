@@ -32,9 +32,6 @@ public class Metadatum {
 
 	@JsonIgnore
 	private String checksum;
-
-	/*private List<MetadatumXPathCache> xPathCache;*/
-
 	
 	public String getId() {
 		return id;
@@ -100,15 +97,7 @@ public class Metadatum {
 		this.checksum = checksum;
 	}
 
-	/*public List<MetadatumXPathCache> getXPathCache() {
-		return xPathCache;
-	}
-
-	public void setXPathCache(List<MetadatumXPathCache> xPathCache) {
-		this.xPathCache = xPathCache;
-	}*/
-
-	@Override
+	/*@Override
 	public String toString() {
 		StringBuilder metadataBuilder = new StringBuilder();
 		metadataBuilder.append("\t" + this.id);
@@ -121,5 +110,5 @@ public class Metadatum {
 		metadataBuilder.append("\n");
 		
 		return metadataBuilder.toString();
-	}
+	}*/
 }

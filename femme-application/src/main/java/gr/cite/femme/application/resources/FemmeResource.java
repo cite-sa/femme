@@ -20,6 +20,7 @@ import gr.cite.femme.core.dto.MetadataList;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
+import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
 import gr.cite.femme.engine.Femme;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Component;
 
 import gr.cite.femme.application.exception.FemmeApplicationException;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
-import gr.cite.femme.core.dto.DataElementList;
+//import gr.cite.femme.core.dto.DataElementList;
 import gr.cite.femme.core.dto.FemmeResponse;
 import gr.cite.femme.core.dto.FemmeResponseEntity;
 import gr.cite.femme.core.exceptions.DatastoreException;
@@ -112,6 +113,48 @@ public class FemmeResource {
 	}
 	
 	@GET
+	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/name/{name}")
+	public Response xpathDataElementWithName(@NotNull @PathParam("name") String name, @QueryParam("xpath") String xPath) throws FemmeApplicationException {
+		return xPathDataElementWithName(name, xPath, false);
+	}
+	
+	@GET
+	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/name/{name}/xpath")
+	public Response xPathInMemoryDataElementWithName(@NotNull @PathParam("name") String name, @QueryParam("xpath") String xPath) throws FemmeApplicationException {
+		return xPathDataElementWithName(name, xPath, true);
+	}
+	
+	private Response xPathDataElementWithName(String name, String xPath, boolean xPathInMemory) throws FemmeApplicationException {
+		FemmeResponse<DataElement> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<DataElement> entity = new FemmeResponseEntity<>();
+		
+		try {
+			MetadataQueryExecutorBuilder.FindQueryExecutorBuilder<DataElement> dataElementQuery = this.femme.query(DataElement.class)
+					.find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.NAME, name).end()));
+			
+			if (xPath != null && ! xPath.trim().isEmpty()) {
+				if (xPathInMemory)
+					dataElementQuery.xPathInMemory(xPath);
+				else
+					dataElementQuery.xPath(xPath);
+			}
+			
+			DataElement dataElement = dataElementQuery.execute().first();
+			if (dataElement == null) {
+				throw new FemmeApplicationException("No DataElement [" + name + "] found", Response.Status.NOT_FOUND.getStatusCode());
+			}
+			
+			entity.setBody(dataElement);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("DataElement [" + name + "] found").setEntity(entity);
+		} catch (DatastoreException | MetadataStoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
+		}
+		
+		return Response.ok().entity(femmeResponse).build();
+	}
+	
+	@GET
 	@Path(FemmeResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response findDataElements(
@@ -130,14 +173,10 @@ public class FemmeResource {
 			@QueryParam("query") QueryMongo query,
 			@QueryParam("options") QueryOptionsMessenger options,
 			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
+		
+		logger.info(query == null ? "Query all DataElements" : "Query DataElements: " + query.build());
 
-		if (query == null) {
-			logger.info("Query all DataElements");
-		} else {
-			logger.info("Query DataElements: " + query.build());
-		}
-
-		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
+		FemmeResponse<ElementList<DataElement>> femmeResponse = new FemmeResponse<>();
 		List<DataElement> dataElements;
 		try {
 			long start = System.currentTimeMillis();
@@ -158,7 +197,7 @@ public class FemmeResource {
 			message = dataElements.size()+ " data elements found";
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message)
-					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), new DataElementList(dataElements)));
+					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), new ElementList<>(dataElements)));
 		}
 
 		return Response.ok().entity(femmeResponse).build();
@@ -177,11 +216,7 @@ public class FemmeResource {
 	}
 
 	private Response findElements(Class<? extends Element> elementType, QueryMongo query, QueryOptionsMessenger options, String xPath, boolean pretty) throws FemmeApplicationException {
-		if (query == null) {
-			logger.debug("Query all " + elementType.getSimpleName());
-		} else {
-			logger.debug("Query " +  elementType.getSimpleName() + " : " + query.build());
-		}
+		logger.debug(query == null ? "Query all " + elementType.getSimpleName() : "Query " +  elementType.getSimpleName() + " : " + query.build());
 
 		if (options != null && options.getLimit() != null && options.getLimit() == 0) {
 			return countQuery(elementType, query, xPath);
@@ -221,7 +256,7 @@ public class FemmeResource {
 			logger.info("XPath total time: " + (end - start) + " ms");
 
 			if (pretty) {
-				elements.forEach(element -> FemmeResource.prettifyMetadata(element.getMetadata()));
+				elements.forEach(element -> prettifyMetadata(element.getMetadata()));
 			}
 		} catch (DatastoreException | MetadataStoreException e) {
 			logger.error(e.getMessage(), e);
@@ -242,17 +277,14 @@ public class FemmeResource {
 		return Response.ok().entity(femmeResponse).build();
 	}
 
-	private Response getElement(
-			Class<? extends Element> elementType,
-			Query<? extends Criterion> query, QueryOptionsMessenger options, String xPath,
-			boolean pretty) throws FemmeApplicationException {
+	private Response getElement(Class<? extends Element> elementType, Query<? extends Criterion> query, QueryOptionsMessenger options, String xPath, boolean pretty) throws FemmeApplicationException {
 
 		FemmeResponse<Element> femmeResponse = new FemmeResponse<>();
 		Element element;
 		try {
 			element = this.femme.query(elementType).find(query).options(options).xPath(xPath).execute().first();
 			if (pretty) {
-				FemmeResource.prettifyMetadata(element.getMetadata());
+				prettifyMetadata(element.getMetadata());
 			}
 
 			String message;
@@ -280,7 +312,7 @@ public class FemmeResource {
 		try {
 			element = this.femme.get(elementType, id, xPath, options, loadInactiveMetadata);
 			if (pretty) {
-				FemmeResource.prettifyMetadata(element.getMetadata());
+				prettifyMetadata(element.getMetadata());
 			}
 
 			String message;
@@ -309,10 +341,7 @@ public class FemmeResource {
 	@GET
 	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/list")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response findDataElementsByIds(
-			@QueryParam("id") List<String> ids,
-			@QueryParam("options") QueryOptionsMessenger options,
-			@QueryParam("xpath") String xPath) throws FemmeApplicationException {
+	public Response findDataElementsByIds(@QueryParam("id") List<String> ids, @QueryParam("options") QueryOptionsMessenger options, @QueryParam("xpath") String xPath) throws FemmeApplicationException {
 		
 		QueryMongo query = null;
 		if (ids.size() > 0) {
@@ -326,10 +355,10 @@ public class FemmeResource {
 		}
 		
 		
-		FemmeResponse<DataElementList> femmeResponse = new FemmeResponse<>();
+		FemmeResponse<ElementList<DataElement>> femmeResponse = new FemmeResponse<>();
 		try {
 			List<DataElement> dataElements = this.femme.query(DataElement.class).find(query).xPath(xPath).options(options).execute().list();
-			DataElementList dataElementList = new DataElementList(dataElements);
+			ElementList<DataElement> dataElementList = new ElementList<>(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
 				logger.info("No data elements found");
@@ -351,22 +380,16 @@ public class FemmeResource {
 	
 	@GET
 	@Path(FemmeResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeResource.DATA_ELEMENTS_PATH)
-	public Response getDataElementsInCollection(
-			@NotNull @PathParam("collectionId") String collectionId,
-			@QueryParam("options") QueryOptionsMessenger options,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
+	public Response getDataElementsInCollection(@NotNull @PathParam("collectionId") String collectionId, @QueryParam("options") QueryOptionsMessenger options,
+			@QueryParam("xpath") String xPath, @QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
+		
 		return getDataElementsInCollectionWithFieldValue(FieldNames.ID, this.femme.generateId(collectionId), options, xPath, pretty);
 	}
 
 	@GET
 	@Path(FemmeResource.COLLECTIONS_PATH + "/{field}/{value}/" + FemmeResource.DATA_ELEMENTS_PATH)
-	public Response getDataElementsInCollectionWithField(
-			@PathParam("field") String field,
-			@PathParam("value") String value,
-			@QueryParam("options") QueryOptionsMessenger options,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
+	public Response getDataElementsInCollectionWithField(@PathParam("field") String field, @PathParam("value") String value, @QueryParam("options") QueryOptionsMessenger options,
+			@QueryParam("xpath") String xPath, @QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
 
 		if (!FieldNames.NAME.equals(field)) {
 			throw new FemmeApplicationException("Unsupported field " + field, Response.Status.BAD_REQUEST.getStatusCode());
@@ -385,12 +408,8 @@ public class FemmeResource {
 	
 	@GET
 	@Path(FemmeResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeResource.DATA_ELEMENTS_PATH  + "/{dataElementId}")
-	public Response getDataElementsInCollection(
-			@NotNull @PathParam("collectionId") String collectionId,
-			@NotNull @PathParam("dataElementId") String dataElementId,
-			@QueryParam("options") QueryOptionsMessenger options,
-			@QueryParam("xpath") String xPath,
-			@QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
+	public Response getDataElementsInCollection(@NotNull @PathParam("collectionId") String collectionId, @NotNull @PathParam("dataElementId") String dataElementId,
+			@QueryParam("options") QueryOptionsMessenger options, @QueryParam("xpath") String xPath, @QueryParam("pretty") boolean pretty) throws FemmeApplicationException {
 
 		CriterionMongo collectionCriterion = CriterionBuilderMongo.root().inAnyCollection(Collections.singletonList(
 				CriterionBuilderMongo.root().eq(FieldNames.ID, this.femme.generateId(collectionId)).end())).end();
@@ -424,10 +443,11 @@ public class FemmeResource {
 			if (element == null) {
 				throw new FemmeApplicationException("No " + elementSubType.getSimpleName() + " with id " + id + " found", Response.Status.NOT_FOUND.getStatusCode());
 			}
+			List<Metadatum> metadata = this.femme.getElementMetadata(id);
 
 			//entity/*.setHref(this.uriInfo.getBaseUriBuilder().path(this.uriInfo.getPath()).toString())*/.setBody(new MetadataList(element.getMetadata()));
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(element.getMetadata().size() + " metadata found")
-					.setEntity(new FemmeResponseEntity<>(new MetadataList(element.getMetadata())));
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(metadata.size() + " metadata found")
+					.setEntity(new FemmeResponseEntity<>(new MetadataList(metadata)));
 		} catch (DatastoreException | MetadataStoreException e) {
 			logger.error(e.getMessage(), e);
 			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
@@ -506,7 +526,7 @@ public class FemmeResource {
 		return Response.ok().type(metadatum.getContentType()).entity(metadatum.getValue()).build();
 	}
 
-	private static void prettifyMetadata(List<Metadatum> metadata) {
+	private void prettifyMetadata(List<Metadatum> metadata) {
 		metadata.forEach(metadatum -> {
 			if (metadatum.getContentType().toLowerCase().contains("xml") && metadatum.getValue() != null && !metadatum.getValue().trim().isEmpty()) {
 				try {
@@ -516,6 +536,11 @@ public class FemmeResource {
 				}
 			}
 		});
+	}
+	
+	private FemmeApplicationException buildFemmeApplicationException(String message, Response.Status status, Exception exception) {
+		logger.error(message, exception);
+		return new FemmeApplicationException(message, status.getStatusCode(), exception);
 	}
 
 	

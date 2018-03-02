@@ -1,16 +1,22 @@
+# FeMME Datastore DB
 gr.cite.femme.datastore.db.host=localhost
 gr.cite.femme.datastore.db.port=27017
 gr.cite.femme.datastore.db.name=femme-db
 
+# FeMME Metadatastore DB
 gr.cite.femme.datastore.metadata.db.host=localhost
 gr.cite.femme.datastore.metadata.db.port=27017
 gr.cite.femme.datastore.metadata.db.name=femme-db
 gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
 
+# FeMME Metadata Schemas DB
+gr.cite.femme.datastore.metadata.schema.index.db.host=localhost
+gr.cite.femme.datastore.metadata.schema.index.db.port=27017
+gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db
+
+# FeMME Metadata Index
 gr.cite.femme.datastore.metadata.index.db.host=localhost
 gr.cite.femme.datastore.metadata.index.db.port=9200
 gr.cite.femme.datastore.metadata.index.db.name=metadataindex
 
-gr.cite.femme.datastore.metadata.schema.index.db.host=localhost
-gr.cite.femme.datastore.metadata.schema.index.db.port=27017
-gr.cite.femme.datastore.metadata.schema.index.db.name=metadata-schema-db
+gr.cite.femme.fulltext.endpoint=http://localhost:8081/fulltext-application

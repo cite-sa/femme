@@ -11,7 +11,7 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 	<!-- <listener>
-		<listener-clFemmeContextListenerener</listener-class>
+		<listener-class>FemmeContextListenerener</listener-class>
 	</listener> -->
 
 	<context-param>
@@ -38,8 +38,7 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 		<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
 			<param-value>gr.cite.femme.application.exception</param-value>
-        <!-- <param-value>gr.cite.femme.application.exception;gr.cite.femme.applicatconfigcore</param-value> -->
-    </init-param>
+    	</init-param>
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
 			<param-value>gr.cite.femme.application.FemmeApplication</param-value>
