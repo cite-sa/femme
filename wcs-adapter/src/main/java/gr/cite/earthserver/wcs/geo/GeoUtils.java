@@ -71,13 +71,25 @@ public final class GeoUtils {
 			ReferencedEnvelope envelope;
 			try {
 				System.out.println("1:"+axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")));
-				envelope = new ReferencedEnvelope(
-						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
-						currentCrs
-				);
+				if(currentCrs.equals(defaultCrs)){
+					envelope = new ReferencedEnvelope(
+							validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+							validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+							validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+							validateLatitude(axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException(""))),
+							currentCrs
+					);
+				}
+				else{
+					envelope = new ReferencedEnvelope(
+							axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
+							axes.stream().filter(GeoUtils::isLongitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
+							axes.stream().filter(GeoUtils::isLatitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")),
+							axes.stream().filter(GeoUtils::isLatitude).map(Axis::getUpperCorner).findFirst().orElseThrow(() -> new ParseException("")),
+							currentCrs
+					);
+				}
+
 			} catch(MismatchedDimensionException e) {
 				throw new ParseException(e);
 			}
@@ -104,7 +116,9 @@ public final class GeoUtils {
 			Polygon geometry = JTS.toGeometry(quick);
 
 			GeometryJSON geomJSON = new GeometryJSON();
+
 			boundingBoxJSON = geomJSON.toString(geometry);
+
 
 		} catch (XPathFactoryConfigurationException | XMLConversionException | XPathEvaluationException | MismatchedDimensionException | FactoryException | TransformException e) {
 			throw new ParseException(e);
