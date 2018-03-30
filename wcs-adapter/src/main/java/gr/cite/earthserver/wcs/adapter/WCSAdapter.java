@@ -72,8 +72,10 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeException {
 		Collection collection = WCSFemmeMapper.fromServer(endpoint, name, server);
 		String collectionId = this.femmeClient.importCollection(importId, collection);
+		// TODO insertServer in GeoService
 		//this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
-		return collectionId;
+		String serverId = "";
+		return serverId;
 	}
 	
 	@Override
@@ -84,7 +86,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 		dataElement.setId(dataElementId);
 		
 		if (this.geoRequests != null) {
-			this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
+			this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, serverId, dataElement));
 		}
 		
 		return dataElementId;
