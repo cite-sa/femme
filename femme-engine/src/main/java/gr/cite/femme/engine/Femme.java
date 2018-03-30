@@ -376,7 +376,9 @@ public class Femme {
 
 			for (Metadatum metadatum : element.getMetadata()) {
 				try {
-					this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue(), metadatum.getContentType().toLowerCase().split("/")[1]));
+					if (this.fulltextClient != null) {
+						this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue(), metadatum.getContentType().toLowerCase().split("/")[1]));
+					}
 				} catch (ProcessingPipelineException | FulltextException e) {
 					logger.error(e.getMessage(), e);
 				}
@@ -385,7 +387,9 @@ public class Femme {
 	}
 
 	private void deleteFromFulltextIndexByElementId(String elementId) throws FemmeException {
+		if (this.fulltextClient != null) {
 			this.fulltextClient.deleteByElementId(elementId);
+		}
 	}
 
 	private void deleteFromFulltextIndexByMetadatumId(String metadatumId) throws FemmeException {
