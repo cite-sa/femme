@@ -77,7 +77,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	}
 	
 	@Override
-	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeException {
+	public String importCoverage(String importId, String serverId, WCSResponse coverage) throws ParseException, FemmeException {
 		DataElement dataElement = WCSFemmeMapper.fromCoverage(coverage);
 		
 		String dataElementId = this.femmeClient.importInCollection(importId, dataElement);

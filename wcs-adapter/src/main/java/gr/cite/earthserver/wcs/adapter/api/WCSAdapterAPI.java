@@ -21,7 +21,7 @@ public interface WCSAdapterAPI {
 
 	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeException;
 
-	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeException;
+	public String importCoverage(String importId, String serverId, WCSResponse coverage) throws ParseException, FemmeException;
 
 	
 	public String insertServer(String endpoint, String name, WCSResponse server) throws ParseException, FemmeException;
