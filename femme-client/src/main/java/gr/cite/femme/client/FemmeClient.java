@@ -458,7 +458,29 @@ public class FemmeClient implements FemmeClientAPI {
 
 		return femmeResponse.getEntity().getBody();
 	}
-
+	
+	@Override
+	public DataElement xPathInMemoryDataElementWithName(String name, String xPath) throws FemmeException, FemmeClientException {
+		WebTarget tempWebTarget = this.webTarget.path("dataElements").path("name").path(name).path("xpath");
+		
+		if (xPath != null) {
+			tempWebTarget = tempWebTarget.queryParam("xpath", xPath);
+		}
+		
+		Response response = tempWebTarget.request().get();
+		
+		FemmeResponse<DataElement> femmeResponse = response.readEntity(new GenericType<FemmeResponse<DataElement>>(){});
+		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+			logger.debug(femmeResponse.getMessage());
+			return null;
+		} else if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+			logger.error(femmeResponse.getMessage());
+			throw new FemmeException(femmeResponse.getMessage());
+		}
+		
+		return femmeResponse.getEntity().getBody();
+	}
+	
 	@Override
 	public List<DataElement> getDataElementsByName(String name) throws FemmeException, FemmeClientException {
 		return findDataElements(QueryClient.query().addCriterion(CriterionBuilderClient.root().eq("name", name).end()), null, null);

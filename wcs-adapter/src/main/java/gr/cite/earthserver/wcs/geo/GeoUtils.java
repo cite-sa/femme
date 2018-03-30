@@ -33,6 +33,8 @@ import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -43,7 +45,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.xml.crypto.Data;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -51,11 +56,13 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class GeoUtils {
+	private static final Logger logger = LoggerFactory.getLogger(GeoUtils.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	public static final String DEFAULT_CRS = "EPSG:4326";
@@ -65,7 +72,7 @@ public final class GeoUtils {
 		try {
 			XPathEvaluator xPathEvaluator = new XPathEvaluator(XMLConverter.stringToNode(describeCoverageXML, true));
 			List<Axis> axes = GeoUtils.getAxes(xPathEvaluator);
-			String currentCrsString =axes.stream().filter(GeoUtils::isLongitude).map(Axis::getCrs).findFirst().orElseThrow(() -> new ParseException(""));
+			String currentCrsString = axes.stream().filter(GeoUtils::isLongitude).map(Axis::getCrs).findFirst().orElseThrow(() -> new ParseException(""));
 			CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
 			CoordinateReferenceSystem currentCrs = CRS.decode(currentCrsString,true);
 			ReferencedEnvelope envelope;
@@ -188,7 +195,11 @@ public final class GeoUtils {
 
 	private static List<String> getCrs(XPathEvaluator evaluator) throws XPathEvaluationException {
 		List<String> crs = evaluator.evaluate("/wcs:CoverageDescriptions/wcs:CoverageDescription/*[local-name()='boundedBy']/*[local-name()='Envelope']/@srsName");
-		return Arrays.stream(URI.create(crs.stream().findFirst().orElse("")).getQuery().split("&"))
+		
+		String[] segments = crs.stream().findFirst().orElse("").split("\\?");
+		if (segments.length < 2) return Collections.emptyList();
+		
+		return Arrays.stream(segments[1].split("&"))
 				.map(queryParam -> queryParam.substring(queryParam.indexOf("/crs/") + 5, queryParam.indexOf("/0/")) + ":" + queryParam.substring(queryParam.lastIndexOf("/") + 1))
 				.collect(Collectors.toList());
 	}
@@ -211,20 +222,19 @@ public final class GeoUtils {
 	/*************************************Geo Transformations**************************************************************************/
 
 
-	public static CoverageGeo convertDataToCoverageGeo(WCSResponse coverage, DataElement dataElement){
+	public static CoverageGeo convertDataToCoverageGeo(WCSResponse coverage, String serverId, DataElement dataElement) {
 		CoverageGeo coverageGeo = new CoverageGeo();
 		try {
 			Pair<String, String> geoJson = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(coverage.getResponse());
 			GeoJsonObject object = mapper.readValue(geoJson.getRight(), GeoJsonObject.class);
-
-			coverageGeo.setGeo(object);
+			
+			//coverageGeo.setId(dataElement.getId());
+			coverageGeo.setDataElementId(dataElement.getId());
+			coverageGeo.setServerId(serverId);
 			coverageGeo.setCoverageId(dataElement.getName());
-			coverageGeo.setServerId(dataElement.getEndpoint());
-            coverageGeo.setId(dataElement.getId());
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ParseException e) {
-			e.printStackTrace();
+			coverageGeo.setGeo(object);
+		} catch (IOException | ParseException e) {
+			logger.error(e.getMessage(), e);
 		}
 		return coverageGeo;
 	}
@@ -262,7 +272,7 @@ public final class GeoUtils {
 		DataElement dataElement = new DataElement();
 		dataElement.setId("test");
 		try {
-			geoRequests.insert(GeoUtils.convertDataToCoverageGeo(response,dataElement));
+			geoRequests.insert(GeoUtils.convertDataToCoverageGeo(response, "", dataElement));
 		} catch (FemmeException e) {
 			e.printStackTrace();
 		}

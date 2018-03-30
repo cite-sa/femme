@@ -36,6 +36,16 @@ public class WCSAdapter implements WCSAdapterAPI {
 	private GeoRequests geoRequests;
 	private boolean indexModeOn = true;
 	
+	public WCSAdapter(String femmeUrl) {
+		this.femmeClient = new FemmeClient(femmeUrl);
+		this.indexModeOn = true;
+	}
+	
+	public WCSAdapter(String femmeUrl, boolean indexModeOn) {
+		this.femmeClient = new FemmeClient(femmeUrl);
+		this.indexModeOn = indexModeOn;
+	}
+	
 	public WCSAdapter(String femmeUrl, String femmeGeoUrl) {
 		this.femmeClient = new FemmeClient(femmeUrl);
 		this.geoRequests = new GeoRequests(femmeGeoUrl);
@@ -62,18 +72,22 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeException {
 		Collection collection = WCSFemmeMapper.fromServer(endpoint, name, server);
 		String collectionId = this.femmeClient.importCollection(importId, collection);
+		// TODO insertServer in GeoService
 		//this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
-		return collectionId;
+		String serverId = "";
+		return serverId;
 	}
 	
 	@Override
-	public String importCoverage(String importId, WCSResponse coverage) throws ParseException, FemmeException {
+	public String importCoverage(String importId, String serverId, WCSResponse coverage) throws ParseException, FemmeException {
 		DataElement dataElement = WCSFemmeMapper.fromCoverage(coverage);
 		
 		String dataElementId = this.femmeClient.importInCollection(importId, dataElement);
 		dataElement.setId(dataElementId);
 		
-		this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
+		if (this.geoRequests != null) {
+			this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, serverId, dataElement));
+		}
 		
 		return dataElementId;
 	}

@@ -66,6 +66,8 @@ public interface FemmeClientAPI {
 	public DataElement getDataElementById(String id, String xPath) throws FemmeException;
 
 	public DataElement getDataElementById(String id, String xPath, Set<String> includes, Set<String> excludes) throws FemmeException;
+	
+	public DataElement xPathInMemoryDataElementWithName(String name, String xPath) throws FemmeException, FemmeClientException;
 
 	public List<DataElement> getDataElementsByName(String name) throws FemmeException, FemmeClientException;
 	

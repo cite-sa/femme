@@ -19,4 +19,4 @@ gr.cite.femme.datastore.metadata.index.db.host=localhost
 gr.cite.femme.datastore.metadata.index.db.port=9200
 gr.cite.femme.datastore.metadata.index.db.name=metadataindex
 
-gr.cite.femme.fulltext.endpoint=http://localhost:8081/fulltext-application
+#gr.cite.femme.fulltext.endpoint=http://localhost:8081/fulltext-application

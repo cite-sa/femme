@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${CATALINA_HOME}/logs/semantic-search.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${CATALINA_HOME}/logs/archived/semantic-search.%d{yyyy-MM}.%i.log</fileNamePattern>
+			<triggeringPolicy class="ch.qos.logbconfigcore.rolling.SizeBasedTriggeringPolicy">
+				<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+					<maxFileSize>30MB</maxFileSize>
+				</timeBasedFileNamingAndTriggeringPolicy>
+			</triggeringPolicy>
+			<maxHistory>12</maxHistory>
+		</rollingPolicy>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %message%n</Pattern>
+		</encoder>
+	</appender>
+	<logger name="gr.cite.femme.semantic.search" level="INFO" additivity="false">
+		<appender-ref ref="FILE" />
+	</logger>
+	<root level="INFO">
+		<appender-ref ref="FILE" />
+	</root>
+</configuration>

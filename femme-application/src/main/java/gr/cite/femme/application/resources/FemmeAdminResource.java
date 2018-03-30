@@ -114,26 +114,26 @@ public class FemmeAdminResource {
 		URI location;
 		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
 		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
-		Response.Status status;
+		
 		
 		try {
-			String elementId = this.femme.addToCollection(dataElement, collectionId);
+			String dataElementId = this.femme.addToCollection(dataElement, collectionId);
 
 			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
 			entity.setHref(location.toString()).setBody(dataElement.getId());
-			entity.setBody(elementId);
+			entity.setBody(dataElement.getId());
 
-			String message = "DataElement " + dataElement.getId() + " successfully " + (elementId != null ? "inserted" : "updated") +  " in collection " + collectionId;
+			String message = "DataElement " + dataElement.getId() + " successfully " + (dataElementId != null ? "inserted" : "updated") +  " in collection " + collectionId;
 			logger.info(message);
 			
-			status = elementId != null ? Response.Status.CREATED : Response.Status.OK;
+			int statusCode = dataElementId != null ? Response.Status.CREATED.getStatusCode() : Response.Status.OK.getStatusCode();
+			femmeResponse.setStatus(statusCode).setMessage(message).setEntity(entity);
 			
-			femmeResponse.setStatus(status.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
 			throw buildFemmeApplicationExceptionForError("DataElement insertion in Collection " + collectionId + " failed", Response.Status.INTERNAL_SERVER_ERROR, e);
 		}
 
-		return Response.status(status).location(location).entity(femmeResponse).build();
+		return Response.status(femmeResponse.getStatus()).location(location).entity(femmeResponse).build();
 	}
 
 	@POST
