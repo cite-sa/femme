@@ -70,7 +70,6 @@ public final class GeoUtils {
 			CoordinateReferenceSystem currentCrs = CRS.decode(currentCrsString,true);
 			ReferencedEnvelope envelope;
 			try {
-				System.out.println("1:"+axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException("")));
 				if(currentCrs.equals(defaultCrs)){
 					envelope = new ReferencedEnvelope(
 							validateLongitude(axes.stream().filter(GeoUtils::isLongitude).map(Axis::getLowerCorner).findFirst().orElseThrow(() -> new ParseException(""))),
@@ -93,8 +92,7 @@ public final class GeoUtils {
 			} catch(MismatchedDimensionException e) {
 				throw new ParseException(e);
 			}
-            System.out.println("lower:"+ envelope.getLowerCorner());
-            System.out.println("upper:"+envelope.getUpperCorner());
+
             Envelope quick = envelope;
 			if (!currentCrs.getName().equals(defaultCrs.getName())) {
 			//	envelope = envelope.transform(defaultCrs, true,10);

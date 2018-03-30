@@ -24,6 +24,12 @@ public class CoverageGeo {
 
 	@JsonProperty("serverId")
 	private String serverId;
+
+	@JsonProperty("dataElementId")
+	private String dataElementId;
+
+	@JsonProperty("crs")
+	private String crs;
 	
 	public String getId() {
 		return id;
@@ -71,5 +77,21 @@ public class CoverageGeo {
 	
 	public void setServerId(String serverId) {
 		this.serverId = serverId;
+	}
+
+	public String getDataElementId() {
+		return dataElementId;
+	}
+
+	public void setDataElementId(String dataElementId) {
+		this.dataElementId = dataElementId;
+	}
+
+	public String getCrs() {
+		return crs;
+	}
+
+	public void setCrs(String crs) {
+		this.crs = crs;
 	}
 }
