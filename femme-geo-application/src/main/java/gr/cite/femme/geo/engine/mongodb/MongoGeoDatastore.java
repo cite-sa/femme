@@ -1,15 +1,17 @@
 package gr.cite.femme.geo.engine.mongodb;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
+import com.mongodb.client.result.UpdateResult;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
-import gr.cite.femme.geo.core.ServerGeo;
+import gr.cite.femme.core.geo.ServerGeo;
 import gr.cite.femme.geo.utils.GeoUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,27 +58,59 @@ public class MongoGeoDatastore {
 		return null;
 	}
 	
-	public String insert(CoverageGeo coverage) {
+	public String insert(CoverageGeo coverage) throws DatastoreException {
 		
 		if (coverage.getGeo() != null) {
 			this.mongoClient.getCoverages().createIndex(new BasicDBObject("loc", "2dsphere"));
 		}
-		CoverageGeo coverageGeo = this.mongoClient.getCoverages().find(new Document("_id", coverage.getCoverageId())).first();
+		CoverageGeo coverageGeo = this.mongoClient.getCoverages().find(new Document("dataElementId", coverage.getDataElementId())).first();
 		
 		if (coverageGeo != null) {
 			System.out.println("*********************** Coverage already present ***********************");
-			return null;
+			coverage = updateCoverage(coverage,coverageGeo.getId());
+			return coverage.getId();
 		} else {
 			this.mongoClient.getCoverages().insertOne(coverage);
 			return coverage.getId();
 		}
 	}
-	
-	public ServerGeo getServerById(String id) throws DatastoreException {
-		return null;
+
+	public CoverageGeo updateCoverage(CoverageGeo coverageGeo, String id) throws DatastoreException {
+		CoverageGeo updated = null;
+
+		if (coverageGeo.getId() != null) {
+			coverageGeo.setModified(Instant.now());
+
+			try {
+				updated = (CoverageGeo) this.mongoClient.getCoverages().findOneAndUpdate(
+						Filters.eq("_id", new ObjectId(id)),
+						new Document().append("$set", coverageGeo),
+						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+			} catch (Exception e) {
+				throw new DatastoreException("Error on " + coverageGeo.getClass() + " [" + coverageGeo.getId() + "] update", e);
+			}
+		}
+		return updated;
+	}
+
+	public String insertServer(ServerGeo server) {
+
+		ServerGeo serverGeo = this.mongoClient.getServers().find(new Document("collectionId", server.getId())).first();
+
+		if (serverGeo != null) {
+			System.out.println("*********************** Server already present ***********************");
+			return null;
+		} else {
+			this.mongoClient.getServers().insertOne(server);
+			return server.getId();
+		}
 	}
 	
-	public ServerGeo getServerByName(String name) throws DatastoreException {
+	public ServerGeo getServerById(String id) throws DatastoreException {
+		return this.mongoClient.getServers().find(new Document("collectionId", id)).first();
+	}
+	
+	public ServerGeo getServerByCollectionId(String name) throws DatastoreException {
 		return null;
 	}
 	
@@ -105,15 +140,7 @@ public class MongoGeoDatastore {
 		
 		return results;
 	}
-	
-	public CoverageGeo getCoverageByBBox(GeoJsonObject geoJson) throws JsonProcessingException {
-		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
-		String jsonString = mapper.writeValueAsString(geoJson);
-		
-		//collection.find(jsonString);
-		return null;
-	}
-	
+
 	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) {
 		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
 		Point refPoint = new Point(new Position(longitude, latitude));

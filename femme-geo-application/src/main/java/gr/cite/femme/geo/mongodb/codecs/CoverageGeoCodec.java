@@ -46,8 +46,8 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		if (coverageGeo.getId() != null) {
 			writer.writeObjectId("_id", new ObjectId(coverageGeo.getId()));
 		}
-		else if(coverageGeo.getCoverageId() != null ){
-			writer.writeString("coverageId",coverageGeo.getCoverageId());
+		else if(coverageGeo.getCoverageName() != null ){
+			writer.writeString("coverageId",coverageGeo.getCoverageName());
 		}
 		if (coverageGeo.getCreated() != null) {
 			writer.writeDateTime("created", coverageGeo.getCreated().toEpochMilli());
@@ -110,9 +110,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 			} else if (fieldName.equals("serverId")) {
 				serverId = reader.readObjectId().toString();
 			} else if (fieldName.equals("loc")) {
-				//geo = new HashMap<>();
-//				reader.readStartDocument();
-				//************
+
 				Document value = null;
 				if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
 					value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
@@ -122,19 +120,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				//**********
-//				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-//					String geoFieldName = reader.readName();
-//					if ("bbox".equals(geoFieldName)) {
-//						Document value = null;
-//						if (reader.getCurrentBsonType() == BsonType.DOCUMENT) {
-//							value = this.codecRegistry.get(Document.class).decode(reader, decoderContext);
-//						}
-//						//BBox bbox = new BBox(value.getString("crs"), ((Document)value.get("geoJson")).toJson());
-//						geo.put(geoFieldName, value.toJson());
-//					}
-//				}
-//				reader.readEndDocument();
+
 			}
 		}
 		
@@ -142,7 +128,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		
 		CoverageGeo coverageGeo = new CoverageGeo();
 		coverageGeo.setId(id);
-		coverageGeo.setCoverageId(coverageId);
+		coverageGeo.setCoverageName(coverageId);
 		coverageGeo.setCreated(created);
 		coverageGeo.setModified(modified);
 		coverageGeo.setServerId(serverId);
@@ -150,20 +136,20 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		
 		return coverageGeo;
 	}
-	
+
 	/*private DateTime decodeZonedDateTime(BsonReader reader) {
 		long timestamp = 0;
 		String offsetId = null, zoneId = null;
-		
+
 		reader.readStartDocument();
 		timestamp = reader.readDateTime(SYSTEMIC_METADATA_TIMESTAMP_KEY);
 		offsetId = reader.readString(SYSTEMIC_METADATA_OFFSET_ID_KEY);
 		zoneId = reader.readString(SYSTEMIC_METADATA_ZONE_ID_KEY);
 		reader.readEndDocument();
-		
+
 		return new DateTime(ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of(zoneId)));
 	}*/
-	
+
 	@Override
 	public CoverageGeo generateIdIfAbsentFromDocument(CoverageGeo coverageGeo) {
 		if (!documentHasId(coverageGeo)) {

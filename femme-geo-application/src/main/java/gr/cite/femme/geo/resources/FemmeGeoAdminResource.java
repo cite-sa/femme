@@ -2,8 +2,8 @@ package gr.cite.femme.geo.resources;
 
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
+import gr.cite.femme.core.geo.ServerGeo;
 import gr.cite.femme.core.model.Collection;
-import gr.cite.femme.geo.core.ServerGeo;
 import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +30,15 @@ public class FemmeGeoAdminResource {
 	public Response insertServer(Collection server) throws DatastoreException {
 		try {
 			ServerGeo serverGeo = new ServerGeo();
-			String id = this.geoDatastore.insert(serverGeo);
+			String id = this.geoDatastore.insertServer(serverGeo);
 			logger.info("Server [" + server.getId() + "] successfully inserted");
-			return Response.ok(id).build();
+			if (id != null) {
+				logger.info("Server [" + server.getId() + "] successfully inserted");
+				return Response.ok().entity(id).build();
+			} else {
+				logger.info("Server [" + server.getId() + "] already exists");
+				return Response.ok().build();
+			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException("Error inserting server [" + server.getName() + "]", e);
@@ -54,7 +60,7 @@ public class FemmeGeoAdminResource {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			throw new WebApplicationException("Error inserting coverage [" + coverage.getCoverageId() + "]", e);
+			throw new WebApplicationException("Error inserting coverage [" + coverage.getCoverageName() + "]", e);
 		}
 	}
 }

@@ -6,11 +6,11 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import gr.cite.femme.core.geo.CoverageGeo;
+import gr.cite.femme.core.geo.ServerGeo;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 
-import gr.cite.femme.geo.core.ServerGeo;
 import gr.cite.femme.geo.mongodb.codecs.CoverageGeoCodecProvider;
 import gr.cite.femme.geo.mongodb.codecs.ServerGeoCodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
