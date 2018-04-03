@@ -7,11 +7,11 @@ import java.time.Instant;
 
 public class CoverageGeo {
 
-	@JsonProperty("_id")
+	@JsonProperty("id")
 	private String id;
 
-	@JsonProperty("coverageId")
-	private String coverageId;
+	@JsonProperty("coverageName")
+	private String coverageName;
 
 	@JsonProperty("created")
 	private Instant created;
@@ -39,12 +39,12 @@ public class CoverageGeo {
 		this.id = id;
 	}
 	
-	public String getCoverageId() {
-		return coverageId;
+	public String getCoverageName() {
+		return coverageName;
 	}
 	
-	public void setCoverageId(String coverageId) {
-		this.coverageId = coverageId;
+	public void setCoverageName(String coverageName) {
+		this.coverageName = coverageName;
 	}
 	
 	public Instant getCreated() {
