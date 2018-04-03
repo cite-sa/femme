@@ -27,10 +27,9 @@ public class FemmeGeoAdminResource {
 	
 	@POST
 	@Path("servers")
-	public Response insertServer(Collection server) throws DatastoreException {
+	public Response insertServer(ServerGeo server) throws DatastoreException {
 		try {
-			ServerGeo serverGeo = new ServerGeo();
-			String id = this.geoDatastore.insertServer(serverGeo);
+			String id = this.geoDatastore.insertServer(server);
 			logger.info("Server [" + server.getId() + "] successfully inserted");
 			if (id != null) {
 				logger.info("Server [" + server.getId() + "] successfully inserted");
@@ -41,7 +40,7 @@ public class FemmeGeoAdminResource {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			throw new WebApplicationException("Error inserting server [" + server.getName() + "]", e);
+			throw new WebApplicationException("Error inserting server [" + server.getId() + "]", e);
 		}
 	}
 	
