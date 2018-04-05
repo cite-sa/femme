@@ -1,10 +1,8 @@
 package gr.cite.femme.geo.api;
 
-import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.geo.core.FemmeGeoException;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface GeoServiceApi {

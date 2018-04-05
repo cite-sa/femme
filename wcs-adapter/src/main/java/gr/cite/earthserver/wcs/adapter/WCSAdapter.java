@@ -16,13 +16,18 @@ import gr.cite.femme.client.query.CriterionBuilderClient;
 import gr.cite.femme.client.query.CriterionClient;
 import gr.cite.femme.client.query.QueryClient;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
+import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
+import gr.cite.femme.core.utils.Pair;
 import jersey.repackaged.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,6 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class WCSAdapter implements WCSAdapterAPI {
+	private static final Logger logger = LoggerFactory.getLogger(WCSAdapter.class);
 	
 	private FemmeClientAPI femmeClient;
 	private GeoRequests geoRequests;
@@ -72,20 +78,35 @@ public class WCSAdapter implements WCSAdapterAPI {
 	public String importServer(String importId, String endpoint, String name, WCSResponse server) throws ParseException, FemmeException {
 		Collection collection = WCSFemmeMapper.fromServer(endpoint, name, server);
 		String collectionId = this.femmeClient.importCollection(importId, collection);
-		String serverId = this.geoRequests.insertServerGeo(collectionId);
+		
+		String serverId = this.geoRequests.insertServerGeo(collectionId, collection.getName());
 		//this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, dataElement));
 		return serverId;
 	}
 	
 	@Override
-	public String importCoverage(String importId, String serverId, WCSResponse coverage) throws ParseException, FemmeException {
+	public String importCoverage(String importId, String serverId, WCSResponse coverage) throws FemmeException, ParseException {
 		DataElement dataElement = WCSFemmeMapper.fromCoverage(coverage);
 		
 		String dataElementId = this.femmeClient.importInCollection(importId, dataElement);
 		dataElement.setId(dataElementId);
 		
 		if (this.geoRequests != null) {
-			this.geoRequests.insert(GeoUtils.convertDataToCoverageGeo(coverage, serverId, dataElement));
+			CoverageGeo coverageGeo = null;
+			try {
+				coverageGeo = GeoUtils.convertDataToCoverageGeo(coverage, serverId, dataElement);
+			} catch (IOException | ParseException e) {
+				logger.error("Error on re-projecting coverage", e);
+			}
+			
+			if (coverageGeo != null) {
+				try {
+					this.geoRequests.insert(coverageGeo);
+				} catch (FemmeException e) {
+					logger.error("Error on inserting coverage in geo service", e);
+				}
+			}
+			
 		}
 
 		return dataElementId;
