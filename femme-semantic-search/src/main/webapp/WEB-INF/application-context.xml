@@ -7,8 +7,16 @@
 
 	<context:property-placeholder location="WEB-INF/semantic-search.properties.devel" />
 
-	<bean id="semanticSearchResource" class="gr.cite.femme.semantic.search.resources.SemanticSearchResource">
+	<bean id="semanticSearchResource" class="gr.cite.femme.semantic.search.repository.ElasticsearchRepository">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
+	</bean>
 
+	<bean id="elasticsearchClient" class="gr.cite.femme.semantic.search.config.ElasticsearchClient">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
 	</bean>
 
 	<context:annotation-config/>
