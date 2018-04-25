@@ -7,6 +7,7 @@ import gr.cite.commons.pipeline.config.FilterOperand;
 import gr.cite.commons.pipeline.config.FilterOperation;
 import gr.cite.commons.pipeline.config.MapOperation;
 import gr.cite.commons.pipeline.config.PipelineConfiguration;
+import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
@@ -68,7 +69,7 @@ public class ProcessingPipeline {
 				if (map.isArray()) {
 					this.output.put(map.getName(), queryResult);
 				} else {
-					this.output.put(map.getName(), queryResult.get(0));
+					if (queryResult.size() > 0) this.output.put(map.getName(), queryResult.get(0));
 				}
 			}
 		}

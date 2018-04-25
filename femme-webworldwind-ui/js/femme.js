@@ -6,16 +6,16 @@ var annotation = undefined;
 var polygonsDrawn = [];
 var polygonsDeleted = [];
 
-// var serverUrl = "http://localhost";
-var serverUrl = "http://earthserver-devel.vhosts.cite.gr/"
+var serverUrl = "http://localhost";
+// var serverUrl = "http://earthserver-devel.vhosts.cite.gr/"
 
-var femmePort = "";
-// var femmePort = ":8090/";
-var femmeGeoPort = "";
-//var femmeGeoPort = ":8080/";
+// var femmePort = "";
+var femmePort = ":8080/";
+// var femmeGeoPort = "";
+var femmeGeoPort = ":8083/";
 
-var femmeUrl = serverUrl + femmePort + "femme-application/";
-var femmeGeoUrl = serverUrl + femmeGeoPort + "femme-geo-application/";
+var femmeUrl = serverUrl + femmePort + "femme/";
+var femmeGeoUrl = serverUrl + femmeGeoPort + "femme-geo/";
 
 var numberOfWCSServerEndpoints = undefined;
 var coverage = undefined;
@@ -25,6 +25,7 @@ $(document).ready(function () {
     var self = this;
     createEndpointSuggest();
     createMetadataModal();
+    console.log(Earthserver.WebWorldWind);
     Earthserver.WebWorldWind.initialize();
     bindEvents();
     $("#coverage-tags-input").val("");
@@ -38,11 +39,11 @@ function bindEvents() {
 
     $("#get-coverages-btn").on('click', function (e) {
         serverCoverages = [];
-        var endpointId = [];
+        var collectionIds = [];
 
         if (!$('.asgEndpoint').CiteAutoSuggest('getSelectedValues').length == 0) {
             for (var i = 0; i < $('.asgEndpoint').CiteAutoSuggest('getSelectedValues').length; i++) {
-                endpointId.push($('.asgEndpoint').CiteAutoSuggest('getSelectedValues')[i]);
+                collectionIds.push($('.asgEndpoint').CiteAutoSuggest('getSelectedValues')[i]);
                 var xPath = $("#xpath-input").val();
                 var queryCoverageIds = $.map($("#coverage-tags-input").tagsinput('items'), function (value, index) {
                     if (value != undefined) {
@@ -51,7 +52,7 @@ function bindEvents() {
                     return undefined;
                 });
             }
-            getCoverages(endpointId, queryCoverageIds, xPath, false);
+            getCoverages(collectionIds, queryCoverageIds, xPath, false);
         }
     });
 
@@ -102,10 +103,13 @@ function getCoverages(endpointId, coverageIds, xPath, includeMetadata) {
             contentType: undefined,
             onSuccess: function (data) {
                 $.each(data.entity.body.elements, function (index, coverage) {
-                    createCoverageAccordions(coverage, index);
-                    coverages[coverage.name] = {};
-                    coverages[coverage.name].coverage = coverage;
-                    $("#show").prop("disabled", false);
+                    
+                    getCoverageGeoJson(coverage.id, function(coverageGeo) {
+                        createCoverageAccordion(coverage, coverageGeo, index);
+                        coverages[coverage.name] = {};
+                        coverages[coverage.name].coverage = coverage;
+                        $("#show").prop("disabled", false);
+                    });
                 });
             },
             onError: function () {
@@ -118,17 +122,30 @@ function getCoverages(endpointId, coverageIds, xPath, includeMetadata) {
     }
 }
 
+function getCoverageGeoJson(dataElementId, callback) {
+    var requestUrl = femmeGeoUrl + "coverages?dataElementId=" + dataElementId;
+    Earthserver.Client.Utilities.callWS(requestUrl, 'GET', {
+        dataType: "json",
+        onSuccess: function (coverageGeo) {
+            callback(coverageGeo);
+        },
+        onError: function () {
+            alert("No geo information for coverage");
+        }
+    });
+}
+
 function createEndpointSuggest() {
     var self = this;
-    var getServerEndpointsUrl = femmeGeoUrl + "endpoints/EPSG:4326";
+    var getServerEndpointsUrl = femmeGeoUrl + "servers?crs=EPSG:4326";
     this.asgEndpoint = $('.asgEndpoint');
 
     this.asgEndpoint.CiteAutoSuggest({
         currentDisplayMode: $.ui.CiteBaseControl.DisplayMode.Edit,
         suggestionMode: $.ui.CiteAutoSuggest.SuggestionMode.Callback,
         uiMode: $.ui.CiteAutoSuggest.UIMode.TextBox,
-        selectionNameProperty: 'name',
-        selectionValueProperty: 'id',
+        selectionNameProperty: 'serverName',
+        selectionValueProperty: 'collectionId',
         allowOnlySuggestionSelections: false,
         allowMultiSelect: true,
         highlightMatches: true,
@@ -168,7 +185,7 @@ function createEndpointSuggest() {
         if (endpointId == '') return;
 
         for (var i = 0; i < endpointId.length; i++) {
-            var requestUrl = femmeUrl + 'collections/' + endpointId[i] + '/dataElements?options={"include": ["name", "systemicMetadata"]}';
+            var requestUrl = femmeUrl + 'collections/' + endpointId[i] + '/dataElements?options={"include": ["name"]}';
             Earthserver.Client.Utilities.callWS(requestUrl, 'GET', {
                 dataType: "json",
                 contentType: undefined,
@@ -187,7 +204,7 @@ function createEndpointSuggest() {
     });
 }
 
-function createCoverageAccordions(coverage) {
+function createCoverageAccordion(coverage, geo) {
     $("#metadata-panel-group").append(
         '<div id="' + coverage.name + '-panel" class="panel panel-default">' +
         '<div id="' + coverage.name + '-heading" class="panel-heading" role="tab">' +
@@ -206,7 +223,7 @@ function createCoverageAccordions(coverage) {
         '</div>' +
         '</div>');
 
-    if (coverage.systemicMetadata.hasOwnProperty("other") && coverage.systemicMetadata.other.hasOwnProperty("bbox") && canBeDrawed(coverage.systemicMetadata.other.bbox) == true) {
+    if (geo.hasOwnProperty("geometry") && geo.geometry != null && canBeDrawed(geo.geometry)) {
 
         $("#" + coverage.name + "-panel").find(".panel-title").append(
             '<span type="button" class="btn btn-default show-on-www" id=' + coverage.name + '-show-on-www data-id=' + coverage.id + '>' +
@@ -216,17 +233,19 @@ function createCoverageAccordions(coverage) {
         $("#" + coverage.name + "-show-on-www").click(function (event) {
             var button = $(this);
             button.toggleClass("active");
-            var requestUrl = femmeUrl + 'dataElements/' + $(button).attr("data-id") + '?options={"exclude":["metadata"]}';
-            Earthserver.Client.Utilities.callWS(requestUrl, 'GET', {
-                dataType: "json",
-                contentType: undefined,
-                onSuccess: function (data) {
-                    drawOrDelete(button, data);
-                },
-                onError: function () {
-                    alert("No endpoints available");
-                }
-            });
+
+            drawOrDelete(button, geo);
+            // var requestUrl = femmeUrl + 'dataElements/' + $(button).attr("data-id") + '?options={"exclude":["metadata"]}';
+            // Earthserver.Client.Utilities.callWS(requestUrl, 'GET', {
+            //     dataType: "json",
+            //     contentType: undefined,
+            //     onSuccess: function (data) {
+            //         drawOrDelete(button, data);
+            //     },
+            //     onError: function () {
+            //         alert("No endpoints available");
+            //     }
+            // });
         });
     }
 }
@@ -262,8 +281,8 @@ function fillMetadataModal(coverageId) {
         dataType: "json",
         contentType: undefined,
         onSuccess: function (data) {
-            if (data.entity.body.dataElements.length != 1) return;
-            var coverage = data.entity.body.dataElements[0];
+            if (data.entity.body.elements.length != 1) return;
+            var coverage = data.entity.body.elements[0];
             coverages[coverageId].coverage.metadata = coverage.metadata;
             appendMetadataToModal(coverages[coverageId].coverage.metadata[0].value);
         },
@@ -300,14 +319,14 @@ function appendMetadataToModal(metadata) {
     });
 }
 
-function drawOrDelete(button, data) {
+function drawOrDelete(button, geo) {
 
     var coverageName = button.attr("id").split("-show-on-www")[0];
-    var coverage = data.entity.body;
+    // var coverage = data.entity.body;
 
     if (button.hasClass("active")) {
 
-        polygon = drawSchema(coverage);
+        polygon = Earthserver.WebWorldWind.drawSchema(geo);
         polygonsDrawn.push(polygon);
 
         polygonsDeleted.find(p => p.name = coverageName);
@@ -346,7 +365,7 @@ function drawOrDelete(button, data) {
             polygonsDrawn.splice(index, 1);
         }
         if (polygon != undefined) {
-            deleteSchema(polygon);
+            Earthserver.WebWorldWind.deleteSchema(polygon);
         }
 
         // console.log(polygonsDrawn);
@@ -397,14 +416,15 @@ function destroyCoverageTagsInput() {
 
 function clearCoverages() {
     $("#metadata-panel-group").empty();
-    polygonsLayer.removeAllRenderables();
-    annotationsLayer.removeAllRenderables();
+    // polygonsLayer.removeAllRenderables();
+    // annotationsLayer.removeAllRenderables();
+    Earthserver.WebWorldWind.clear();
     destroyCoverageTagsInput();
     coverageTags = [];
 }
 
-function canBeDrawed(bbox) {
-    var boundingBox = bbox.geoJson.coordinates[0];
+function canBeDrawed(geo) {
+    var boundingBox = geo.coordinates[0];
     var boundingBoxLat = [];
     var boundingBoxLon = [];
 

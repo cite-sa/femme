@@ -1,6 +1,14 @@
 (function ($, undefined) {
 	$.namespace("Earthserver.WebWorldWind");
 
+	// var wwd = undefined;
+	var polygonsLayer = undefined;
+	var annotationsLayer;
+	var annotation = {};
+	var templatePolygons = [];
+	var bigNavRange = 50e5;
+	var smallNavRange = 10e5;
+
 	Earthserver.WebWorldWind.initialize = function() {
 		wwd = new WorldWind.WorldWindow("coverageCanvas");
 		wwd.deepPicking = true;
@@ -8,9 +16,10 @@
 		WorldWind.Logger.setLoggingLevel(WorldWind.Logger.LEVEL_WARNING);
 		WorldWind.configuration.gpuCacheSize = 300e6;
 	
-		wwd.addLayer(new WorldWind.BingAerialLayer())
+		// wwd.addLayer(new WorldWind.BingAerialLayer());
+		wwd.addLayer(new WorldWind.BMNGLayer());
 		wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
-		wwd.addLayer(new WorldWind.AtmosphereLayer());
+		// wwd.addLayer(new WorldWind.AtmosphereLayer());
 	
 		polygonsLayer = new WorldWind.RenderableLayer("CoveragesLayer");
 		polygonsLayer.enabled = true;
@@ -22,11 +31,18 @@
 		annotationsLayer.pickEnabled = true;
 		wwd.addLayer(annotationsLayer);
 	
-		wwwEventHandler();
+		eventHandler();
 	};
 
+	Earthserver.WebWorldWind.clear = function() {
+		polygonsLayer.removeAllRenderables();
+    	annotationsLayer.removeAllRenderables();
+	}
+
+	var highlightedItems = [];
+
 	var eventHandler = function() {
-		var highlightedItems = [];
+		// var highlightedItems = [];
 
 		var clickPickRecognizer = new WorldWind.ClickRecognizer(wwd, handlePick);
 		clickPickRecognizer.enabled = true;
@@ -185,9 +201,10 @@
 	};
 
 	
-	var drawSchema = function (coverage) {
+	Earthserver.WebWorldWind.drawSchema = function (coverage) {
 		var schema = undefined;
-		var coverageGeography = coverage.systemicMetadata.other.bbox.geoJson.coordinates[0];
+		console.log(coverage.geometry.coordinates[0]);
+		var coverageGeography = coverage.geometry.coordinates[0];
 		var centroid = getCentroid(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[2][1], coverageGeography[2][0]);
 		var distanceX = findDistance(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[1][1], coverageGeography[1][0]);
 		var distanceY = findDistance(coverageGeography[1][1], coverageGeography[1][0], coverageGeography[2][1], coverageGeography[2][0]);
@@ -261,15 +278,14 @@
 
 	var drawPlacemark = function(coverage, coverageGeography) {
 		var image;
-		var wcsServerName = coverage.collections[0].name;
-	
-		if (wcsServerName == "MEEO") {
+		
+		if (coverage.serverName.includes("MEEO")) {
 			image = "images/Meteorological-Environmental-Earth-Observation.gif";
-		} else if (wcsServerName == "PML") {
+		} else if (coverage.serverName.includes("PML")) {
 			image = "images/pml-logo-small-white.png";
-		} else if (wcsServerName == "PS") {
+		} else if (coverage.serverName.includes("PS")) {
 			image = "images/images.jpg";
-		} else if (wcsServerName == "ECMWF") {
+		} else if (coverage.serverName.includes("ECMWF")) {
 			image = "images/ecmwf.png"
 		} else {
 			image = "images/castshadow-blue.png";
@@ -324,7 +340,7 @@
 		return Math.sqrt(Math.pow((point2Lon - point1Lon), 2) + Math.pow((point2Lat - point1Lat), 2));
 	};
 	
-	var deleteSchema = function(schema) {
+	Earthserver.WebWorldWind.deleteSchema = function(schema) {
 		if (schema.length === undefined) {
 			polygonsLayer.removeRenderable(schema);
 			drawAnnotation(schema);
@@ -355,7 +371,4 @@
 		context.RGBA, context.UNSIGNED_BYTE, pixels);
 	};
 
-	return {
-		initializeWww: initializeWww
-	}
 })(jQuery);

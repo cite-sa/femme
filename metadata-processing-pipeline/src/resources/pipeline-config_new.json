@@ -1,0 +1,17 @@
+[
+	{
+		"operation": "EXTRACT",
+		"format": "XML",
+		"query": "/a/b/text()"
+	},
+	{
+		"operation": "FILTER",
+		"operator": "=",
+		"value": "3",
+		"datatype": "INTEGER"
+	},
+	{
+		"operation": "TRANSFORM",
+		"datatype": "INTEGER"
+	}
+]

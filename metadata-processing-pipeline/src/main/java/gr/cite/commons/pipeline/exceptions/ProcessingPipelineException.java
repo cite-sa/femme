@@ -1,4 +1,4 @@
-package gr.cite.commons.pipeline;
+package gr.cite.commons.pipeline.exceptions;
 
 public class ProcessingPipelineException extends Exception {
 	public ProcessingPipelineException() {

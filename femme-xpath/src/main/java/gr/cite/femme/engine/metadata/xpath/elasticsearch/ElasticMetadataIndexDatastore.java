@@ -236,37 +236,6 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		return shoulds;
 	}
 
-	/*private ElasticSearchQuery buildShould(Node<QueryNode> node, List<ElasticSearchQuery> shoulds) {
-		//if (node.getChildren().size() > 0) {
-		for (Node<QueryNode> child : node.getChildren()) {
-			//List<ElasticSearchQuery> nodeShould = new ArrayList<>(should);
-			//ElasticSearchQuery childQuery = buildShould(child, new ArrayList<>(), shoulds);
-			ElasticSearchQuery childQuery = buildShould(child, shoulds);
-			// if (node.getData() != null && (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null)) {
-			if (childQuery != null) {
-				shoulds.add(childQuery);
-			}
-
-			*//*QueryNode data = child.getData();
-			if (!data.getFilterPath().toString().trim().isEmpty() || data.getValue() != null) {
-				List<ElasticSearchQuery> subQueries = buildTermOrNested(data);
-				nodeShould.forEach();
-				subQueries
-				nodeShould.addAll(buildTermOrNested(data));
-			}*//*
-		}
-		//} else {
-		if (node.getChildren().size() == 0) {
-			//shoulds.add(should);
-
-			if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null) {
-				return buildTermOrNested(node.getData());
-			}
-		}
-
-		return null;
-	}*/
-
 	private ElasticSearchQuery buildShould(Node<QueryNode> node, List<ElasticSearchQuery> shoulds, Set<String> includes) {
 		for (Node<QueryNode> child : node.getChildren()) {
 			ElasticSearchQuery childQuery = buildShould(child, shoulds, includes);
@@ -278,9 +247,9 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			}*/
 		}
 
-		if (!node.getData().getFilterPath().toString().trim().isEmpty() || node.getData().getValue() != null || node.getData().getFilterNodes().size() > 0) {
-			ElasticSearchQuery query = buildTermOrNested(node.getData());
-			return query;
+		QueryNode nodeData = node.getData();
+		if (!nodeData.getFilterPath().toString().trim().isEmpty() || nodeData.getValue() != null || nodeData.getFilterNodes().size() > 0) {
+			return buildTermOrNested(nodeData);
 		//} else if (node.getData().getFilterNodes().size() > 0) {
 		
 		} else if (node.isLeaf()) {
@@ -300,15 +269,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 	}
 
 	private ElasticSearchQuery buildTermOrNested(QueryNode node) {
-		//String subQuery;
-
-		//List<MetadataSchema> test = this.schemaIndexDatastore.findArrayMetadataIndexPathsByRegex("^" + node.getNodePath());
-
-		/*List<String> nestedNodes = this.schemaIndexDatastore.findArrayMetadataIndexPaths().stream()
-				.map(schema -> schema.getSchema().stream().map(JSONPath::getPath).collect(Collectors.toList()))
-				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath))
-				.sorted(Comparator.comparing(String::length)).collect(Collectors.toList());*/
-
+		
 		List<String> nodeMetadataSchemaIds = new ArrayList<>(node.getMetadataSchemaIds());
 
 		Map<String, List<String>> map = new HashMap<>();
@@ -337,55 +298,15 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 				.flatMap(List::stream).filter(nestedPath -> node.getNodePath().toString().startsWith(nestedPath))
 				.sorted(Comparator.comparing(String::length)).collect(Collectors.toList());*/
 
-
-		//Map<String, List<String>> finalMap = new HashMap<>();
-		//List<ElasticSearchQuery> result;
 		ElasticSearchQuery query = new ElasticSearchQuery();
 
 		map.forEach((key, value) -> {
 			//query.setIndices(entry.getValue());
-			query.addQuery("{" +
-					"\"nested\" : {" +
-						"\"path\": \"value." + key + "\"," +
-						"\"query\": {" +
-							"\"bool\": {" +
-								"\"must\": [" +
-								"{" +
-									"\"term\": {" +
-										"\"value." + node.getNodePath().toString() + ("".equals(node.getFilterPath().toString()) ? "" : ".") +
-										node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
-									"}" +
-								"}" +
-							"]" +
-						"}" +
-					"}" +
-				"}" +
-			"}", value);
-
-			/*finalMap.put("{" +
-				"\"nested\" : {" +
-					"\"path\": \"value." + path + "\"," +
-					"\"query\": {" +
-						"\"bool\": {" +
-							"\"must\": [" +
-								"{" +
-									"\"term\": {" +
-										"\"value." + node.getNodePath().toString() +
-											("".equals(node.getFilterPath().toString()) ? "" : ".") +
-											node.getFilterPath().toString() +
-											".keyword\"" + ":\"" +
-												node.getValue() + "\"" +
-										"}" +
-									"}" +
-								"]" +
-							"}" +
-						"}" +
-					"}" +
-				"}", ids)*/
+			query.addQuery(buildNestedQuery(key, node), value);
 		});
-			//ElasticSearchQuery query = new ElasticSearchQuery();
+		//ElasticSearchQuery query = new ElasticSearchQuery();
 
-			//query.setIndices(node.getMetadataSchemaIds());
+		//query.setIndices(node.getMetadataSchemaIds());
 		/*query.addQuery("{" +
 				"\"term\":{" +
 					"\"value." + node.getNodePath().toString() + ("".equals(node.getFilterPath().toString()) ? "" : ".") +
@@ -393,83 +314,50 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 				"}" +
 			"}", nodeMetadataSchemaIds);*/
 		
-		
-		
-		query.addQuery("{" +
-				"\"bool\": {" +
-					"\"filter\": [" +
-						node.getFilterNodes().stream().map(filterNode ->
-							"{" +
-								"\"term\": {" +
-									"\"value." + node.getNodePath().toString() + ("".equals(filterNode.getFilterPath().toString()) ? "" : ".") +
-										filterNode.getFilterPath().toString() + ".keyword\"" + ":\"" + filterNode.getValue() + "\"" +
-								"}" +
-							"}"
-						).collect(Collectors.joining(",")) +
-					"]" +
-				"}" +
-			"}", nodeMetadataSchemaIds);
-		
-		
+		query.addQuery(buildFilterQuery(node), nodeMetadataSchemaIds);
 		
 		if (node.isFilterPayload()) {
 			query.getIncludes().add(node.getNodePath().toString());
 		}
 
-			/*result = new ArrayList<>();
-			result.add(query);*/
-
-			/*finalMap.put(
-				"{" +
-					"\"term\":{" +
-						"\"value." + node.getNodePath().toString() +
-							("".equals(node.getFilterPath().toString()) ? "" : ".") +
-							node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
-						"}" +
-					"}", node.getMetadataSchemaIds());*/
-		//}
-
-		/*finalMap.entrySet().stream().map(entry -> {
-			ElasticSearchQuery query = new ElasticSearchQuery();
-			query.addQuery(entry.getKey());
-			query.setIndices(entry.getValue());
-			return query;
-		}).collect(Collectors.toList());*/
-
 		return query;
-
-
-		/*if (nestedNodes.size() > 0) {
-			subQuery = "{" +
-					"\"nested\" : {" +
-						"\"path\": \"value." + nestedNodes.get(0) + "\"," +
-							"\"query\": {" +
-								"\"bool\": {" +
-									"\"must\": [" +
-										"{" +
-											"\"term\": {" +
-												"\"value." + node.getNodePath().toString() +
-												("".equals(node.getFilterPath().toString()) ? "" : ".") +
-												node.getFilterPath().toString() +
-												".keyword\"" + ":\"" +
-												node.getValue() + "\"" +
-											"}" +
-										"}" +
-									"]" +
+	}
+	
+	private String buildNestedQuery(String key, QueryNode node) {
+		return "{" +
+			"\"nested\" : {" +
+				"\"path\": \"value." + key + "\"," +
+				"\"query\": {" +
+					"\"bool\": {" +
+						"\"must\": [" +
+							"{" +
+								"\"term\": {" +
+									"\"value." + node.getNodePath().toString() + ("".equals(node.getFilterPath().toString()) ? "" : ".") +
+									node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
 								"}" +
 							"}" +
-						"}" +
-					"}";
-		} else {
-			subQuery = "{" +
-					"\"term\":{" +
-						"\"value." + node.getNodePath().toString() +
-						("".equals(node.getFilterPath().toString()) ? "" : ".") +
-						node.getFilterPath().toString() + ".keyword\"" + ":\"" + node.getValue() + "\"" +
+						"]" +
 					"}" +
-				"}";
-		}
-		return subQuery;*/
+				"}" +
+			"}" +
+		"}";
+	}
+	
+	private String buildFilterQuery(QueryNode node) {
+		return "{" +
+			"\"bool\": {" +
+				"\"filter\": [" +
+					node.getFilterNodes().stream().map(filterNode ->
+						"{" +
+							"\"term\": {" +
+								"\"value." + node.getNodePath().toString() + ("".equals(filterNode.getFilterPath().toString()) ? "" : ".") +
+										filterNode.getFilterPath().toString() + ".keyword\"" + ":\"" + filterNode.getValue() + "\"" +
+							"}" +
+						"}"
+					).collect(Collectors.joining(",")) +
+				"]" +
+			"}" +
+		"}";
 	}
 
 }

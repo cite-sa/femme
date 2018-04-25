@@ -1,10 +1,13 @@
 package gr.cite.femme.core.geo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.geojson.GeoJsonObject;
 
 import java.time.Instant;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CoverageGeo {
 	
 	@JsonProperty("id")
@@ -14,9 +17,11 @@ public class CoverageGeo {
 	private String coverageName;
 	
 	@JsonProperty("created")
+	@JsonSerialize(using = InstantSerializer.class)
 	private Instant created;
 	
 	@JsonProperty("modified")
+	@JsonSerialize(using = InstantSerializer.class)
 	private Instant modified;
 	
 	@JsonProperty("geometry")
@@ -30,6 +35,9 @@ public class CoverageGeo {
 	
 	@JsonProperty("crs")
 	private String crs;
+	
+	@JsonProperty("serverName")
+	private String serverName;
 	
 	public String getId() {
 		return id;
@@ -93,5 +101,13 @@ public class CoverageGeo {
 	
 	public void setCrs(String crs) {
 		this.crs = crs;
+	}
+	
+	public String getServerName() {
+		return serverName;
+	}
+	
+	public void setServerName(String serverName) {
+		this.serverName = serverName;
 	}
 }

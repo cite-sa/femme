@@ -56,33 +56,10 @@ public final class WCSFemmeMapper {
 
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
 
-		// TODO uncomment to transform geodata
-		/*try {
-			Pair<String, String> bboxGeoJsonWithCRS = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(response.getResponse());
-			
-			Map<String, String> geo = new HashMap<>();
-			String bboxJson;
-			if (bboxGeoJsonWithCRS.getRight() != null) {
-				BBox bbox = new BBox(bboxGeoJsonWithCRS.getLeft(), bboxGeoJsonWithCRS.getRight());
-				
-				try {
-					bboxJson = mapper.writeValueAsString(bbox);
-				} catch (JsonProcessingException e) {
-					throw new ParseException(e.getMessage(), e);
-				}
-				geo.put("bbox", bboxJson);
-			}
-			dataElement.getSystemicMetadata().setGeo(geo);
-			
-		} catch(Exception e) {
-			logger.error(e.getMessage());
-		}*/
-
 		return dataElement;
 	}
 	
 	public static Map<String, String> fromCoverageToBBox(WCSResponse response) throws ParseException {
-		// TODO uncomment to transform geodata
 		Map<String, String> geo = new HashMap<>();
 		try {
 			Pair<String, String> bboxGeoJsonWithCRS = GeoUtils.getGeoJsonBoundingBoxFromDescribeCoverage(response.getResponse());

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import gr.cite.commons.pipeline.config.PipelineConfiguration;
+import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
 import org.junit.Test;
 
 import java.io.IOException;

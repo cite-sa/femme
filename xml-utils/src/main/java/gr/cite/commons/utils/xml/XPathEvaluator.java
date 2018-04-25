@@ -100,7 +100,7 @@ public class XPathEvaluator {
 	}
 
 	public List<String> evaluate(String expression) throws XPathEvaluationException {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 		try {
 			NodeList nodeList = (NodeList) xpath.evaluate(expression, node, XPathConstants.NODESET);
 			for (int i = 0; i < nodeList.getLength(); i++) {

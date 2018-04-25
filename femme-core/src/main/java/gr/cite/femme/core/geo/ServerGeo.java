@@ -1,6 +1,7 @@
 package gr.cite.femme.core.geo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.time.Instant;
 
@@ -16,9 +17,11 @@ public class ServerGeo {
 	private String serverName;
 	
 	@JsonProperty("created")
+	@JsonSerialize(using = InstantSerializer.class)
 	private Instant created;
 	
 	@JsonProperty("modified")
+	@JsonSerialize(using = InstantSerializer.class)
 	private Instant modified;
 	
 	public String getId() {

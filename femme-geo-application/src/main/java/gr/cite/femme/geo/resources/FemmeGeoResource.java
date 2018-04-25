@@ -20,9 +20,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Path("/")
 @Component
@@ -61,6 +59,23 @@ public class FemmeGeoResource {
 	public Response getCoveragesByServerId(@PathParam("serverId") String serverId) {
 		List<CoverageGeo> coverages = this.geoDatastore.getCoveragesByServerId(serverId);
 		return Response.ok(coverages).build();
+	}
+	
+	@GET
+	@Path("coverages")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCoveragesByDataElementId(@QueryParam("dataElementId") String dataElementId) {
+		try {
+			CoverageGeo coverage = this.geoDatastore.getCoverageByDataElementId(dataElementId);
+			
+			ServerGeo server = this.geoDatastore.getServerById(coverage.getServerId());
+			coverage.setServerName(server.getServerName());
+			
+			return Response.ok(coverage).build();
+		} catch (DatastoreException e) {
+			logger.error("Error retrieving coverage with DataElmentId [" + dataElementId + "]", e);
+			throw new WebApplicationException("Error retrieving coverage with DataElmentId [" + dataElementId + "]");
+		}
 	}
 	
 	@GET
