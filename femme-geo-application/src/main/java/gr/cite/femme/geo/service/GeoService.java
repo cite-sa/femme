@@ -1,7 +1,5 @@
 package gr.cite.femme.geo.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.geo.api.GeoServiceApi;
 import gr.cite.femme.geo.core.FemmeGeoException;
@@ -11,16 +9,20 @@ import org.geojson.GeoJsonObject;
 import org.opengis.referencing.FactoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 
+@Component
 public class GeoService implements GeoServiceApi {
 	private static final Logger logger = LoggerFactory.getLogger(GeoService.class);
 	private MongoGeoDatastore mongoGeoDatastore;
 	
-	public GeoService() {
-		this.mongoGeoDatastore = new MongoGeoDatastore();
+	@Inject
+	public GeoService(MongoGeoDatastore mongoGeoDatastore) {
+		this.mongoGeoDatastore = mongoGeoDatastore;
 	}
 	
 	@Override

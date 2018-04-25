@@ -1,19 +1,24 @@
 package gr.cite.femme.geo.engine.mongodb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
-import com.mongodb.client.result.UpdateResult;
+import gr.cite.femme.core.datastores.Datastore;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.core.geo.ServerGeo;
+import gr.cite.femme.geo.mongodb.codecs.CoverageGeoCodec;
+import gr.cite.femme.geo.mongodb.codecs.ServerGeoCodec;
 import gr.cite.femme.geo.utils.GeoUtils;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.geojson.GeoJsonObject;
 import org.slf4j.Logger;
@@ -24,7 +29,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class MongoGeoDatastore {
@@ -33,21 +40,13 @@ public class MongoGeoDatastore {
 	
 	private MongoGeoDatastoreClient mongoClient;
 	
-	public MongoGeoDatastore() {
+	/*public MongoGeoDatastore() {
 		this.mongoClient = new MongoGeoDatastoreClient();
-	}
+	}*/
 	
 	@Inject
-	public MongoGeoDatastore(String host, int port, String name) {
-		this.mongoClient = new MongoGeoDatastoreClient(host, port, name);
-	}
-	
-	public MongoCollection<ServerGeo> getServers() {
-		return this.mongoClient.getServers();
-	}
-	
-	public MongoCollection<CoverageGeo> getCoverages() {
-		return this.mongoClient.getCoverages();
+	public MongoGeoDatastore(MongoGeoDatastoreClient mongoClient) {
+		this.mongoClient = mongoClient;
 	}
 	
 	public void close() {
@@ -55,35 +54,59 @@ public class MongoGeoDatastore {
 	}
 	
 	public String insert(ServerGeo server) throws DatastoreException {
-		return null;
+		ServerGeo serverGeo = null;
+		if (server.getCollectionId() != null) {
+			serverGeo = getServerByCollectionId(server.getCollectionId());
+		}
+		
+		if (serverGeo != null) {
+			server.setId(serverGeo.getId());
+			logger.info("Server already exists [" + server.getId() + "]");
+			
+			return null;
+		} else {
+			server.setCreated(Instant.now());
+			server.setModified(Instant.now());
+			
+			this.mongoClient.getServers().insertOne(server);
+			
+			return server.getId();
+		}
 	}
 	
 	public String insert(CoverageGeo coverage) throws DatastoreException {
+		//if (coverage.getGeo() != null) {
+		//	this.mongoClient.getCoverages().createIndex(new BasicDBObject("loc", "2dsphere"));
+		//}
 		
-		if (coverage.getGeo() != null) {
-			this.mongoClient.getCoverages().createIndex(new BasicDBObject("loc", "2dsphere"));
+		CoverageGeo coverageGeo = null;
+		if (coverage.getDataElementId() != null) {
+			coverageGeo = getCoverageByDataElementId(coverage.getDataElementId());
 		}
-		CoverageGeo coverageGeo = this.mongoClient.getCoverages().find(new Document("dataElementId", coverage.getDataElementId())).first();
 		
 		if (coverageGeo != null) {
-			System.out.println("*********************** Coverage already present ***********************");
-			coverage = updateCoverage(coverage,coverageGeo.getId());
+			logger.info("Coverage already exists [" + coverage.getId() + "]");
+			coverage = updateCoverage(coverage, coverageGeo.getId());
 			return coverage.getId();
 		} else {
+			coverage.setCreated(Instant.now());
+			coverage.setModified(Instant.now());
+			
 			this.mongoClient.getCoverages().insertOne(coverage);
+			
 			return coverage.getId();
 		}
 	}
-
-	public CoverageGeo updateCoverage(CoverageGeo coverageGeo, String id) throws DatastoreException {
+	
+	private CoverageGeo updateCoverage(CoverageGeo coverageGeo, String id) throws DatastoreException {
 		CoverageGeo updated = null;
-
+		
 		if (coverageGeo.getId() != null) {
 			coverageGeo.setModified(Instant.now());
-
+			
 			try {
-				updated = (CoverageGeo) this.mongoClient.getCoverages().findOneAndUpdate(
-						Filters.eq("_id", new ObjectId(id)),
+				updated = this.mongoClient.getCoverages().findOneAndUpdate(
+						Filters.eq(CoverageGeoCodec.ID, generateId(id)),
 						new Document().append("$set", coverageGeo),
 						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
 			} catch (Exception e) {
@@ -92,73 +115,122 @@ public class MongoGeoDatastore {
 		}
 		return updated;
 	}
-
-	public String insertServer(ServerGeo server) {
-
-		ServerGeo serverGeo = this.mongoClient.getServers().find(new Document("collectionId", server.getId())).first();
-
-		if (serverGeo != null) {
-			System.out.println("*********************** Server already present ***********************");
-			return null;
-		} else {
-			this.mongoClient.getServers().insertOne(server);
-			return server.getId();
+	
+	public List<ServerGeo> getAllServers() throws DatastoreException {
+		List<ServerGeo> servers = new ArrayList<>();
+		
+		try {
+			this.mongoClient.getServers().find().into(servers);
+		} catch (Exception e) {
+			throw new DatastoreException(e);
 		}
+		
+		return servers;
 	}
 	
 	public ServerGeo getServerById(String id) throws DatastoreException {
-		return this.mongoClient.getServers().find(new Document("collectionId", id)).first();
+		try {
+			return this.mongoClient.getServers().find(Filters.eq(ServerGeoCodec.ID, generateId(id))).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
 	}
 	
-	public ServerGeo getServerByCollectionId(String name) throws DatastoreException {
-		return null;
+	public ServerGeo getServerByCollectionId(String collectionId) throws DatastoreException {
+		try {
+			return this.mongoClient.getServers().find(Filters.eq(ServerGeoCodec.COLLECTION_ID, generateId(collectionId))).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
+	}
+	
+	public List<ServerGeo> getServersWithCrs(String crs) throws DatastoreException {
+		List<ServerGeo> serversByCrs = new ArrayList<>();
+		this.mongoClient.getCoveragesWithServerCodec().aggregate(
+				Arrays.asList(
+						Aggregates.match(Filters.eq(CoverageGeoCodec.CRS, crs)),
+						Aggregates.group("$" + CoverageGeoCodec.SERVER_ID)
+				)
+		).into(serversByCrs);
+		
+		List<ServerGeo> servers = new ArrayList<>();
+		List<Bson> getServerById = serversByCrs.stream().map(server -> Filters.eq(ServerGeoCodec.ID, generateId(server.getId()))).collect(Collectors.toList());
+		this.mongoClient.getServers().find(Filters.or(getServerById)).into(servers);
+		
+		return servers;
+	}
+	
+	public List<CoverageGeo> getAllCoverages() throws DatastoreException {
+		List<CoverageGeo> coverages = new ArrayList<>();
+		
+		try {
+			this.mongoClient.getCoverages().find().into(coverages);
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
+		
+		return coverages;
 	}
 	
 	public CoverageGeo getCoverageById(String id) throws DatastoreException {
-		return null;
+		try {
+			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.ID, generateId(id))).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
+	}
+	
+	public CoverageGeo getCoverageGeoById(String id) throws DatastoreException {
+		try {
+			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.ID, generateId(id))).projection(Projections.include(CoverageGeoCodec.LOC)).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
+	}
+	
+	public CoverageGeo getCoverageByDataElementId(String dataElementId) throws DatastoreException {
+		try {
+			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.DATA_ELEMENT_ID, generateId(dataElementId))).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
 	}
 	
 	public CoverageGeo getCoverageByName(String name) throws DatastoreException {
-		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
-		collection.find();
-		return null;
+		try {
+			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.COVERAGE_NAME, name)).first();
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
 	}
 	
 	public List<CoverageGeo> getCoveragesByPolygon(GeoJsonObject geoJson) throws IOException {
-		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
-		
 		String jsonString = mapper.writeValueAsString(geoJson);
 		String query = GeoUtils.buildGeoWithinQuery(jsonString);
 		logger.debug("query:" + query);
+		
 		List<CoverageGeo> results = new ArrayList<>();
-		collection.find(Document.parse(query)).into(results);
-
-		/*Iterable<CoverageGeo> geoIterable = collection.find();
-		for (CoverageGeo c : geoIterable) {
-			logger.debug(c.getId());
-		}*/
+		this.mongoClient.getCoverages().find(Document.parse(query)).into(results);
 		
 		return results;
 	}
-
+	
 	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) {
-		MongoCollection<CoverageGeo> collection = this.mongoClient.getCoverages();
 		Point refPoint = new Point(new Position(longitude, latitude));
-		
-		return collection.find(Filters.near("loc", refPoint, radius, radius)).into(new ArrayList<>());
-		
+		return this.mongoClient.getCoverages().find(Filters.near(CoverageGeoCodec.LOC, refPoint, radius, radius)).into(new ArrayList<>());
 	}
 	
-	
-	public List<CoverageGeo> getCoveragesInServer(String serverId) {
-		return null;
+	public List<CoverageGeo> getCoveragesByServerId(String serverId) {
+		List<CoverageGeo> coverages = new ArrayList<>();
+		this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.SERVER_ID, generateId(serverId))).into(coverages);
+		return coverages;
 	}
 	
 	public String generateId() {
 		return new ObjectId().toString();
 	}
 	
-	public Object generateId(String id) {
+	public ObjectId generateId(String id) {
 		return new ObjectId(id);
 	}
 }

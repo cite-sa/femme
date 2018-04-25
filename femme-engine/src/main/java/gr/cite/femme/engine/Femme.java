@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import gr.cite.commons.pipeline.ProcessingPipeline;
-import gr.cite.commons.pipeline.ProcessingPipelineException;
+import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
 import gr.cite.commons.pipeline.config.PipelineConfiguration;
 import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
@@ -29,19 +29,15 @@ import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import gr.cite.femme.fulltext.client.FulltextException;
 import gr.cite.femme.fulltext.client.FulltextIndexClientAPI;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.QueryParam;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class Femme {
 	private static final Logger logger = LoggerFactory.getLogger(Femme.class);

@@ -46,16 +46,17 @@ public class GeoRequests {
 		return id;
 	}
 
-	public String insertServerGeo(String collectionId) throws FemmeException {
-		ServerGeo serverGeo = new ServerGeo();
-		serverGeo.setCollectionId(collectionId);
-		Response response = webTarget.path("admin/servers")
-				.request().post(Entity.entity(serverGeo, MediaType.APPLICATION_JSON));
+	public String insertServerGeo(String collectionId, String collectionName) throws FemmeException {
+		ServerGeo server = new ServerGeo();
+		server.setCollectionId(collectionId);
+		server.setServerName(collectionName);
+		
+		Response response = webTarget.path("admin/servers").request().post(Entity.entity(server, MediaType.APPLICATION_JSON));
 
 		String id = response.readEntity(String.class);
 		if (response.getStatus() != 200) {
 			//logger.error(femmeResponse.getMessage());
-			throw new FemmeException("Error on server insert");
+			throw new FemmeException("Error on inserting server in geo service");
 		}
 		//logger.debug("CoverageGeo " + femmeResponse.getEntity().getBody() + " has been successfully inserted");
 		return id;

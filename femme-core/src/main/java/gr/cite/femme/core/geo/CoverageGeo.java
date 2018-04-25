@@ -6,28 +6,28 @@ import org.geojson.GeoJsonObject;
 import java.time.Instant;
 
 public class CoverageGeo {
-
+	
 	@JsonProperty("id")
 	private String id;
-
+	
 	@JsonProperty("coverageName")
 	private String coverageName;
-
+	
 	@JsonProperty("created")
 	private Instant created;
-
+	
 	@JsonProperty("modified")
 	private Instant modified;
-
+	
 	@JsonProperty("geometry")
 	private GeoJsonObject geo;
-
+	
 	@JsonProperty("serverId")
 	private String serverId;
-
+	
 	@JsonProperty("dataElementId")
 	private String dataElementId;
-
+	
 	@JsonProperty("crs")
 	private String crs;
 	
@@ -63,11 +63,11 @@ public class CoverageGeo {
 		this.modified = modified;
 	}
 	
-	public GeoJsonObject  getGeo() {
+	public GeoJsonObject getGeo() {
 		return geo;
 	}
 	
-	public void setGeo(GeoJsonObject  geo) {
+	public void setGeo(GeoJsonObject geo) {
 		this.geo = geo;
 	}
 	
@@ -78,19 +78,19 @@ public class CoverageGeo {
 	public void setServerId(String serverId) {
 		this.serverId = serverId;
 	}
-
+	
 	public String getDataElementId() {
 		return dataElementId;
 	}
-
+	
 	public void setDataElementId(String dataElementId) {
 		this.dataElementId = dataElementId;
 	}
-
+	
 	public String getCrs() {
 		return crs;
 	}
-
+	
 	public void setCrs(String crs) {
 		this.crs = crs;
 	}

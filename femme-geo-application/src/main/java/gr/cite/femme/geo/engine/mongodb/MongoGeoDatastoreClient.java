@@ -1,5 +1,6 @@
 package gr.cite.femme.geo.engine.mongodb;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -13,10 +14,13 @@ import gr.cite.femme.core.model.Element;
 
 import gr.cite.femme.geo.mongodb.codecs.CoverageGeoCodecProvider;
 import gr.cite.femme.geo.mongodb.codecs.ServerGeoCodecProvider;
+import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
 
 public class MongoGeoDatastoreClient {
 	
@@ -33,28 +37,27 @@ public class MongoGeoDatastoreClient {
 	private MongoDatabase database;
 	private MongoCollection<ServerGeo> servers;
 	private MongoCollection<CoverageGeo> coverages;
+	private MongoCollection<ServerGeo> serversByCrs;
 	
-	public MongoGeoDatastoreClient() {
+	/*public MongoGeoDatastoreClient() {
 		this(MongoGeoDatastoreClient.DATABASE_HOST, MongoGeoDatastoreClient.DATABASE_PORT, MongoGeoDatastoreClient.DATABASE_NAME);
-	}
-
-
+	}*/
 	
+	@Inject
 	public MongoGeoDatastoreClient(String host, int port, String name) {
 		
 		this.client = new MongoClient(host, port);
 		this.database = client.getDatabase(name);
 		
 		CodecRegistry codecRegistry = CodecRegistries
-				.fromRegistries(
-						MongoClient.getDefaultCodecRegistry(),
-						CodecRegistries.fromProviders(
-								new ServerGeoCodecProvider(),
-								new CoverageGeoCodecProvider()),
-						MongoClient.getDefaultCodecRegistry());
+				.fromRegistries(MongoClient.getDefaultCodecRegistry(),
+						CodecRegistries.fromProviders(new ServerGeoCodecProvider(), new CoverageGeoCodecProvider()));
 		
 		this.servers = this.database.getCollection(MongoGeoDatastoreClient.SERVER_COLLECTION_NAME, ServerGeo.class).withCodecRegistry(codecRegistry);
 		this.coverages = this.database.getCollection(MongoGeoDatastoreClient.COVERAGE_COLLECTION_NAME, CoverageGeo.class).withCodecRegistry(codecRegistry);
+		this.serversByCrs = this.database.getCollection(MongoGeoDatastoreClient.COVERAGE_COLLECTION_NAME, ServerGeo.class).withCodecRegistry(codecRegistry);
+		
+		this.coverages.createIndex(new Document("loc", "2dsphere"));
 	}
 
 	/*<T extends Element> MongoCollection<T> getCollection(Class<T> elementSubType) throws IllegalArgumentException {
@@ -73,6 +76,10 @@ public class MongoGeoDatastoreClient {
 	
 	MongoCollection<CoverageGeo> getCoverages() {
 		return this.coverages;
+	}
+	
+	MongoCollection<ServerGeo> getCoveragesWithServerCodec() {
+		return this.serversByCrs;
 	}
 	
 	void close() {
