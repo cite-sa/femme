@@ -22,7 +22,7 @@ public class SemanticDocument {
         this.score = score;
     }
 
-    public static FulltextDocument getFulltextDocument() {
+    public FulltextDocument getFulltextDocument() {
         return fulltextDocument;
     }
 
