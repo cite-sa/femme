@@ -27,13 +27,13 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 			<!--<param-name>jersey.config.server.provider.packages</param-name>-->
 			<!--<param-value>gr.cite.femme.fulltext.application.resources</param-value>-->
 		<!--</init-param>-->
-		<init-param>
+		<!--<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>gr.cite.femme.fulltext.application.exceptions</param-value>
-    	</init-param>
+			<param-value>gr.cite.femme.semantic.search</param-value>
+    	</init-param>-->
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>gr.cite.femme.fulltext.application.FulltextIndexApplication</param-value>
+			<param-value>gr.cite.femme.semantic.search.SemanticSearchApplication</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>

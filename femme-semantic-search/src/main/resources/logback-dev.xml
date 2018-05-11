@@ -6,9 +6,9 @@
 		</encoder>
 	</appender>
 	<logger name="gr.cite.femme.semantic.search" level="INFO" additivity="false">
-		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
 	</logger>
 	<root level="INFO">
-		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

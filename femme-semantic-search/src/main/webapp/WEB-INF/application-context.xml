@@ -7,19 +7,36 @@
 
 	<context:property-placeholder location="WEB-INF/semantic-search.properties.devel" />
 
-	<bean id="semanticSearchResource" class="gr.cite.femme.semantic.search.repository.ElasticsearchRepository">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
+	<!--<bean id="elasticsearchRepository" class="gr.cite.femme.semantic.search.repository.ElasticsearchRepository">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.semantic.index.taxonomies.host}" />
+		<constructor-arg type="int" value="${gr.cite.femme.semantic.index.taxonomies.port}" />
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.semantic.index.taxonomies.name}" />
+	</bean>-->
+
+	<bean id="taxonomyClient" class="gr.cite.femme.semantic.search.config.ElasticsearchClient" destroy-method="close">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.semantic.index.taxonomies.host}" />
+		<constructor-arg type="int" value="${gr.cite.femme.semantic.index.taxonomies.port}" />
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.semantic.index.taxonomies.name}" />
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.semantic.index.taxonomies.type}" />
+	</bean>
+	<bean id="taxonomyRepository" class="gr.cite.femme.semantic.search.TaxonomyRepository" >
+		<constructor-arg ref="taxonomyClient"/>
 	</bean>
 
-	<bean id="elasticsearchClient" class="gr.cite.femme.semantic.search.config.ElasticsearchClient">
+	<!--<bean id="elasticsearchClient" class="gr.cite.femme.semantic.search.config.ElasticsearchClient">
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
 		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
+	</bean>-->
+
+	<!--<bean id="semanticSearchResource" class="gr.cite.femme.semantic.search.resources.SemanticSearchResource" >
+		<constructor-arg ref="taxonomyRepository"/>
 	</bean>
+	<bean id="semanticSearchAdminResource" class="gr.cite.femme.semantic.search.resources.SemanticSearchAdminResource" >
+		<constructor-arg ref="taxonomyRepository"/>
+	</bean>-->
 
 	<context:annotation-config/>
-	<context:component-scan base-package="gr.cite.femme.semantic.search.application"/>
+	<context:component-scan base-package="gr.cite.femme.semantic.search"/>
 
 </beans>

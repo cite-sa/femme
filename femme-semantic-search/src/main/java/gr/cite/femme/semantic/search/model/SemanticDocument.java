@@ -3,7 +3,6 @@ package gr.cite.femme.semantic.search.model;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import gr.cite.femme.fulltext.core.FulltextDocument;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +11,7 @@ import java.util.Map;
 public class SemanticDocument {
 
     private String score;
-    private FulltextDocument fulltextDocument;
+    //private FulltextDocument fulltextDocument;
 
     public String getScore() {
         return score;
@@ -22,11 +21,11 @@ public class SemanticDocument {
         this.score = score;
     }
 
-    public FulltextDocument getFulltextDocument() {
+    /*public FulltextDocument getFulltextDocument() {
         return fulltextDocument;
     }
 
     public void setFulltextDocument(FulltextDocument fulltextDocument) {
         this.fulltextDocument = fulltextDocument;
-    }
+    }*/
 }

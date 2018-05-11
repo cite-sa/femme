@@ -1,3 +1,4 @@
-gr.cite.femme.fulltext.index.host=localhost
-gr.cite.femme.fulltext.index.port=9200
-gr.cite.femme.fulltext.index.name=fulltext_search
+gr.cite.femme.semantic.index.taxonomies.host=localhost
+gr.cite.femme.semantic.index.taxonomies.port=9200
+gr.cite.femme.semantic.index.taxonomies.name=semantic_search
+gr.cite.femme.semantic.index.taxonomies.type=taxonomies
