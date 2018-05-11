@@ -12,6 +12,7 @@ import java.util.List;
 public interface MetadataQueryExecutorBuilder<T extends Element> {
 	FindQueryExecutorBuilder<T> find();
 	FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query);
+	CountQueryExecutorBuilder<T> count();
 	CountQueryExecutorBuilder<T> count(Query<? extends Criterion> query);
 
 	interface FindQueryExecutorBuilder<U extends Element> {

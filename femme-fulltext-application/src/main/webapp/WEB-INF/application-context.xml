@@ -7,20 +7,31 @@
 
 	<context:property-placeholder location="WEB-INF/fulltext.properties.devel" />
 
-	<bean id="fulltextIndexEngine" class="gr.cite.femme.fulltext.engine.FulltextIndexEngine">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
-	</bean>
-
-	<bean id="fulltextIndexResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexResource">
+	<!--<bean id="fulltextIndexResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexResource">
 		<constructor-arg ref="fulltextIndexEngine"/>
 	</bean>
 	<bean id="fulltextIndexAdminResource" class="gr.cite.femme.fulltext.application.resources.FulltextIndexAdminResource">
 		<constructor-arg ref="fulltextIndexEngine"/>
+	</bean>-->
+
+	<bean id="taxonomyClient" class="gr.cite.femme.fulltext.engine.semantic.search.taxonomy.ElasticsearchClient" destroy-method="close">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.host}" />
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.port}" />
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.name}" />
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.type}" />
+	</bean>
+	<bean id="taxonomyRepository" class="gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyRepository" >
+		<constructor-arg ref="taxonomyClient"/>
+	</bean>
+
+	<bean id="fulltextIndexEngine" class="gr.cite.femme.fulltext.engine.FulltextIndexEngine">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.host}"/>
+		<constructor-arg type="int" value="${gr.cite.femme.fulltext.index.port}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.index.name}"/>
+		<constructor-arg ref="taxonomyRepository"/>
 	</bean>
 
 	<context:annotation-config/>
-	<context:component-scan base-package="gr.cite.femme.fulltext.application"/>
+	<context:component-scan base-package="gr.cite.femme.fulltext"/>
 
 </beans>

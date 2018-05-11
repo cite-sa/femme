@@ -51,12 +51,18 @@ public class GeoRequests {
 		server.setCollectionId(collectionId);
 		server.setServerName(collectionName);
 		
-		Response response = webTarget.path("admin/servers").request().post(Entity.entity(server, MediaType.APPLICATION_JSON));
-
-		String id = response.readEntity(String.class);
-		if (response.getStatus() != 200) {
-			//logger.error(femmeResponse.getMessage());
-			throw new FemmeException("Error on inserting server in geo service");
+		String id = null;
+		try {
+			
+			Response response = webTarget.path("admin/servers").request().post(Entity.entity(server, MediaType.APPLICATION_JSON));
+			
+			id = response.readEntity(String.class);
+			if (response.getStatus() != 200) {
+				//logger.error(femmeResponse.getMessage());
+				logger.error("Error on inserting server in geo service");
+			}
+		} catch (Exception e) {
+			logger.error("Error on inserting server in geo service", e);
 		}
 		//logger.debug("CoverageGeo " + femmeResponse.getEntity().getBody() + " has been successfully inserted");
 		return id;

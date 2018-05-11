@@ -36,6 +36,10 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 	public FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query) {
 		return new FindQueryMongoExecutorBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).find(query);
 	}
+	
+	public CountQueryMongoExecutionBuilder<T> count() {
+		return new CountQueryMongoExecutionBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).count();
+	}
 
 	public CountQueryMongoExecutionBuilder<T> count(Query<? extends Criterion> query) {
 		return new CountQueryMongoExecutionBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).count(query);
@@ -128,7 +132,11 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 			this.elementSubtype = elementSubtype;
 			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastore, metadataStore, elementSubtype);
 		}
-
+		
+		public CountQueryMongoExecutionBuilder<T> count() {
+			return this;
+		}
+		
 		public CountQueryMongoExecutionBuilder<T> count(Query<? extends Criterion> query) {
 			this.query = query;
 			return this;
@@ -153,7 +161,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 					preFilteringIds = preFilteringQueryExecutor.find(this.query).options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).list();
 				}
 
-				if (preFilteringIds.size() > 0) {
+				if (this.query == null || preFilteringIds.size() > 0) {
 					this.queryExecutor.xPath(preFilteringIds.stream().map(Element::getId).collect(Collectors.toList()), xPath);
 				} else {
 					return 0;

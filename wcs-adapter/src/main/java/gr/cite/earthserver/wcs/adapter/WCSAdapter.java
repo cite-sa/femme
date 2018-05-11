@@ -91,7 +91,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 		String dataElementId = this.femmeClient.importInCollection(importId, dataElement);
 		dataElement.setId(dataElementId);
 		
-		if (this.geoRequests != null) {
+		if (this.geoRequests != null && serverId != null) {
 			CoverageGeo coverageGeo = null;
 			try {
 				coverageGeo = GeoUtils.convertDataToCoverageGeo(coverage, serverId, dataElement);

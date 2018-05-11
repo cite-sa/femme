@@ -1,0 +1,28 @@
+.data-elements-container {
+	position: relative;
+}
+
+.data-elements-table {
+	width: 100%;
+}
+
+.spinner-container {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(255,255,255,0.8);
+}
+
+.mat-cell {
+	padding: 0px 10px;
+}
+
+.elements-table-row:hover {
+	cursor: pointer;
+	background-color: rgba(0, 0, 0, 0.1);
+	transition: background-color 300ms ease-in-out;
+}
+

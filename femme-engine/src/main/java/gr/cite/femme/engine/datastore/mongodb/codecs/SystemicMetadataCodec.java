@@ -48,22 +48,16 @@ public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
 		if (value.getStatus() != null) {
 			writer.writeInt32(FieldNames.STATUS, value.getStatus().getStatusCode());
 		}
-		if (value.getGeo() != null && value.getGeo().size() > 0) {
+		/*if (value.getGeo() != null && value.getGeo().size() > 0) {
 			writer.writeName("geo");
 			writer.writeStartDocument();
 
 			for (final Map.Entry<String, String> entry : value.getGeo().entrySet()) {
 				writer.writeName(entry.getKey());
-				/*try {*/
-				//encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(mapper.writeValueAsString(entry.getValue())));
 				encoderContext.encodeWithChildContext(this.codecRegistry.get(Document.class), writer, Document.parse(entry.getValue()));
-
-				/*} catch (JsonProcessingException e) {
-					e.printStackTrace();
-				}*/
 			}
 			writer.writeEndDocument();
-		}
+		}*/
 		if (value.getOther() != null && value.getOther().size() > 0) {
 			writer.writeName("other");
 			writer.writeStartDocument();
@@ -118,7 +112,7 @@ public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
 	        	modified = Instant.ofEpochMilli(reader.readDateTime());
 	        } else if (fieldName.equals(FieldNames.STATUS)) {
 				status = Status.getEnum(reader.readInt32());
-			} else if (fieldName.equals("geo")) {
+			/*} else if (fieldName.equals("geo")) {
 				geo = new HashMap<>();
 				reader.readStartDocument();
 				while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -132,8 +126,8 @@ public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
 						geo.put(geoFieldName, value.toJson());
 					}
 				}
-				reader.readEndDocument();
-		} else if (fieldName.equals("other")) {
+				reader.readEndDocument();*/
+			} else if (fieldName.equals("other")) {
 	        	other = new HashMap<>();
 	        	reader.readStartDocument();
 	        	while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -157,7 +151,7 @@ public class SystemicMetadataCodec implements Codec<SystemicMetadata> {
         systemicMetadata.setCreated(created);
 		systemicMetadata.setModified(modified);
 		systemicMetadata.setStatus(status);
-		systemicMetadata.setGeo(geo);
+		//systemicMetadata.setGeo(geo);
 		systemicMetadata.setOther(other);
 
 		//return new SystemicMetadata(id, created, modified, status, other);

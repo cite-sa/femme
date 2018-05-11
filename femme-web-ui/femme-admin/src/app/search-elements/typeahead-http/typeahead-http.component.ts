@@ -1,8 +1,9 @@
 import { FemmeQueryService } from './../../femme-services/femme-query.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators/map';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/debounceTime';
+import { debounceTime } from 'rxjs/operators/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
@@ -51,26 +52,28 @@ export class TypeaheadHttpComponent {
   		// searchFailed = false;
 
 		text$
-		.debounceTime(300)
-		.distinctUntilChanged()
-		.do(() => this.searching = true)
-		.switchMap(term => {
-			console.log("Term: " + term);
-			let fulltextQuery: FulltextQuery;
-			fulltextQuery = new FulltextQuery();
-			fulltextQuery.metadataField = new FulltextField("name", term);
-			return this.femmeService.autocomplete(fulltextQuery)
-				// .subscribe(
-				// 	fulltextResults => this.fulltextResults = fulltextResults,
-				// 	error => this.errorMessage = <any>error);
-				// .do((result) => console.log(result))
-				.do(() => this.searchFailed = false)
-            	.catch(() => {
-              		this.searchFailed = true;
-              		return Observable.of([]);
-            	})
-		})
-		.do(() => this.searching = false);
+		.pipe(
+			debounceTime(300),
+			distinctUntilChanged(),
+			do(() => this.searching = true),
+			switchMap(term => {
+				console.log("Term: " + term);
+				let fulltextQuery: FulltextQuery;
+				fulltextQuery = new FulltextQuery();
+				fulltextQuery.metadataField = new FulltextField("name", term);
+				return this.femmeService.autocomplete(fulltextQuery)
+					// .subscribe(
+					// 	fulltextResults => this.fulltextResults = fulltextResults,
+					// 	error => this.errorMessage = <any>error);
+					// .do((result) => console.log(result))
+					.do(() => this.searchFailed = false)
+					.catch(() => {
+						this.searchFailed = true;
+						return Observable.of([]);
+					})
+			}),
+			do(() => this.searching = false)
+		)
 
 	// search() {
 	// 	let query: FulltextQuery;

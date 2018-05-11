@@ -1,5 +1,8 @@
 package gr.cite.femme.fulltext.core;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class FulltextSearchQueryMessenger {
 	private String elementId;
 	private String metadatumId;
@@ -9,6 +12,7 @@ public class FulltextSearchQueryMessenger {
 	private FulltextField metadataField;
 	private FulltextField autocompleteField;
 	private String allField;
+	private String expand;
 
 	public String getElementId() {
 		return elementId;
@@ -72,5 +76,13 @@ public class FulltextSearchQueryMessenger {
 
 	public void setAllField(String allField) {
 		this.allField = allField;
+	}
+	
+	public String getExpand() {
+		return expand;
+	}
+	
+	public void setExpand(String expand) {
+		this.expand = expand;
 	}
 }

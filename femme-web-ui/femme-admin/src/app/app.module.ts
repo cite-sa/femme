@@ -6,7 +6,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule }   from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, Routes } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { UiSwitchModule } from 'ng2-ui-switch';
 
 import { AppComponent } from './app.component';
@@ -45,8 +44,7 @@ const appRoutes: Routes = [
 		BrowserModule, BrowserAnimationsModule,
 		FormsModule, ReactiveFormsModule,
 		HttpModule,
-		RouterModule.forRoot(appRoutes),
-		NgbModule.forRoot()
+		RouterModule.forRoot(appRoutes)
 	],
 	providers: [FemmeQueryService, ElementsService, MetadataRetrievalService],
 	bootstrap: [AppComponent]

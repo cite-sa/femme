@@ -1,0 +1,16 @@
+<mat-card class="element-card">
+	<mat-card-header>
+		<mat-card-title>
+			<h2>{{ data.element.name }}</h2>
+		</mat-card-title>
+	</mat-card-header>
+	<mat-divider></mat-divider>
+	<mat-card-content>
+		<pre>
+			<code>
+				{{ data.element.metadata[0]?.value | formatXml }}
+			</code>
+		</pre>
+	</mat-card-content>
+</mat-card>
+	  

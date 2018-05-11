@@ -34,8 +34,8 @@ public class SystemicMetadata {
 	@JsonProperty("status")
 	private Status status;
 
-	@JsonProperty("geo")
-	private Map<String, String> geo;
+	/*@JsonProperty("geo")
+	private Map<String, String> geo;*/
 
 	@JsonProperty("other")
 	private Map<String, Object> other;
@@ -83,13 +83,13 @@ public class SystemicMetadata {
 		this.status = status;
 	}
 
-	public Map<String, String> getGeo() {
+	/*public Map<String, String> getGeo() {
 		return geo;
 	}
 
 	public void setGeo(Map<String, String> geo) {
 		this.geo = geo;
-	}
+	}*/
 
 	public Map<String, Object> getOther() {
 		return other;

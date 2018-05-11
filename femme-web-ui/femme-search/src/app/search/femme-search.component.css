@@ -1,0 +1,63 @@
+.femme-search-container {
+	margin: 0px 10px;
+	display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fulltext-search-form {
+	/* width: 100%; */
+	margin: 5px 10px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+
+	flex: 1;
+}
+
+.search-form-field {
+	margin-right: 5px;
+	flex: 1;
+}
+
+.search-form-field-input {
+	line-height: 25px;
+}
+
+.search-filters-button {
+	position: absolute;
+	right: 0;
+	top: -10px;
+}
+
+.expansion-type-selector {
+	width: 7em;
+	margin-left: 5px;
+}
+
+.xpath-form {
+	margin: 5px 10px;
+	flex: 1;
+}
+
+.xpath-form-input {
+	width: 100%;
+}
+
+.field-names {
+	width: 100%;
+	margin-top: 8px;
+	display: flex;
+	align-content: center;
+	align-items: center;
+	position: absolute;
+	z-index: 1;
+	overflow: hidden;
+	background-color: #ffffff;
+	font-size: 11pt;
+	color: rgba(0, 0, 0, 0.6);
+}
+
+.field-names-margin {
+	margin: 0 10px;
+}

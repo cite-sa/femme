@@ -1,0 +1,27 @@
+{
+	"mappings": {
+		"elements": {
+			"dynamic_templates": [
+				{
+					"strings": {
+						"match_mapping_type": "string",
+						"mapping": {
+							"type": "text",
+							"copy_to": "all_fields"
+						}
+					}
+				}
+			],
+			"properties": {
+				"elementId": {
+					"type": "keyword",
+					"index": true
+				},
+				"metadatumId": {
+					"type": "keyword",
+					"index": true
+				}
+			}
+		}
+	}
+}

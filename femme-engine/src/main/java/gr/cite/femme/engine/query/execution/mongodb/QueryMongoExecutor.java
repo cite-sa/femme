@@ -109,9 +109,9 @@ public class QueryMongoExecutor<T extends Element> implements QueryExecutor<T> {
 
 	@Override
 	public long count(Query<? extends Criterion> query) {
-		//totalQueryStart = System.currentTimeMillis();
-		this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
-		//logger.debug("Query: " + queryDocument.toJson());
+		if (query != null) {
+			this.queryDocument = postProcessQuery((QueryMongo) query, datastore);
+		}
 
 		return this.collection.count(
 				this.queryDocument == null

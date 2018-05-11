@@ -8,6 +8,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
@@ -92,6 +93,7 @@ public class ElasticFulltextIndexClient {
 	}
 
 	public void createIndex(String indexName, String mapping) throws FemmeFulltextException {
+		//CreateIndexRequest request = new CreateIndexRequest(indexName);
 		try {
 			this.client.performRequest("PUT", "/" + indexName, Collections.emptyMap(), new NStringEntity(mapping, ContentType.APPLICATION_JSON));
 		} catch (IOException e) {
@@ -359,7 +361,6 @@ public class ElasticFulltextIndexClient {
 					Charset.defaultCharset()), ElasticResponseContent.class);
 
 			return content.getHits().getHits();
-			//response.
 		} catch (IOException e) {
 			throw new FemmeFulltextException("Search failed [" + query + "]", e);
 		}
