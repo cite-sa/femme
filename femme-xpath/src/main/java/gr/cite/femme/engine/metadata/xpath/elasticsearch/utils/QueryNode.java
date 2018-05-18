@@ -19,11 +19,11 @@ public class QueryNode {
 			this.operator = operator;
 		}
 
-		public String getOperationString() {
+		public String getOperator() {
 			return this.operator;
 		}
 
-		public static Operator getOperationEnum(String operator) {
+		public static Operator getOperator(String operator) {
 			switch (operator) {
 				case "=":
 					return Operator.EQUALS;
@@ -49,7 +49,9 @@ public class QueryNode {
 	private String value;
 	
 	private boolean isPredicateNode = false;
+	private boolean isProjectionNode = false;
 	private List<FilterNode> filterNodes = new ArrayList<>();
+	private FilterNodesExpression filterNodesExpression = new FilterNodesExpression();
 
 	private List<String> metadataSchemaIds;
 	private boolean isArray;
@@ -95,12 +97,28 @@ public class QueryNode {
 		this.value = value;
 	}
 	
-	public List<FilterNode> getFilterNodes() {
+	public boolean isProjectionNode() {
+		return isProjectionNode;
+	}
+	
+	public void setProjectionNode(boolean projectionNode) {
+		isProjectionNode = projectionNode;
+	}
+	
+	/*public List<FilterNode> getFilterNodes() {
 		return filterNodes;
 	}
 	
 	public void setFilterNodes(List<FilterNode> filterNodes) {
 		this.filterNodes = filterNodes;
+	}
+	*/
+	public FilterNodesExpression getFilterNodesExpression() {
+		return filterNodesExpression;
+	}
+	
+	public void setFilterNodesExpression(FilterNodesExpression filterNodesExpression) {
+		this.filterNodesExpression = filterNodesExpression;
 	}
 	
 	public List<String> getMetadataSchemaIds() {

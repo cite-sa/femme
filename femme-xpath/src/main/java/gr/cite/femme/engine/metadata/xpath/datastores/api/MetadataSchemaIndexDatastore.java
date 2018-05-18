@@ -1,9 +1,7 @@
 package gr.cite.femme.engine.metadata.xpath.datastores.api;
 
-import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +16,8 @@ public interface MetadataSchemaIndexDatastore {
 	public Map<String, List<String>> findMetadataIndexPathByRegexAndGroupById(String regex);
 
 	public List<MetadataSchema> findArrayMetadataIndexPaths();
+	
+	public List<MetadataSchema> findArrayMetadataIndexPaths(List<String> ids, String pathPrefix);
 
 	public List<MetadataSchema> findArrayMetadataIndexPathsByRegex(String regex);
 

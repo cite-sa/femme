@@ -2,6 +2,7 @@ package gr.cite.femme.engine.metadata.xpath.parser.visitors;
 
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.FilterNode;
+import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.FilterNodesExpression;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Node;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
@@ -11,7 +12,9 @@ import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
 import java.util.*;
 
 public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
-
+	private static final String ATTRIBUTE = "@";
+	private static final String TEXT = "text()";
+	
 	private MetadataSchemaIndexDatastore metadataSchemaDatastore;
 	private QueryNode filterBuilder;
 	private Tree<QueryNode> queryTree;
@@ -22,6 +25,8 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 	private boolean attributeMode = false;
 	private boolean textPredicateMode = false;
 	private boolean andExprMode = false;
+	private boolean orExprMode = false;
+	private boolean predicateEvaluated = false;
 
 	public MongoXPathVisitor(MetadataSchemaIndexDatastore metadataSchemaDatastore) {
 		this.metadataSchemaDatastore = metadataSchemaDatastore;
@@ -67,7 +72,7 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 				} else {
 					this.filterBuilder.getNodePath().append("\\.*");
 				}
-			} else if ("text()".equals(ctx.getChild(i).getText())) {
+			} else if (TEXT.equals(ctx.getChild(i).getText())) {
 				this.currentLevelNodes.forEach(node -> {
 					if (predicateMode) {
 						this.filterBuilder.getFilterPath().append("#text");
@@ -101,18 +106,24 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 						this.metadataSchemaDatastore.findMetadataIndexPathByRegexAndGroupById("(?:\\.|^)(" + node.getData().getNodePath().toString() + this.filterBuilder.getNodePath().toString() + ")$")
 								.forEach((path, ids) -> {
 									QueryNode childNodeData = new QueryNode();
+									
 									childNodeData.setNodePath(new StringBuilder(path));
 									childNodeData.setFilterPath(new StringBuilder(this.filterBuilder.getFilterPath()));
 									childNodeData.setOperator(this.filterBuilder.getOperator());
 									childNodeData.setValue(this.filterBuilder.getValue());
 									
-									childNodeData.setFilterNodes(this.filterBuilder.getFilterNodes());
+									/*childNodeData.getFilterNodesExpression().setFilterNodes(this.filterBuilder.getFilterNodesExpression().getFilterNodes());
+									childNodeData.getFilterNodesExpression().setOperator(childNodeData.getFilterNodesExpression().getOperator());*/
+									childNodeData.setFilterNodesExpression(this.filterBuilder.getFilterNodesExpression());
 
 									childNodeData.setMetadataSchemaIds(ids);
+									
+									childNodeData.setProjectionNode(this.predicateEvaluated);
 
 									Node<QueryNode> childNode = new Node<>();
 									childNode.setData(childNodeData);
 									node.addChild(childNode);
+									
 									newLevelNodes.add(childNode);
 
 								});
@@ -125,6 +136,15 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 					this.currentLevelNodes = newLevelNodes;
 					this.filterBuilder = new QueryNode();
 
+				} else if (this.predicateEvaluated) {
+					this.currentLevelNodes.forEach(node -> {
+						if (predicateMode) {
+							this.filterBuilder.getFilterPath().append("#text");
+						} else {
+							node.getData().getNodePath().append(".#text");
+							node.getData().setFilterPayload(true);
+						}
+					});
 				} else {
 					// TODO multiple filter paths (node1[node2//node3='value'])
 					//if (this.andExprMode) this.filterBuilder = new QueryNode();
@@ -154,11 +174,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 	@Override
 	public Tree<QueryNode> visitAxisSpecifier(XPathParser.AxisSpecifierContext ctx) {
 		if (predicateMode) {
-			if ("@".equals(ctx.getText())) {
-				this.filterBuilder.getFilterPath().append("@.");
+			if (ATTRIBUTE.equals(ctx.getText())) {
+				this.filterBuilder.getFilterPath().append(ATTRIBUTE + ".");
 			}
 		} else {
-			if ("@".equals(ctx.getText())) {
+			if (ATTRIBUTE.equals(ctx.getText())) {
 				this.currentLevelNodes.forEach(node -> {
 					node.getData().getNodePath().append(".").append(ctx.getText()).append(".");
 				});
@@ -171,9 +191,9 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
 	@Override
 	public Tree<QueryNode> visitNodeTest(XPathParser.NodeTestContext ctx) {
-		if (attributeMode) {
+		if (this.attributeMode) {
 			this.currentLevelNodes.forEach(node -> node.getData().getNodePath().append(ctx.getText()));
-			attributeMode = false;
+			this.attributeMode = false;
 		}
 		visitChildren(ctx);
 		return this.queryTree;
@@ -181,9 +201,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 
 	@Override
 	public Tree<QueryNode> visitPredicate(XPathParser.PredicateContext ctx) {
-		predicateMode = true;
+		this.predicateMode = true;
 		visitChildren(ctx);
-		predicateMode = false;
+		this.predicateMode = false;
+		
+		this.predicateEvaluated = true;
 
 		return this.queryTree;
 	}
@@ -192,7 +214,6 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 	public Tree<QueryNode> visitAndExpr(XPathParser.AndExprContext ctx) {
 		if (ctx.getChildCount() > 1) this.andExprMode = true;
 		
-		if (ctx.getChildCount() > 1) this.andExprMode = false;
 		for (int i = 0; i < ctx.getChildCount(); i ++) {
 			visit(ctx.getChild(i));
 			
@@ -202,14 +223,25 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 				filterNode.setOperator(this.filterBuilder.getOperator());
 				filterNode.setValue(this.filterBuilder.getValue());
 				
-				this.filterBuilder.getFilterNodes().add(filterNode);
-				System.out.println(this.filterBuilder.getFilterPath().toString());
-				
+				this.filterBuilder.getFilterNodesExpression().getFilterNodes().add(filterNode);
 				this.filterBuilder.setFilterPath(new StringBuilder());
 				this.filterBuilder.setOperator(null);
 				this.filterBuilder.setValue(null);
 			}
 		}
+		
+		this.filterBuilder.getFilterNodesExpression().setOperator(FilterNodesExpression.FilterNodesOperator.AND);
+		
+		if (ctx.getChildCount() > 1) this.andExprMode = false;
+		
+		return this.queryTree;
+	}
+	
+	@Override
+	public Tree<QueryNode> visitOrExpr(XPathParser.OrExprContext ctx) {
+		visitChildren(ctx);
+		
+		if (ctx.getChildCount() > 1) this.filterBuilder.getFilterNodesExpression().setOperator(FilterNodesExpression.FilterNodesOperator.OR);
 		
 		return this.queryTree;
 	}
@@ -219,11 +251,12 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 		if (predicateMode) {
 			String operator = null;
 			for (int i = 0; i < ctx.getChildCount(); i++) {
-				if ("=".equals(ctx.getChild(i).getText()) || "!=".equals(ctx.getChild(i).getText())) {
+				if (QueryNode.Operator.EQUALS.getOperator().equals(ctx.getChild(i).getText()) ||
+						QueryNode.Operator.NOT_EQUALS.getOperator().equals(ctx.getChild(i).getText())) {
 					operator = ctx.getChild(i).getText();
 				}
 			}
-			this.filterBuilder.setOperator(QueryNode.Operator.getOperationEnum(operator));
+			this.filterBuilder.setOperator(QueryNode.Operator.getOperator(operator));
 		}
 		visitChildren(ctx);
 		return this.queryTree;

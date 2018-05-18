@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDatastore {
 	private static final Logger logger = LoggerFactory.getLogger(MongoMetadataSchemaIndexDatastore.class);
@@ -117,6 +118,23 @@ public class MongoMetadataSchemaIndexDatastore implements MetadataSchemaIndexDat
 				Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
 		)).into(metadataSchemas);
 
+		return metadataSchemas;
+	}
+	
+	@Override
+	public List<MetadataSchema> findArrayMetadataIndexPaths(List<String> ids, String pathPrefix) {
+		List<MetadataSchema> metadataSchemas = new ArrayList<>();
+		List<ObjectId> objectIds = ids.stream().map(ObjectId::new).collect(Collectors.toList());
+		
+		this.schemasCollection.aggregate(Arrays.asList(
+			Aggregates.match(Filters.and(Filters.eq("schema.array", true), Filters.in("_id", objectIds))),
+			Aggregates.unwind("$schema"),
+			Aggregates.match(Filters.and(Filters.eq("schema.array", true))),
+			Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
+		)).into(metadataSchemas);
+		
+		//Filters.regex("schema.path", "^" + pathPrefix + ".*$")
+		
 		return metadataSchemas;
 	}
 
