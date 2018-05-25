@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import gr.cite.earthserver.wcs.geo.GeoUtils;
+import gr.cite.femme.core.model.ElementType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,8 @@ public final class WCSFemmeMapper {
 	public static Collection fromServer(String endpoint, String name, WCSResponse response) throws ParseException {
 		/*Collection.Builder collectionBuilder = Collection.builder();*/
 		Collection collection = new Collection();
-
+		
+		collection.setType(ElementType.WCS);
 		/*collectionBuilder.endpoint(endpoint);*/
 		collection.setEndpoint(endpoint);
 		
@@ -51,10 +53,13 @@ public final class WCSFemmeMapper {
 	public static DataElement fromCoverage(WCSResponse response) throws ParseException {
 		DataElement dataElement = new DataElement();
 
+		dataElement.setType(ElementType.WCS);
 		dataElement.setName(WCSParseUtils.getCoverageId(response.getResponse()));
 		dataElement.setEndpoint(response.getEndpoint());
 
 		dataElement.getMetadata().add(WCSFemmeMapper.fromWCSMetadata(response, DESCRIBE_COVERAGE));
+		
+		
 
 		return dataElement;
 	}

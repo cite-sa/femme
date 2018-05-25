@@ -1,19 +1,18 @@
 package gr.cite.femme.geo.engine.mongodb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Polygon;
 import com.mongodb.client.model.geojson.Position;
-import gr.cite.femme.core.datastores.Datastore;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.core.geo.ServerGeo;
+import gr.cite.femme.geo.core.GeoJson;
 import gr.cite.femme.geo.mongodb.codecs.CoverageGeoCodec;
 import gr.cite.femme.geo.mongodb.codecs.ServerGeoCodec;
 import gr.cite.femme.geo.utils.GeoUtils;
@@ -180,6 +179,16 @@ public class MongoGeoDatastore {
 		}
 	}
 	
+	public List<CoverageGeo> getCoveragesByIds(List<String> ids) throws DatastoreException {
+		try {
+			return this.mongoClient.getCoverages().find(Filters.or(
+				ids.stream().map(id -> Filters.eq(CoverageGeoCodec.ID, generateId(id))).collect(Collectors.toList())
+			)).into(new ArrayList<>());
+		} catch (Exception e) {
+			throw new DatastoreException(e);
+		}
+	}
+	
 	public CoverageGeo getCoverageGeoById(String id) throws DatastoreException {
 		try {
 			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.ID, generateId(id))).projection(Projections.include(CoverageGeoCodec.LOC)).first();
@@ -198,7 +207,7 @@ public class MongoGeoDatastore {
 	
 	public CoverageGeo getCoverageByName(String name) throws DatastoreException {
 		try {
-			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.COVERAGE_NAME, name)).first();
+			return this.mongoClient.getCoverages().find(Filters.eq(CoverageGeoCodec.NAME, name)).first();
 		} catch (Exception e) {
 			throw new DatastoreException(e);
 		}
@@ -218,6 +227,17 @@ public class MongoGeoDatastore {
 	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) {
 		Point refPoint = new Point(new Position(longitude, latitude));
 		return this.mongoClient.getCoverages().find(Filters.near(CoverageGeoCodec.LOC, refPoint, radius, radius)).into(new ArrayList<>());
+	}
+	
+	public List<CoverageGeo> getCoveragesIntersectingOrWithin(GeoJson bbox) {
+		List<Position> positions = bbox.getCoordinates().get(0).stream().map(Position::new).collect(Collectors.toList());
+		Polygon polygon = new Polygon(positions);
+		return this.mongoClient.getCoverages().find(
+			Filters.or(
+				Filters.geoIntersects(CoverageGeoCodec.LOC, polygon),
+				Filters.geoWithin(CoverageGeoCodec.LOC, polygon)
+			)
+		).into(new ArrayList<>());
 	}
 	
 	public List<CoverageGeo> getCoveragesByServerId(String serverId) {

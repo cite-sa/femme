@@ -1,31 +1,53 @@
 {
-  "fulltext": {
-    "map": [
-      {
-        "format": "xml",
-        "query": "//wcs:CoverageId/text()",
-        "name": "name",
-        "type": "string",
-        "array": false
-      }
-    ]
-  },
-  "geo": {
-    "map": [
-      {
-        "format": "xml",
-        "query": "//*[local-name()='lowerCorner']/text()",
-        "name": "lowerCorner",
-        "type": "string",
-        "array": false
-      },
-      {
-        "format": "xml",
-        "query": "//*[local-name()='upperCorner']/text()",
-        "name": "upperCorner",
-        "type": "string",
-        "array": false
-      }
-    ]
-  }
+	"FULLTEXT": {
+		"WCS": {
+			"map": [
+				{
+					"format": "xml",
+					"query": "//wcs:CoverageId/text()",
+					"name": "name",
+					"type": "string",
+					"array": false
+				}
+			]
+		},
+		"OAIPMH": {
+			"map": [
+				{
+					"format": "xml",
+					"query": "/*[local-name()='dc']//*[local-name()='title']/text()",
+					"name": "title",
+					"type": "string",
+					"array": false
+				},
+				{
+					"format": "xml",
+					"query": "/*[local-name()='dc']//*[local-name()='creator']/text()",
+					"name": "creator",
+					"type": "string",
+					"array": false
+				}
+			]
+		}
+	},
+	"GEO": {
+		"WCS": {
+			"map": [
+				{
+					"format": "xml",
+					"query": "//*[local-name()='lowerCorner']/text()",
+					"name": "lowerCorner",
+					"type": "string",
+					"array": false
+				},
+				{
+					"format": "xml",
+					"query": "//*[local-name()='upperCorner']/text()",
+					"name": "upperCorner",
+					"type": "string",
+					"array": false
+				}
+			]
+		}
+	}
 }

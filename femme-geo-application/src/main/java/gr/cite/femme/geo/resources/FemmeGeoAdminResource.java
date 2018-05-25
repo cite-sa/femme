@@ -62,7 +62,7 @@ public class FemmeGeoAdminResource {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			throw new WebApplicationException("Error inserting coverage [" + coverage.getCoverageName() + "]", e);
+			throw new WebApplicationException("Error inserting coverage [" + coverage.getName() + "]", e);
 		}
 	}
 }

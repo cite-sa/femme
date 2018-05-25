@@ -10,8 +10,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<!--<module>../femme-core</module>-->
-		<module>../femme-geo-engine</module>
 		<module>../femme-geo-application</module>
 	</modules>
 

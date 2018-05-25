@@ -44,7 +44,7 @@ public class FulltextIndexEngine {
 		this.indexClient = new ElasticFulltextIndexClient(host, port);
 		this.indexName = indexName;
 		this.taxonomyRepository = taxonomyRepository;
-		this.mappingsConfiguration = Resources.toString(Resources.getResource("elasticsearch-mappings-config.json"), StandardCharsets.UTF_8);
+		this.mappingsConfiguration = Resources.toString(Resources.getResource("elasticsearch-mappings.json"), StandardCharsets.UTF_8);
 	}
 
 	public void insert(FulltextDocument doc) throws FemmeFulltextException, IOException {

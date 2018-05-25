@@ -4,10 +4,10 @@
 		<mat-button-toggle value="XPath">XPath</mat-button-toggle>
 	</mat-button-toggle-group>
 	
-	<form class="fulltext-search-form" *ngIf="group.value=='Search'">
+	<form class="fulltext-search-form" *ngIf="group.value=='Search'" (ngSubmit)="fulltextQuery()">
 		<mat-form-field class="search-form-field">
 			<input class ="search-form-field-input"type="text" [placeholder]="group.value" aria-label="Number" matInput [formControl]="searchTerm" [matAutocomplete]="auto">
-			<button mat-icon-button class="search-filters-button" (click)="filterButtonClick($event)">
+			<button mat-icon-button class="search-filters-button" type="button" (click)="filterButtonClick($event)">
 				<mat-icon aria-label="Filters">filter_list</mat-icon>
 			</button>
 			<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)">
@@ -19,7 +19,7 @@
 				</mat-option> -->
 				<div *ngFor="let result of searchResults | async">
 					<mat-option *ngIf="!result.semantic" [value]="result">
-						{{ result.fulltext[defaultFieldShown] }}
+						{{ result | extractFulltextFields }}
 					</mat-option>
 					<div *ngIf="result.semantic">
 						<mat-optgroup [label]="result.fulltext[defaultFieldShown]">

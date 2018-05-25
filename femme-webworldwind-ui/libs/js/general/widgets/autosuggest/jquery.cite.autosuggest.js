@@ -134,8 +134,6 @@
 						if (limit === false) limit = null;
 						self.loadedItems = {};
 						eval(self.getRetrieveSuggestionsCallback()).call(self, text, self.currentFilters, limit, function(items) {
-							console.log("ITEMS");
-							console.log(items);
 							items = self.addEmptyOptionToList(items);
 							var formattedItems = self.formatSuggestions(items);
 							var vProp = self.getSelectionValueProperty();
@@ -143,9 +141,6 @@
 								if (items[i][vProp])
 									self.loadedItems[items[i][vProp]] = items[i];
 							}
-							console.log("FROMATTED ITEMS");
-							console.log(formattedItems);
-							console.log(callback);
 							callback(formattedItems);
 						});
 					}

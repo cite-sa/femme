@@ -6,6 +6,7 @@ import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyRepository
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
@@ -13,14 +14,14 @@ public class FullTextEngineTest {
 	private FulltextIndexEngine engine;
 
 	@Before
-	public void init() throws UnknownHostException {
+	public void init() throws IOException {
 		ElasticsearchClient elasticsearchClient = new ElasticsearchClient("localhost", 9200, "semantic_search", "taxonomies");
 		TaxonomyRepository taxonomyRepository = new TaxonomyRepository(elasticsearchClient);
 		this.engine = new FulltextIndexEngine("localhost", 9200, "fulltext_search", taxonomyRepository);
 	}
 
 	@Test
-	public void testInsert() throws FemmeFulltextException {
+	public void testInsert() throws FemmeFulltextException, IOException {
 		FulltextDocument doc = new FulltextDocument();
 		doc.setElementId(UUID.randomUUID().toString());
 		doc.setMetadatumId(UUID.randomUUID().toString());

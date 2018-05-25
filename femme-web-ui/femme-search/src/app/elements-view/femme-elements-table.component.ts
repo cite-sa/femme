@@ -1,13 +1,15 @@
-import { FemmeQuery } from './../models/femme-query';
 import { Component, OnInit, ViewChild, AfterViewInit, Input } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { DataSource } from '@angular/cdk/collections';
-
-import { DataElement } from '@app/models/data-element';
-import { FemmeService } from '@app/services/femme.service';
-import { catchError, finalize, tap } from 'rxjs/operators';
 import { MatPaginator, MatDialog } from '@angular/material';
+
+import { catchError, finalize, tap } from 'rxjs/operators';
+
 import { FemmeElementDialogComponent } from '@app/elements-view/femme-element-dialog.component';
+import { FemmeService } from '@app/services/femme.service';
+import { Collection } from '@app/models/collection';
+import { DataElement } from '@app/models/data-element';
+import { FemmeQuery } from '@app/models/femme-query';
 
 @Component({
 	selector: 'femme-elements-table',
@@ -29,7 +31,7 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 	constructor(private femmeService: FemmeService, private dialog: MatDialog) { }
 
 	ngOnInit() {
-		this.dataSource.loadDataElements(0, 10);
+		// this.dataSource.loadDataElements(0, 10);
 		this.query.subscribe(q => this.loadDataElementsPage(q));
 	}
 
@@ -40,24 +42,33 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 	}
 
 	loadDataElementsPage(query?: FemmeQuery) {
-		if (query) {
-			if (query.xpath) {
-				let xpath = query ? query.xpath : undefined;
-				this.getTotalDataElements(xpath);
-			} else if (query.ids) {
-				this.totalSubject.next(query.ids.length)
-			} else {
-				this.getTotalDataElements();
-			}
-		}
-
-        this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, query);
+		this.getDataElementCount(query, () => this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, query));
+		console.log("pageIndex: " + this.paginator.pageIndex + ", pageSize: " + this.paginator.pageSize);
+        // this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, query);
 	}
 
-	getTotalDataElements(xpath?: string) {
+	private getDataElementCount(query?: FemmeQuery, dataElementsQueryCallback?: Function) {
+		if (query != undefined) {
+			if (query.xpath != undefined && query.xpath != "") {
+				this.getTotalDataElements(query.xpath, dataElementsQueryCallback);
+			} else if (query.ids != undefined && query.ids.length > 0) {
+				this.totalSubject.next(query.ids.length)
+				dataElementsQueryCallback();
+			} else {
+				this.getTotalDataElements(undefined, dataElementsQueryCallback);
+			}
+		} else {
+			this.getTotalDataElements(undefined, dataElementsQueryCallback);
+		}
+	}
+
+	getTotalDataElements(xpath?: string, dataElementsQueryCallback?: Function) {
 		this.femmeService.countDataElements(xpath).pipe(
 			catchError(() => of(0)),
-		).subscribe(total => this.totalSubject.next(total));
+		).subscribe(total => {
+			this.totalSubject.next(total);
+			dataElementsQueryCallback();
+		});
 	}
 
 	openElementDialog(element: DataElement) {
@@ -99,6 +110,15 @@ export class FemmeDataSource extends DataSource<DataElement> {
 		this.femmeService.getDataElements(offset, limit, query).pipe(
 			catchError(() => of([])),
 			finalize(() => this.loadingSubject.next(false))
-		).subscribe(dataElements => this.dataElementsSubject.next(dataElements));
+		).subscribe((dataElements: DataElement[]) => {
+			dataElements.forEach((dataElement: DataElement) => {
+				dataElement.collections.forEach(dataElementCollection => {
+					this.femmeService.getCollection(dataElementCollection.id).subscribe(collection => {
+						dataElementCollection.name = collection.name;
+					})
+				})
+			})
+			this.dataElementsSubject.next(dataElements);
+		});
 	}
 }

@@ -4,7 +4,8 @@ import com.google.common.io.Resources;
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.engine.FulltextIndexEngine;
 import gr.cite.femme.fulltext.engine.FemmeFulltextException;
-import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyParser;
+import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyParserSkosApi;
+import org.elasticsearch.common.Strings;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.semanticweb.skos.SKOSCreationException;
@@ -21,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 @Component
@@ -49,10 +51,11 @@ public class FulltextIndexAdminResource {
 		try {
 			this.engine.insert(doc);
 			logger.info(doc.getElementId() + " successfully indexed");
-		} catch (FemmeFulltextException e) {
+		} catch (IOException | FemmeFulltextException e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e);
 		}
+		
 		return Response.ok("done").build();
 	}
 
@@ -91,13 +94,24 @@ public class FulltextIndexAdminResource {
 	
 	@POST
 	@Path("taxonomies")
-	public Response enableTaxonony(@QueryParam("enable") String taxonomyName) {
-		TaxonomyParser parser;
+	public Response enableTaxonony(@QueryParam("enable") String taxonomyName, @QueryParam("uri") URI uri) {
+		URI taxonomyUri = null;
+		TaxonomyParserSkosApi parser;
 		try {
-			parser = new TaxonomyParser(Resources.getResource(taxonomyName).toURI());
+			if (!Strings.isNullOrEmpty(taxonomyName)) {
+				taxonomyUri = Resources.getResource(taxonomyName).toURI();
+			} else if (uri != null) {
+				taxonomyUri = uri;
+			}
+			
+			if (taxonomyUri != null) {
+				parser = new TaxonomyParserSkosApi(taxonomyUri);
+			} else {
+				throw new WebApplicationException("Error while parsing taxonomy");
+			}
 		} catch (URISyntaxException | SKOSCreationException e) {
 			logger.error(e.getMessage(), e);
-			throw new WebApplicationException("Error while parsing taxonomy [" + taxonomyName + "]", e);
+			throw new WebApplicationException("Error while parsing taxonomy", e);
 		}
 		this.engine.storeConcepts(parser.parse());
 		return Response.ok("taxonomies").build();
@@ -128,9 +142,9 @@ public class FulltextIndexAdminResource {
 			throw new WebApplicationException("Error while uploading file [" + taxonomyFileDetails.getFileName() + "]" + ". Please try again");
 		}
 		
-		TaxonomyParser parser;
+		TaxonomyParserSkosApi parser;
 		try {
-			parser = new TaxonomyParser(tempTaxonomyFile.toURI());
+			parser = new TaxonomyParserSkosApi(tempTaxonomyFile.toURI());
 		} catch (Exception e) {
 			tempTaxonomyFile.delete();
 			logger.error(e.getMessage(), e);

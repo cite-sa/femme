@@ -15,6 +15,7 @@ import { FemmeService } from "@app/services/femme.service";
 import { FemmeElementDialogComponent } from '@app/elements-view/femme-element-dialog.component';
 import { FemmeElementsTableComponent } from "@app/elements-view/femme-elements-table.component";
 import { MatDialogContainer } from "@angular/material";
+import { ExtractFulltextFieldsPipe } from './search/extract-fulltext-fields.pipe';
 import { FormatXmlPipe } from "@app/elements-view/format-xml.pipe";
 
 @NgModule({
@@ -24,6 +25,7 @@ import { FormatXmlPipe } from "@app/elements-view/format-xml.pipe";
 		FemmeSearchComponent,
 		FemmeElementsTableComponent,
 		FemmeElementDialogComponent,
+		ExtractFulltextFieldsPipe,
 		FormatXmlPipe
 	],
 	imports: [

@@ -1,12 +1,10 @@
 package gr.cite.femme.engine;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import gr.cite.commons.pipeline.ProcessingPipeline;
 import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
-import gr.cite.commons.pipeline.config.PipelineConfiguration;
 import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
 import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
 import gr.cite.femme.core.datastores.Datastore;
@@ -24,6 +22,8 @@ import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
+import gr.cite.femme.engine.pipeline.config.DatastoreType;
+import gr.cite.femme.engine.pipeline.config.PipelineTypesConfiguration;
 import gr.cite.femme.engine.query.construction.mongodb.CriterionBuilderMongo;
 import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
@@ -37,21 +37,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class Femme {
 	private static final Logger logger = LoggerFactory.getLogger(Femme.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private static final String PIPELINE_CONFIG_FILE = "pipeline-config.json";
-	private static final String FULLTEXT_PIPELINE_CONFIG = "fulltext";
-	private static final String GEO_PIPELINE_CONFIG = "geo";
 
 	private Datastore datastore;
 	private MetadataStore metadataStore;
 	private FulltextIndexClientAPI fulltextClient;
 
-	private Map<String, PipelineConfiguration> pipelineConfiguration;
+	private PipelineTypesConfiguration pipelineConfiguration;
 	
 	@Inject
 	public Femme(Datastore datastore, MetadataStore metadataStore) throws IOException {
@@ -59,9 +56,7 @@ public class Femme {
 		this.metadataStore = metadataStore;
 
 		String config = Resources.toString(Resources.getResource(Femme.PIPELINE_CONFIG_FILE), Charsets.UTF_8);
-		if (!config.trim().isEmpty()) {
-			this.pipelineConfiguration = mapper.readValue(config, new TypeReference<Map<String, PipelineConfiguration>>() {});
-		}
+		this.pipelineConfiguration = new PipelineTypesConfiguration(config);
 	}
 	
 	@Inject
@@ -366,9 +361,8 @@ public class Femme {
 	}
 
 	private void insertInFulltextIndex(Element element) {
-		if (this.pipelineConfiguration != null) {
-			ProcessingPipeline pipeline;
-			pipeline = new ProcessingPipeline(this.pipelineConfiguration.get(Femme.FULLTEXT_PIPELINE_CONFIG));
+		if (! this.pipelineConfiguration.isEmpty()) {
+			ProcessingPipeline pipeline = new ProcessingPipeline(this.pipelineConfiguration.getConfigurationForDatastoreTypeAndElementType(DatastoreType.FULLTEXT, element.getType()));
 
 			for (Metadatum metadatum : element.getMetadata()) {
 				try {

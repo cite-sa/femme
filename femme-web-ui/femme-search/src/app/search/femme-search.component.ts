@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter, HostListener } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, map } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 import { FemmeSearchService } from '@app/services/femme-search.service';
@@ -54,27 +54,50 @@ export class FemmeSearchComponent {
 		this.searchTerm.valueChanges.pipe(
 			debounceTime(400) 
 		).subscribe(term => {
-			this.searchResults = this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined);
+			if (typeof term === "string") {
+				this.searchResults = this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined);
+			}
 		});
 	}
 
 	elementToDisplayValue(element: FulltextSearchResult) {
-		if (element) {		
-			return element.fulltext["name"];
+		if (element != undefined) {
+			let propertyNames: string[] = Object.getOwnPropertyNames(element.fulltext);
+			let projectedFields =  propertyNames.filter(propertyName => (propertyName != "metadatumId") && (propertyName != "elementId"));
+			return projectedFields.map(field => element.fulltext[field]).join(" - ");
 		}
 	}
 
 	selectFromAutocomplete(event: MatAutocompleteSelectedEvent) {
-		let searchResult: FulltextSearchResult = event.option.value;
+		this.emitQueryEvent([event.option.value.fulltext.elementId]);
+	}
 
-		let query = new FemmeQuery();
-		query.ids = [searchResult.fulltext.elementId];
-		this.queryEvent.emit(query);
+	fulltextQuery() {
+		let term: string = this.searchTerm.value;
+
+		if (term == undefined && term == "") {
+			this.emitQueryEvent();
+		} else {
+			this.searchByTerm(term);
+		}
+	}
+
+	private searchByTerm(term: string) {
+		this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined)
+				.pipe(
+					map(results => results.map(result => result.fulltext.elementId))
+				).subscribe(ids => this.emitQueryEvent(ids));
 	}
 
 	xpathQuery() {
+		this.emitQueryEvent(undefined, this.xpathTerm.value);
+	}
+
+	private emitQueryEvent(ids?: string[], xpath?: string): void {
 		let query = new FemmeQuery();
-		query.xpath = this.xpathTerm.value;
+		query.ids = ids;
+		query.xpath = xpath;
+
 		this.queryEvent.emit(query);
 	}
 
@@ -83,7 +106,9 @@ export class FemmeSearchComponent {
 	}
 
 	filterButtonClick(event: any) {
-		event.stopPropagation();
-		this.showFields = this.showFields === 'hide' ? 'show' : 'hide';
+		if (event.which !== 1) {
+			event.stopPropagation();
+			this.showFields = this.showFields === 'hide' ? 'show' : 'hide';
+		}
 	}
 }

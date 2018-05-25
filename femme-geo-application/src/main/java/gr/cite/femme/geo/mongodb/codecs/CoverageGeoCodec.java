@@ -22,7 +22,7 @@ import java.time.Instant;
 
 public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 	public static final String ID = "_id";
-	public static final String COVERAGE_NAME = "coverageName";
+	public static final String NAME = "name";
 	public static final String CREATED = "created";
 	public static final String MODIFIED = "modified";
 	public static final String SERVER_ID = "serverId";
@@ -48,8 +48,9 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		
 		if (coverageGeo.getId() != null) {
 			writer.writeObjectId(ID, new ObjectId(coverageGeo.getId()));
-		} else if (coverageGeo.getCoverageName() != null) {
-			writer.writeString(COVERAGE_NAME, coverageGeo.getCoverageName());
+		}
+		if (coverageGeo.getName() != null) {
+			writer.writeString(NAME, coverageGeo.getName());
 		}
 		if (coverageGeo.getCreated() != null) {
 			writer.writeDateTime(CREATED, coverageGeo.getCreated().toEpochMilli());
@@ -95,7 +96,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 			
 			if (fieldName.equals(ID)) {
 				id = reader.readObjectId().toString();
-			} else if (fieldName.equals(COVERAGE_NAME)) {
+			} else if (fieldName.equals(NAME)) {
 				coverageName = reader.readString();
 			} else if (fieldName.equals(CREATED)) {
 				created = Instant.ofEpochMilli(reader.readDateTime());
@@ -125,7 +126,7 @@ public class CoverageGeoCodec implements CollectibleCodec<CoverageGeo> {
 		
 		CoverageGeo coverageGeo = new CoverageGeo();
 		coverageGeo.setId(id);
-		coverageGeo.setCoverageName(coverageName);
+		coverageGeo.setName(coverageName);
 		coverageGeo.setCreated(created);
 		coverageGeo.setModified(modified);
 		coverageGeo.setServerId(serverId);

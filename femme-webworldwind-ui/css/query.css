@@ -87,6 +87,14 @@
     background-image: none;
 }
 
+#service-navbar .navbar-nav > li > a {
+    color: #ffffff
+}
+
+#service-navbar .navbar-nav > li.active > a {
+    background-color: #284a88;
+}
+
 #service-navbar .navbar-brand {
     padding: 2px;
     transition: transform 0.2s linear 0s;

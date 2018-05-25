@@ -1,40 +1,245 @@
-var wwd = undefined;
-var polygonsLayer;
-var annotationsLayer;
-var annotation = {};
-var templatePolygons = [];
-var bigNavRange = 50e5;
-var smallNavRange = 10e5;
+(function ($, undefined) {
+	$.namespace("Earthserver.WebWorldWind");
 
-function initializeWww() {
+	var polygonsLayer = undefined;
+	var searchLayer = undefined;
+	var annotationsLayer = undefined;
 
-	wwd = new WorldWind.WorldWindow("coverageCanvas");
-	wwd.deepPicking = true;
-	wwd.navigator.range = 200e5;
-	WorldWind.Logger.setLoggingLevel(WorldWind.Logger.LEVEL_WARNING);
-	WorldWind.configuration.gpuCacheSize = 300e6;
+	var annotation = {};
+	var templatePolygons = [];
+	var bigNavRange = 80e5;
+	var smallNavRange = 30e5;
 
-	wwd.addLayer(new WorldWind.BingAerialLayer())
-	wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
-	wwd.addLayer(new WorldWind.AtmosphereLayer());
+	var ctrlDown = false;
+	var initialCtrlClickPosition = undefined;
+	var lastCtrlClickPosition = undefined;
+	var searchPolygon = undefined;
 
-	polygonsLayer = new WorldWind.RenderableLayer("CoveragesLayer");
-	polygonsLayer.enabled = true;
-	polygonsLayer.pickEnabled = true;
-	wwd.addLayer(polygonsLayer);
-
-	annotationsLayer = new WorldWind.RenderableLayer("AnnotationsLayer");
-	wwd.addLayer(annotationsLayer);
-	annotationsLayer.enabled = true;
-	annotationsLayer.pickEnabled = true;
-
-	wwwEventHandler();
-}
-
-function wwwEventHandler() {
 	var highlightedItems = [];
-	var handlePick = function (recognizer) {
 
+	Earthserver.WebWorldWind.initialize = function() {
+		initializeWorldWindow();
+		initializeLayers();
+		initializeEventHandlers();
+	};
+
+	var initializeWorldWindow = function() {
+		wwd = new WorldWind.WorldWindow("coverageCanvas");
+		wwd.deepPicking = true;
+		wwd.navigator.range = 200e5;
+		WorldWind.Logger.setLoggingLevel(WorldWind.Logger.LEVEL_WARNING);
+		WorldWind.configuration.gpuCacheSize = 300e6;
+	};
+
+	var initializeLayers = function() {
+		// wwd.addLayer(new WorldWind.BingAerialLayer());
+		wwd.addLayer(new WorldWind.BMNGLayer());
+		wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
+		// wwd.addLayer(new WorldWind.AtmosphereLayer());
+
+		searchLayer = new WorldWind.RenderableLayer("SearchLayer");
+		searchLayer.enabled = true;
+		searchLayer.pickEnabled = false;
+		wwd.addLayer(searchLayer);
+
+		polygonsLayer = new WorldWind.RenderableLayer("CoveragesLayer");
+		polygonsLayer.enabled = true;
+		polygonsLayer.pickEnabled = true;
+		wwd.addLayer(polygonsLayer);
+	
+		annotationsLayer = new WorldWind.RenderableLayer("AnnotationsLayer");
+		annotationsLayer.enabled = true;
+		annotationsLayer.pickEnabled = true;
+		wwd.addLayer(annotationsLayer);
+	};
+
+	Earthserver.WebWorldWind.clear = function() {
+		searchLayer.removeAllRenderables();
+		polygonsLayer.removeAllRenderables();
+		annotationsLayer.removeAllRenderables();
+	};
+
+	var initializeEventHandlers = function() {
+		$("body")
+			.keydown(event => {
+				if (event.which == 17) {
+					deleteSearchPolygon();
+					ctrlDown = true;
+					initialCtrlClickPosition = undefined;
+					lastCtrlClickPosition = undefined;
+				}
+			})
+			.keyup(event => {
+				if (event.which == 17) {
+					ctrlDown = false;
+					initialCtrlClickPosition = undefined;
+					lastCtrlClickPosition = undefined;
+
+					if (searchPolygon != undefined && searchPolygon.boundaries != undefined && searchPolygon.boundaries.length > 0) {
+						var boundaries = searchPolygon.boundaries.map(position => [position.longitude, position.latitude]);
+							
+						var geoJson = {
+							"type":"Polygon",
+							"coordinates":[boundaries]
+						};
+						Femme.clearCoverages();
+						getCoveragesIntersectingOrWithinBBox(geoJson);
+					}
+					// deleteSearchPolygon();
+				}
+			});
+
+		var clickPickRecognizer = new WorldWind.ClickRecognizer(wwd, handlePick);
+		clickPickRecognizer.enabled = true;
+		wwd.addEventListener("mouseclick", handlePick);
+	
+		// var clickHoverRecognizer = new WorldWind.ClickRecognizer(wwd, handleHover);
+		// clickHoverRecognizer.enabled = true;
+		// wwd.addEventListener("mousemove", handleHover);
+
+		var tapPickRecognizer = new WorldWind.TapRecognizer(wwd, handlePick);
+		tapPickRecognizer.enabled = true;
+
+		// var tapHoverRecognizer = new WorldWind.TapRecognizer(wwd, handleHover);
+		// tapHoverRecognizer.enabled = true;
+
+		wwd.addEventListener("pointerdown", (event) => {
+			if (ctrlDown) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		});
+
+		var ctrlDragRecognizer = new WorldWind.DragRecognizer(wwd, handleCtrlDrag);
+		ctrlDragRecognizer.enabled = true;
+		wwd.addEventListener("pointerdown", handleCtrlDrag);
+	
+		wwd.redraw();
+	};
+
+	var handleCtrlDrag = function(recognizer) {
+		if (ctrlDown) {
+			var x = recognizer.clientX,
+				y = recognizer.clientY;
+
+			var pickList = wwd.pick(wwd.canvasCoordinates(x, y));
+			if (pickList.objects.length > 0) {
+				for (var i = 0; i < pickList.objects.length; i ++) {
+					var pickObject = pickList.objects[i];
+					
+					if (! initialCtrlClickPosition) {
+						initialCtrlClickPosition = pickObject.position;
+						initialCtrlClickPosition.altitude = 0;
+					} else {
+						if (! lastCtrlClickPosition) {
+							createSearchPolygon();
+						}
+
+						lastCtrlClickPosition = pickObject.position;
+						lastCtrlClickPosition.altitude = 0;
+
+						buildBoundariesOfSearchPolygon();
+						renderSearchPolygon();
+					}
+				}	
+			}
+		}
+	};
+
+	var createSearchPolygon = function() {
+		var attributes = new WorldWind.ShapeAttributes(null);
+		attributes.outlineColor = WorldWind.Color.GREEN;
+		attributes.drawInterior = true;
+		attributes.interiorColor = new WorldWind.Color(0, 128, 0, 0.1);
+		attributes.drawOutline = true;
+	
+		searchPolygon = new WorldWind.SurfacePolygon([], attributes);
+		searchPolygon.enabled = true;
+		searchPolygon.displayName = "search";
+		searchPolygon.opacity = 0.2;
+		searchPolygon.name = "search";
+		searchPolygon.pickEnabled = true;
+	
+		var highlightAttributes = new WorldWind.ShapeAttributes(attributes);
+		highlightAttributes.imageScale = 0.6;
+		highlightAttributes.drawInterior = true;
+		highlightAttributes.outlineColor = WorldWind.Color.RED;
+		highlightAttributes.interiorColor = new WorldWind.Color(1, 1, 1, 0);
+		searchPolygon.highlightAttributes = highlightAttributes;
+		searchPolygon.pathType = WorldWind.RHUMB_LINE;
+		searchPolygon.label = "search";
+	};
+
+	var buildBoundariesOfSearchPolygon = function() {
+		var boundaries = [];
+
+		var ctrlClickPosition1 = new WorldWind.Position(lastCtrlClickPosition.latitude, initialCtrlClickPosition.longitude, 0);
+		var ctrlClickPosition2 = new WorldWind.Position(initialCtrlClickPosition.latitude, lastCtrlClickPosition.longitude, 0);
+
+		boundaries.push(initialCtrlClickPosition, ctrlClickPosition1, lastCtrlClickPosition, ctrlClickPosition2, initialCtrlClickPosition);
+
+		searchPolygon.boundaries = boundaries;
+	}
+
+	var renderSearchPolygon = function() {
+		searchLayer.addRenderable(searchPolygon);
+		wwd.redraw();
+	};
+
+	var deleteSearchPolygon = function() {
+		searchLayer.removeAllRenderables();
+		delete searchPolygon;
+		searchPolygon = undefined;
+	}
+
+	var getCoveragesIntersectingOrWithinBBox = function(bbox) {
+		Loader.attach();
+
+		FemmeClient.getCoveragesIntersectingOrWithinBBox(bbox,
+			(coverages) => {
+				Loader.detach();
+				displaySelectedCoverages(coverages);
+			}, () => {
+				console.log("Error querying for intersecting coverages");
+			}
+		);
+	};
+
+	var displaySelectedCoverages = function(coverages) {
+		coverages.forEach(coverage => {
+			createCoverageAccordion(coverage);
+			$("#show").prop("disabled", false);
+		});
+		deleteSearchPolygon();
+	};
+
+	var getServerName = function(coverage) {
+		Earthserver.Client.Utilities.callWS(femmeGeoUrl + 'servers/' + coverage.serverId, 'GET', {
+			dataType: "json",
+			onSuccess: function (server) {
+				coverage.serverName = server.serverName;
+			},
+			onError: function () {
+				alert("Error retrieving collection name");
+			}
+		});
+	};
+
+	var getDataElement = function(coverage) {
+		Earthserver.Client.Utilities.callWS(femmeUrl + 'dataElements/' + coverage.dataElementId, 'GET', {
+			dataType: "json",
+			onSuccess: function (data) {
+				createCoverageAccordion(coverage);
+				$("#show").prop("disabled", false);
+			},
+			onError: function () {
+				alert("Error retrieving intersecting coverages info");
+			}
+		});
+	};
+
+	var handlePick = function(recognizer) {
+		
 		var x = recognizer.clientX,
 			y = recognizer.clientY;
 
@@ -53,21 +258,16 @@ function wwwEventHandler() {
 		if (pickList.objects.length > 0) {
 			for (var p = 0; p < pickList.objects.length; p++) {
 
-				console.log(pickList.objects[p]);
-				if (pickList.objects[p].isTerrain == true) {
-					console.log("You picked Terrain")
-				}
-				else if (pickList.objects[p].userObject.pickDelegate === undefined) {
-					if (pickList.objects[p].userObject.type == "coverage") {
-						var coverageId = pickList.objects[p].userObject.id;
-						fillMetadataModalonClick(coverageId);
-						$("#metadata-modal").modal("show");
-					}
-				} else if (pickList.objects[p].userObject.pickDelegate.type == "coverage") {
-					var coverageId = pickList.objects[p].userObject.pickDelegate.id;
-					fillMetadataModalonClick(coverageId);
-					$("#metadata-modal").modal("show");
-				} else if (pickList.objects[p].userObject.pickDelegate.type == "annotation") {
+				var pickObject = pickList.objects[p];
+				if (pickObject.isTerrain) {
+					handleTerrainPick(pickObject);
+				// } else if (pickObject.userObject.userProperties == undefined) {
+				// 	if (pickObject.userObject.type == "coverage") {
+				// 		handleCoveragePick(pickObject);
+				// 	}
+				} else if (pickObject.userObject.userProperties.type == "coverage") {
+					handleCoveragePick(pickObject);
+				} else if (pickObject.userObject.userProperties.type == "annotation") {
 					return false;
 				}
 			}
@@ -77,293 +277,332 @@ function wwwEventHandler() {
 		}
 	};
 
-	var handleHover = function (recognizer) {
+	var handleTerrainPick = function(pickObject) {
+		console.log("You picked Terrain");
+	};
 
-		var x = recognizer.clientX,
-			y = recognizer.clientY;
+	var handleCoveragePick = function(pickObject) {
+		var dataElementId = pickObject.userObject.userProperties.dataElementId;
+		fillMetadataModalonClick(dataElementId);
+		$("#metadata-modal").modal("show");
+	};
 
-		var redrawRequired = highlightedItems.length > 0;
+	// var handleHover = function(recognizer) {
+	// 	var x = recognizer.clientX,
+	// 		y = recognizer.clientY;
 
-		for (var h = 0; h < highlightedItems.length; h++) {
-			highlightedItems[h].highlighted = false;
-		}
+	// 	var redrawRequired = highlightedItems.length > 0;
+	// 	for (var h = 0; h < highlightedItems.length; h++) {
+	// 		highlightedItems[h].highlighted = false;
+	// 	}
 
-		highlightedItems = [];
+	// 	highlightedItems = [];
+	// 	var pickList = wwd.pick(wwd.canvasCoordinates(x, y));
+	// 	if (pickList.objects.length == 0) {
+	// 		return false;
+	// 	}
+	// 	if (pickList.objects.length > 0) {
+	// 		redrawRequired = true;
+	// 	}
 
-		var pickList = wwd.pick(wwd.canvasCoordinates(x, y));
+	// 	if (pickList.objects.length > 0) {
+	// 		for (var p = 0; p < pickList.objects.length; p++) {
 
-		if (pickList.objects.length == 0) {
-			return false;
-		}
+	// 			var pickObject = pickList.objects[p];
+	// 			if (pickObject.isTerrain == true) {
+	// 				if (annotation !== null) {
+	// 					deleteAnnotations();
+	// 				}
+	// 			} else if (pickObject.userObject.userProperties != undefined && pickObject.userObject.userProperties.type == "coverage") {
+	// 				// drawAnnotation(pickList.objects[p]);
+	// 			} else if (pickObject.userObject.userProperties != undefined && pickObject.userObject.userProperties.type == "annotation") {
+	// 				return false;
+	// 			}
+	// 		}
+	// 	}
 
-		if (pickList.objects.length > 0) {
-			redrawRequired = true;
-		}
+	// 	if (redrawRequired) {
+	// 		wwd.redraw();
+	// 	}
+	// };
 
-		if (pickList.objects.length > 0) {
-			for (var p = 0; p < pickList.objects.length; p++) {
-				if (pickList.objects[p].isTerrain == true) {
-					if (annotation !== null) {
-						deleteAnnotations();
-					}
-				} else if (pickList.objects[p].userObject.pickDelegate != undefined && pickList.objects[p].userObject.pickDelegate.type == "coverage") {
-					drawAnnotation(pickList.objects[p].userObject);
-				} else if (pickList.objects[p].userObject.pickDelegate != undefined && pickList.objects[p].userObject.pickDelegate.type == "annotation") {
-					return false;
-				}
-			}
-		}
+	// var drawAnnotation = function(polygon) {
+	// 	var annotationAttributes = new WorldWind.AnnotationAttributes(null);
+	// 	annotationAttributes.cornerRadius = 8;
+	// 	annotationAttributes.opacity = 0.5;
+	// 	annotationAttributes.scale = 1;
+	// 	annotationAttributes.width = 200;
+	// 	annotationAttributes.height = 100;
+	// 	annotationAttributes.textAttributes.color = WorldWind.Color.RED;
+	// 	annotationAttributes.insets = new WorldWind.Insets(5, 5, 5, 5);
+	// 	annotationAttributes.cornerRadius = 14;
+	// 	annotationAttributes.textColor = new WorldWind.Color(1, 0, 0, 1);
+	
+	// 	if (polygon.boundaries != undefined) {
+	// 		var centroid = getCentroid(polygon._boundaries[0].latitude, polygon._boundaries[0].longitude, polygon._boundaries[2].latitude, polygon._boundaries[2].longitude);
+	// 		var position = new WorldWind.Position(centroid[0], centroid[1], 0);
+	// 	} else {
+	// 		var position = new WorldWind.Position(polygon.position.latitude, polygon.position.longitude, 0);
+	// 	}
+	
+	// 	annotation = new WorldWind.Annotation(position, annotationAttributes);
+	// 	annotation.displayName = polygon.label;
+	
+	// 	annotation.label = polygon.label + "\n" + "DELETED";
+	// 	annotationsLayer.addRenderable(annotation);
+	
+	// 	if (centroid === undefined) {
+	// 		wwd.goTo(new WorldWind.Location(polygon.position.latitude, polygon.position.longitude, bigNavRange));
+	// 	}
+	// 	else {
+	// 		wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], bigNavRange));
+	// 	}
+	// 	wwd.redraw();
+	// 	return annotation;
+	// };
 
-		if (redrawRequired) {
-			wwd.redraw();
+	// var deleteAnnotation = function(annotation) {
+	// 	annotationsLayer.removeRenderable(annotation);
+	// 	wwd.redraw();
+	// };
+	
+	// var deleteAnnotations = function() {
+	// 	annotationsLayer.removeAllRenderables();
+	// 	wwd.redraw();
+	// };
+	
+	Earthserver.WebWorldWind.drawSchema = function (coverage) {
+		var coverageGeography = coverage.geometry.coordinates[0];
+		var centroid = getCentroid(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[2][1], coverageGeography[2][0]);
+		var distanceX = findDistance(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[1][1], coverageGeography[1][0]);
+		var distanceY = findDistance(coverageGeography[1][1], coverageGeography[1][0], coverageGeography[2][1], coverageGeography[2][0]);
+		var area = distanceX * distanceY;
+	
+		if (area > 0) {
+			drawPlacemark(coverage, coverageGeography);
+			drawPolygon(coverage, coverageGeography, area, centroid);
+		} else if (area == 0) {
+			drawPlacemark(coverage, coverageGeography);
 		}
 	};
 
-	var tapRecognizer = new WorldWind.TapRecognizer(wwd, handlePick);
-	tapRecognizer.enabled = true;
-	var clickRecognizer = new WorldWind.ClickRecognizer(wwd, handlePick);
-	clickRecognizer.enabled = true;
+	var drawPolygon = function(coverage, coverageGeography, area, centroid) {
+		var boundaries = [];
+		var altitude = 0;
+	
+		boundaries.push(new WorldWind.Position(coverageGeography[0][1], coverageGeography[0][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[1][1], coverageGeography[1][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[2][1], coverageGeography[2][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[3][1], coverageGeography[3][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[4][1], coverageGeography[4][0], altitude));
+	
+		var attributes = new WorldWind.ShapeAttributes(null);
+		attributes.drawInterior = true;
+		attributes.interiorColor = new WorldWind.Color(0, 0, 0, 0.5);
+		attributes.drawOutline = true;
+		attributes.outlineColor = WorldWind.Color.BLUE;
+		attributes.applyLighting = true;
+	
+		var polygon = new WorldWind.SurfacePolygon(boundaries, attributes);
+		polygon.enabled = true;
+		polygon.displayName = coverage.dataElementId;
+		polygon.name = coverage.dataElementId;
+	
+		var highlightAttributes = new WorldWind.ShapeAttributes(attributes);
+		highlightAttributes.imageScale = 0.6;
+		highlightAttributes.drawInterior = true;
+		highlightAttributes.outlineColor = WorldWind.Color.RED;
+		highlightAttributes.interiorColor = new WorldWind.Color(1, 1, 1, 0);
+		polygon.highlightAttributes = highlightAttributes;
+		polygon.pathType = WorldWind.RHUMB_LINE;
+		polygon.label = coverage.dataElementId;
+	
+		polygon.userProperties = {
+			type: "coverage",
+			id: coverage.id,
+			dataElementId: coverage.dataElementId
+		};
+		polygonsLayer.addRenderable(polygon);
+	
+		wwd.navigator.range = area > 10 ? bigNavRange : smallNavRange;
+	
+		wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], wwd.navigator.range));
+		wwd.redraw();
+	};
 
-	var clickRecognizer2 = new WorldWind.ClickRecognizer(wwd, handleHover);
-	clickRecognizer2.enabled = true;
-	var tapRecognizer2 = new WorldWind.TapRecognizer(wwd, handleHover);
-	tapRecognizer2.enabled = true;
+	var getCentroid = function(x1, y1, x2, y2) {
+		return [x, y] = [(x2 + x1) / 2, (y2 + y1) / 2];
+	};
 
-	wwd.addEventListener("mouseclick", handlePick);
-	wwd.addEventListener("mousemove", handleHover);
+	Earthserver.WebWorldWind.deleteSchema = function(name) {
+		var renderablesToBeDeleted = [];
+		 polygonsLayer.renderables.forEach(renderable => {
+			if (renderable.name == name || renderable.name == name + "-placemark") {
+				renderablesToBeDeleted.push(renderable);
+			}
+		});
 
-	wwd.redraw();
-}
+		renderablesToBeDeleted.forEach(renderable => polygonsLayer.removeRenderable(renderable));
+		wwd.redraw();
+	};
 
-function drawAnnotation(polygon) {
+	Earthserver.WebWorldWind.clear = function() {
+		polygonsLayer.removeAllRenderables();
+		wwd.redraw();
+	};
 
-	var annotationAttributes = new WorldWind.AnnotationAttributes(null);
-	annotationAttributes.cornerRadius = 8;
-	annotationAttributes.opacity = 0.5;
-	annotationAttributes.scale = 1;
-	annotationAttributes.width = 200;
-	annotationAttributes.height = 100;
-	annotationAttributes.textAttributes.color = WorldWind.Color.RED;
-	annotationAttributes.insets = new WorldWind.Insets(5, 5, 5, 5);
-	annotationAttributes.cornerRadius = 14;
-	annotationAttributes.textColor = new WorldWind.Color(1, 0, 0, 1);
+	var findDistance = function(point1Lon, point1Lat, point2Lon, point2Lat) {
+		return Math.sqrt(Math.pow((point2Lon - point1Lon), 2) + Math.pow((point2Lat - point1Lat), 2));
+	};
 
-	if (polygon._boundaries != undefined) {
-		var centroid = getCentroid(polygon._boundaries[0].latitude, polygon._boundaries[0].longitude, polygon._boundaries[2].latitude, polygon._boundaries[2].longitude);
-		var position = new WorldWind.Position(centroid[0], centroid[1], 0);
-	}
-	else {
-		var position = new WorldWind.Position(polygon.position.latitude, polygon.position.longitude, 0);
-	}
-
-	annotation = new WorldWind.Annotation(position, annotationAttributes);
-	annotation.displayName = polygon.label;
-
-	// if (polygon._boundaries != undefined){
-	// 	annotation.label = "Name" + "\n" + polygon.label + "\n" + /*"Bounding Box (lat,lon) = " + "\n" +
-	// 		"[("+ polygon._boundaries[0].latitude + "," + polygon._boundaries[0].longitude + ")" + "\t" +
-	// 		"(" + polygon._boundaries[1].latitude + "," + polygon._boundaries[1].longitude + ")" + "\t" +
-	// 		"(" + polygon._boundaries[2].latitude + "," + polygon._boundaries[2].longitude + ")" + "\t" +
-	// 		"(" + polygon._boundaries[3].latitude + "," + polygon._boundaries[3].longitude + ")]"+ "\n" +
-	// 		*/"DELETED";
-	// }
-	// else {
-	// 	annotation.label = "Name" + "\n" + polygon.label + "\n" + /*"(lat,lon) = " + "\n" +
-	// 		"[("+ position.latitude + "," + position.longitude + ")" + "\n" +*/
-	// 		"DELETED";
-	// }
-
-	annotation.label = polygon.label + "\n" + "DELETED";
-	annotationsLayer.addRenderable(annotation);
-
-	if (centroid === undefined) {
-		wwd.goTo(new WorldWind.Location(polygon.position.latitude, polygon.position.longitude, bigNavRange));
-	}
-	else {
+	var drawPlacemark = function(coverage, coverageGeography) {
+		var image;
+		
+		if (coverage.serverName.includes("MEEO")) {
+			image = "images/Meteorological-Environmental-Earth-Observation.gif";
+		} else if (coverage.serverName.includes("PML")) {
+			image = "images/pml-logo-small-white.png";
+		} else if (coverage.serverName.includes("PS")) {
+			image = "images/images.jpg";
+		} else if (coverage.serverName.includes("ECMWF")) {
+			image = "images/ecmwf.png"
+		} else {
+			image = "images/castshadow-blue.png";
+		}
+	
+		var centroid = getCentroid(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[2][1], coverageGeography[2][0]);
+	
+		var placemarkAttributes = new WorldWind.PlacemarkAttributes(null);
+		placemarkAttributes.depthTest = false;
+		placemarkAttributes.imageScale = 0.5;
+		placemarkAttributes.imageOffset = new WorldWind.Offset(WorldWind.OFFSET_FRACTION, 0.3, WorldWind.OFFSET_FRACTION, 0.0);
+		placemarkAttributes.imageColor = WorldWind.Color.WHITE;
+		placemarkAttributes.labelAttributes.offset = new WorldWind.Offset(WorldWind.OFFSET_FRACTION, 0.5, WorldWind.OFFSET_FRACTION, 1.0);
+		placemarkAttributes.labelAttributes.color = WorldWind.Color.WHITE;
+		placemarkAttributes.drawLeaderLine = true;
+		placemarkAttributes.leaderLineAttributes.outlineColor = WorldWind.Color.BLUE;
+	
+		placemark = new WorldWind.Placemark(new WorldWind.Position(centroid[0], centroid[1], 0), true, null);
+		placemark.enabled = true;
+		placemark.name = coverage.dataElementId + "-placemark";
+		// placemark.label = coverage.dataElementId + "-placemark";
+	
+		placemark.altitudeMode = WorldWind.RELATIVE_TO_GLOBE;
+		placemarkAttributes = new WorldWind.PlacemarkAttributes(placemarkAttributes);
+		placemarkAttributes.imageSource = image;
+		placemark.attributes = placemarkAttributes;
+	
+		highlightAttributes = new WorldWind.PlacemarkAttributes(placemarkAttributes);
+		highlightAttributes.imageScale = 0.6;
+		placemark.highlightAttributes = highlightAttributes;
+	
+		placemark.userProperties = {
+			type: "coverage",
+			id: coverage.id,
+			dataElementId: coverage.dataElementId
+		};
+	
+		polygonsLayer.addRenderable(placemark);
+	
+		wwd.navigator.range = 5e5;
 		wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], bigNavRange));
-	}
-	wwd.redraw();
-	return annotation;
-}
-
-function getCentroid(x1, y1, x2, y2) {
-	return [x, y] = [(x2 + x1) / 2, (y2 + y1) / 2];
-}
-
-function drawSchema(coverage) {
-
-	var schema = undefined;
-	var coverageGeography = coverage.systemicMetadata.other.bbox.geoJson.coordinates[0];
-	var centroid = getCentroid(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[2][1], coverageGeography[2][0]);
-	var distanceX = findDistance(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[1][1], coverageGeography[1][0]);
-	var distanceY = findDistance(coverageGeography[1][1], coverageGeography[1][0], coverageGeography[2][1], coverageGeography[2][0]);
-	var area = distanceX * distanceY;
-	var height = 0;
-
-	if (area > 0) {
-		schema = [];
-		schema[1] = drawPlacemark(coverage, coverageGeography);
-		schema[0] = drawPolygon(coverage, coverageGeography, area, centroid);
-	}
-	else if (area == 0) {
-		schema = drawPlacemark(coverage, coverageGeography);
-	}
-	if (schema != undefined) {
-		return schema;
-	}
-}
-
-function drawPolygon(coverage, coverageGeography, area, centroid) {
-
-	var coverageId = coverage.id;
-	var coverageName = coverage.name;
-	var boundaries = [];
-	var height = 0;
-
-	boundaries.push(new WorldWind.Position(coverageGeography[0][1], coverageGeography[0][0], height));
-	boundaries.push(new WorldWind.Position(coverageGeography[1][1], coverageGeography[1][0], height));
-	boundaries.push(new WorldWind.Position(coverageGeography[2][1], coverageGeography[2][0], height));
-	boundaries.push(new WorldWind.Position(coverageGeography[3][1], coverageGeography[3][0], height));
-	boundaries.push(new WorldWind.Position(coverageGeography[4][1], coverageGeography[4][0], height));
-
-	var attributes = new WorldWind.ShapeAttributes(null);
-	attributes.outlineColor = WorldWind.Color.BLUE;
-	attributes.drawInterior = false;
-	attributes.interiorColor = new WorldWind.Color(1, 0, 0, 1);
-	attributes.drawOutline = true;
-
-	var polygon = new WorldWind.SurfacePolygon(boundaries, attributes);
-	polygon.enabled = true;
-	polygon.displayName = coverageName;
-	polygon.opacity = 0;
-	polygon.name = coverageName;
-	polygon.pickEnabled = true;
-
-	var highlightAttributes = new WorldWind.ShapeAttributes(attributes);
-	highlightAttributes.imageScale = 0.6;
-	highlightAttributes.drawInterior = true;
-	highlightAttributes.outlineColor = WorldWind.Color.RED;
-	highlightAttributes.interiorColor = new WorldWind.Color(1, 1, 1, 0);
-	polygon.highlightAttributes = highlightAttributes;
-	polygon.pathType = WorldWind.RHUMB_LINE;
-	polygon.label = coverageName;
-
-	polygon.pickDelegate = {
-		type: "coverage",
-		id: coverageId
+		wwd.redraw();
 	};
-	polygonsLayer.addRenderable(polygon);
-
-	if (area > 10) {
-		wwd.navigator.range = bigNavRange;
-	}
-	else {
-		wwd.navigator.range = smallNavRange;
-	}
-
-	wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], bigNavRange));
-	wwd.redraw();
-	return polygon;
-}
-
-function drawPlacemark(coverage, coverageGeography) {
-
-	var image = undefined;
-	var wcsServerName = coverage.collections[0].name;
-
-	if (wcsServerName == "MEEO") {
-		image = "images/Meteorological-Environmental-Earth-Observation.gif";
-	}
-	else if (wcsServerName == "PML") {
-		image = "images/pml-logo-small-white.png";
-	}
-	else if (wcsServerName == "PS") {
-		image = "images/images.jpg";
-	}
-	else if (wcsServerName == "ECMWF") {
-		image = "images/ecmwf.png"
-	}
-	else {
-		image = "images/castshadow-blue.png";
-	}
-
-	var coverageId = coverage.id;
-	var centroid = getCentroid(coverageGeography[0][1], coverageGeography[0][0], coverageGeography[2][1], coverageGeography[2][0]);
-
-	var placemarkAttributes = new WorldWind.PlacemarkAttributes(null);
-	placemarkAttributes.depthTest = false;
-	placemarkAttributes.imageScale = 0.5;
-	placemarkAttributes.imageOffset = new WorldWind.Offset(WorldWind.OFFSET_FRACTION, 0.3, WorldWind.OFFSET_FRACTION, 0.0);
-	placemarkAttributes.imageColor = WorldWind.Color.WHITE;
-	placemarkAttributes.labelAttributes.offset = new WorldWind.Offset(WorldWind.OFFSET_FRACTION, 0.5, WorldWind.OFFSET_FRACTION, 1.0);
-	placemarkAttributes.labelAttributes.color = WorldWind.Color.WHITE;
-	placemarkAttributes.drawLeaderLine = true;
-	placemarkAttributes.leaderLineAttributes.outlineColor = WorldWind.Color.BLUE;
-
-	placemark = new WorldWind.Placemark(new WorldWind.Position(centroid[0], centroid[1], 0), true, null);
-	placemark.enabled = true;
-	placemark.name = coverage.name;
-	placemark.label = "Name" + "\n" + coverage.name  /* +"\n" + "Bounding Box (lat,lon) = " + "\n" +
-	   "[(" + coverageGeography[0][1] + "," + coverageGeography[0][0] + ")" + "\t" +
-		"(" + coverageGeography[1][1] + "," + coverageGeography[1][0] + ")" + "\t" +
-		"(" + coverageGeography[2][1] + "," + coverageGeography[2][0] + ")" + "\t" +
-		"(" + coverageGeography[3][1] + "," + coverageGeography[3][0] + ")]"*/;
-
-	placemark.altitudeMode = WorldWind.RELATIVE_TO_GLOBE;
-	placemarkAttributes = new WorldWind.PlacemarkAttributes(placemarkAttributes);
-	placemarkAttributes.imageSource = image;
-	placemark.attributes = placemarkAttributes;
-
-	highlightAttributes = new WorldWind.PlacemarkAttributes(placemarkAttributes);
-	highlightAttributes.imageScale = 0.6;
-	placemark.highlightAttributes = highlightAttributes;
-
-	placemark.pickDelegate = {
-		type: "coverage",
-		id: coverageId
+	
+	var canvasInfo = function() {
+		var canvas = document.getElementById("coverageCanvas");
+		var context = canvas.getContext('webgl');
+		var pixels = new Uint8Array(context.drawingBufferWidth * context.drawingBufferHeight * 4);
+		context.readPixels(0, 0, context.drawingBufferWidth, context.drawingBufferHeight,
+		context.RGBA, context.UNSIGNED_BYTE, pixels);
 	};
 
-	polygonsLayer.addRenderable(placemark);
+	// var canvasManipulation = {
+    //     drawStuff: function () {
+    //         var canvas = document.getElementById("coverageCanvas");
+    //         var img = new Image();
+    //         img.src = "http://www.cite.gr/sites/default/files/logo_%28480%29.png";
+    //         var context = canvas.getContext('2d');
+    //         // context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    //         context.drawImage(img, 110, 60, 75, 30, 30, 30, 70, 80);
+    //         return context;
+    //     },
 
-	wwd.navigator.range = 5e5;
-	wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], bigNavRange));
-	wwd.redraw();
+    //     createShaders: function () {
+    //         var img, tex, vloc, tloc, vertexBuff, texBuff;
 
-	return placemark;
-}
+    //         var cvs3d = document.getElementById('coverageCanvas');
+    //         var ctx3d = cvs3d.getContext('experimental-webgl');
+    //         var uLoc;
 
-function findDistance(point1Lon, point1Lat, point2Lon, point2Lat) {
-	return Math.sqrt(Math.pow((point2Lon - point1Lon), 2) + Math.pow((point2Lat - point1Lat), 2));
-}
+    //         var vertexShaderSrc =
+    //             "attribute vec2 aVertex;" +
+    //             "attribute vec2 aUV;" +
+    //             "varying vec2 vTex;" +
+    //             "uniform vec2 pos;" +
+    //             "void main(void) {" +
+    //             "  gl_Position = vec4(aVertex + pos, 0.0, 1.0);" +
+    //             "  vTex = aUV;" +
+    //             "}";
 
-function deleteSchema(schema) {
-	if (schema.length === undefined) {
-		polygonsLayer.removeRenderable(schema);
-		drawAnnotation(schema);
-		wwd.redraw();
-	}
-	else if (schema.length > 1) {
-		polygonsLayer.removeRenderable(schema[0]);
-		polygonsLayer.removeRenderable(schema[1]);
-		drawAnnotation(schema[0]);
-		wwd.redraw();
-	}
-}
+    //         var fragmentShaderSrc =
+    //             "precision highp float;" +
+    //             "varying vec2 vTex;" +
+    //             "uniform sampler2D sampler0;" +
+    //             "void main(void){" +
+    //             "  gl_FragColor = texture2D(sampler0, vTex);" +
+    //             "}";
 
-function deleteAnnotation(annotation) {
-	annotationsLayer.removeRenderable(annotation);
-	wwd.redraw();
-}
+    //         var vertShaderObj = ctx3d.createShader(ctx3d.VERTEX_SHADER);
+    //         var fragShaderObj = ctx3d.createShader(ctx3d.FRAGMENT_SHADER);
+    //         ctx3d.shaderSource(vertShaderObj, vertexShaderSrc);
+    //         ctx3d.shaderSource(fragShaderObj, fragmentShaderSrc);
+    //         ctx3d.compileShader(vertShaderObj);
+    //         ctx3d.compileShader(fragShaderObj);
 
-function deleteAnnotations() {
-	annotationsLayer.removeAllRenderables();
-	wwd.redraw();
-}
+    //         var progObj = ctx3d.createProgram();
+    //         ctx3d.attachShader(progObj, vertShaderObj);
+    //         ctx3d.attachShader(progObj, fragShaderObj);
 
-function canvasInfo() {
-	var canvas = document.getElementById("coverageCanvas");
-	var context = canvas.getContext('webgl');
-	var pixels = new Uint8Array(context.drawingBufferWidth * context.drawingBufferHeight * 4);
-	context.readPixels(0, 0, context.drawingBufferWidth, context.drawingBufferHeight,
-	context.RGBA, context.UNSIGNED_BYTE, pixels);
-}
+    //         ctx3d.linkProgram(progObj);
+    //         ctx3d.useProgram(progObj);
+
+    //         ctx3d.viewport(0, 0, 1024, 768);
+
+    //         vertexBuff = ctx3d.createBuffer();
+    //         ctx3d.bindBuffer(ctx3d.ARRAY_BUFFER, vertexBuff);
+    //         ctx3d.bufferData(ctx3d.ARRAY_BUFFER, new Float32Array([-1, 1, -1, -1, 1, -1, 1, 1]), ctx3d.STATIC_DRAW);
+
+    //         texBuff = ctx3d.createBuffer();
+    //         ctx3d.bindBuffer(ctx3d.ARRAY_BUFFER, texBuff);
+    //         ctx3d.bufferData(ctx3d.ARRAY_BUFFER, new Float32Array([0, 1, 0, 0, 1, 0, 1, 1]), ctx3d.STATIC_DRAW);
+
+    //         vloc = ctx3d.getAttribLocation(progObj, "aVertex");
+    //         tloc = ctx3d.getAttribLocation(progObj, "aUV");
+    //         uLoc = ctx3d.getUniformLocation(progObj, "pos");
+
+    //         img = new Image();
+    //         img.src = "http://www.cite.gr/sites/default/files/logo_%28480%29.png";
+
+    //         img.onload = function () {
+    //             tex = ctx3d.createTexture();
+    //             ctx3d.bindTexture(ctx3d.TEXTURE_2D, tex);
+    //             ctx3d.texParameteri(ctx3d.TEXTURE_2D, ctx3d.TEXTURE_MIN_FILTER, ctx3d.NEAREST);
+    //             ctx3d.texParameteri(ctx3d.TEXTURE_2D, ctx3d.TEXTURE_MAG_FILTER, ctx3d.NEAREST);
+    //             ctx3d.texImage2D(ctx3d.TEXTURE_2D, 0, ctx3d.RGBA, ctx3d.RGBA, ctx3d.UNSIGNED_BYTE, this);
+
+    //             ctx3d.enableVertexAttribArray(vloc);
+    //             ctx3d.bindBuffer(ctx3d.ARRAY_BUFFER, vertexBuff);
+    //             ctx3d.vertexAttribPointer(vloc, 2, ctx3d.FLOAT, false, 0, 0);
+
+    //             ctx3d.enableVertexAttribArray(tloc);
+    //             ctx3d.bindBuffer(ctx3d.ARRAY_BUFFER, texBuff);
+    //             ctx3d.bindTexture(ctx3d.TEXTURE_2D, tex);
+    //             ctx3d.vertexAttribPointer(tloc, 2, ctx3d.FLOAT, false, 0, 0);
+
+    //             ctx3d.drawArrays(ctx3d.TRIANGLE_FAN, 0, 4);
+    //         };
+    //     }
+    // };
+
+})(jQuery);

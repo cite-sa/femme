@@ -15,27 +15,25 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class TaxonomyParser {
-	private static final Logger logger = LoggerFactory.getLogger(TaxonomyParser.class);
+public class TaxonomyParserSkosApi implements TaxonomyParser{
+	private static final Logger logger = LoggerFactory.getLogger(TaxonomyParserSkosApi.class);
 	
+	private URI taxonomyUri;
 	private final SKOSManager manager = new SKOSManager();
 	private SKOSDataset dataset;
-	//private Map<URI, SkosConcept> concepts;
 	
-	public TaxonomyParser(URI taxonomyUri) throws SKOSCreationException {
-		this.dataset = this.manager.loadDatasetFromPhysicalURI(taxonomyUri);
+	public TaxonomyParserSkosApi(URI taxonomyUri) throws SKOSCreationException {
+		this.taxonomyUri = taxonomyUri;
+		this.dataset = this.manager.loadDataset(this.taxonomyUri);
 	}
 	
 	public List<SkosConcept> parse() {
-		/*return this.dataset.getSKOSConceptSchemes().stream().map(this::getConceptsInScheme).flatMap(Collection::stream)
-			.collect(Collectors.toMap(SkosConcept::getUri, skosConcept -> skosConcept));*/
-		
-		return this.dataset.getSKOSConceptSchemes().stream().map(this::getConceptsInScheme).flatMap(Collection::stream).collect(Collectors.toList());
+		return this.dataset.getSKOSConcepts().stream().map(this::getSkosConcept).collect(Collectors.toList());
+		//return this.dataset.getSKOSConceptSchemes().stream().map(this::getConceptsInScheme).flatMap(Collection::stream).collect(Collectors.toList());
 		
 		/*System.out.println("");
 		System.out.println("---------------------");
@@ -80,6 +78,7 @@ public class TaxonomyParser {
 		SkosConcept skosConcept = new SkosConcept();
 		
 		skosConcept.setUri(concept.getURI());
+		skosConcept.setTaxonomyUri(this.taxonomyUri);
 		
 		try {
 			skosConcept.setPrefLabel(getConstantsInRelation(concept, this.manager.getSKOSDataFactory().getSKOSPrefLabelProperty()));
@@ -107,11 +106,9 @@ public class TaxonomyParser {
 	}
 	
 	public static void main(String[] args) throws SKOSCreationException, URISyntaxException, UnknownHostException {
-		TaxonomyParser parser = new TaxonomyParser(new URI("http://eulersharp.sourceforge.net/2003/03swap/countries"));
-		//Map<URI, SkosConcept> concepts = parser.parse();
+		TaxonomyParserSkosApi parser = new TaxonomyParserSkosApi(Resources.getResource("stw.ttl").toURI());
+		//TaxonomyParserSkosApi parser = new TaxonomyParserSkosApi(new URI("http://vocab.nerc.ac.uk/collection/A02/current/"));
 		List<SkosConcept> concepts = parser.parse();
 		System.out.println(concepts);
-		
-		//System.out.println(concepts.get(new URI("http://zbw.eu/stw/descriptor/18861-0")));
 	}
 }

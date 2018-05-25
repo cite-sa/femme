@@ -3,6 +3,16 @@ body {
     background-color: #000;
 }
 
+#buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.asgEndpoint .as-original > input {
+    margin: 4px 10px;
+}
+
 #metadata-display {
     padding-top: 15px;
     padding-bottom: 15px;
@@ -43,9 +53,8 @@ body {
     left: 0;
     transition: left 0.3s 0s;
 
-    padding-bottom: 43px;
+    padding-bottom: 15px;
     max-height: 100%;
-    //overflow: hidden;
     background-color: #203864;
 
 }
@@ -71,33 +80,9 @@ body {
     padding: 3px 5px;
 }
 
-/* ?? */
-
-/*p {
-	color: #ffffff;
-}*/
-
-/*.panel-title {
-	background-color: #9a9a9a;
-}*/
-
-/* .collapsed{
-	color : #ffffff;
-} */
-
-/*.panel-body , .accordionbutton{
-	background-color: #b5b5b5;
-	margin-left: 1px;
-	margin-right: 1px;
-	margin-bottom: 1px;
-	margin-up: 1px;
+.modal-title {
+    margin: 0px 15px;
 }
-
-
-/* textarea {
-    max-width: 100%; 
-    max-height: 100%;
-} */
 
 textarea { resize:none; } /* none|horizontal|vertical|both */
 
@@ -115,7 +100,8 @@ body,html{
 }
 
 .coverage-container ,.modal-body  {
-	max-height: 547px;
+    max-height: 547px;
+    /* min-height: 5em; */
 	overflow: auto;
 	background-color: #203864
 }
@@ -144,8 +130,10 @@ body,html{
 
 #metadata-panel-group .panel-title {
     width: 100%;
+    height: 2em;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     background: none;
     color: #ffffff;
 }
@@ -168,13 +156,15 @@ body,html{
 }
 
 #metadata-panel-group .show-on-www.active {
-    background-color: #1A263C;
+    /* background-color: #1A263C; */
+    box-shadow: inset 0px 0px 5px 1px rgba(0,0,0,0.4);
 }
 
 #metadata-panel-group .show-on-www:hover {
     color: #fff;
-    background-color: #1c3054;
-     border-color: #1c3054;
+    /* background-color: #1c3054;
+    border-color: #1c3054; */
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.4);
 }
 
 #metadata-panel-group .panel-body {
@@ -228,8 +218,16 @@ body,html{
     width: 100%;
 }
 
-#query-container .bootstrap-tagsinput {
+#query-container .bootstrap-tagsinput,
+#query-container .bootstrap-tagsinput > input {
     width: 100%;
+}
+
+#query-container .bootstrap-tagsinput .typeahead.dropdown-menu {
+    margin-left: -8px;
+    margin-top: 5px;
+    width: 92.5%;
+    overflow: hidden;
 }
 
 #server-endpoint-dropdown .dropdown-menu .selected {

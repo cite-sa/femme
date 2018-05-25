@@ -18,6 +18,9 @@ public class Element {
 	
 	@JsonProperty("endpoint")
 	private String endpoint;
+	
+	@JsonProperty("type")
+	private ElementType type;
 
 	@JsonProperty("metadata")
 	private List<Metadatum> metadata;
@@ -81,7 +84,15 @@ public class Element {
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
 	}
-
+	
+	public ElementType getType() {
+		return type;
+	}
+	
+	public void setType(ElementType type) {
+		this.type = type;
+	}
+	
 	public List<Metadatum> getMetadata() {
 		return metadata;
 	}

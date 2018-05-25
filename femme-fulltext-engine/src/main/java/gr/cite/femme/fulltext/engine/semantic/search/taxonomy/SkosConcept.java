@@ -13,6 +13,7 @@ public class SkosConcept {
 	private List<URI> broader;
 	private List<URI> narrower;
 	private List<URI> related;
+	private URI taxonomyUri;
 	
 	public URI getUri() {
 		return uri;
@@ -78,6 +79,14 @@ public class SkosConcept {
 		this.related = related;
 	}
 	
+	public URI getTaxonomyUri() {
+		return taxonomyUri;
+	}
+	
+	public void setTaxonomyUri(URI taxonomyUri) {
+		this.taxonomyUri = taxonomyUri;
+	}
+	
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -86,20 +95,13 @@ public class SkosConcept {
 		SkosConcept that = (SkosConcept) o;
 		
 		if (! getUri().equals(that.getUri())) return false;
-		if (getConceptScheme() != null ? ! getConceptScheme().equals(that.getConceptScheme()) : that.getConceptScheme() != null)
-			return false;
-		if (getLabel() != null ? ! getLabel().equals(that.getLabel()) : that.getLabel() != null) return false;
-		if (! getPrefLabel().equals(that.getPrefLabel())) return false;
-		return getAltLabel() != null ? getAltLabel().equals(that.getAltLabel()) : that.getAltLabel() == null;
+		return getTaxonomyUri().equals(that.getTaxonomyUri());
 	}
 	
 	@Override
 	public int hashCode() {
 		int result = getUri().hashCode();
-		result = 31 * result + (getConceptScheme() != null ? getConceptScheme().hashCode() : 0);
-		result = 31 * result + (getLabel() != null ? getLabel().hashCode() : 0);
-		result = 31 * result + getPrefLabel().hashCode();
-		result = 31 * result + (getAltLabel() != null ? getAltLabel().hashCode() : 0);
+		result = 31 * result + getTaxonomyUri().hashCode();
 		return result;
 	}
 	

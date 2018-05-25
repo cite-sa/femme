@@ -1,11 +1,13 @@
-import { FemmeQuery } from './../models/femme-query';
-import { DataElementList } from './../models/data-element-list';
-import { environment } from '@env/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '@env/environment';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+
+import { FemmeQuery } from '@app/models/femme-query';
+import { Collection } from '@app/models/collection';
 import { DataElement } from '@app/models/data-element';
+import { DataElementList } from './../models/data-element-list';
 import { FemmeResponse } from '@app/models/femme-response';
 
 @Injectable({
@@ -13,36 +15,49 @@ import { FemmeResponse } from '@app/models/femme-response';
 })
 export class FemmeService {
 	private femmeBaseUrl: string = environment.femmeBaseUrl;
+
+	private femmeCollectionsUrl: string = environment.femmeBaseUrl + environment.femmeCollectionsEndpoint;
 	private femmeDataElementsUrl: string = environment.femmeBaseUrl + environment.femmeDataElementsEndpoint;
 
 	constructor(private http: HttpClient) { }
 
-	countDataElements(xpath: string): Observable<number> {
+	countDataElements(xpath?: string): Observable<number> {
 		let xpathQueryParam = xpath ? `&xpath=${xpath}` : "";
-		return this.http.get<FemmeResponse<number>>(`${this.femmeDataElementsUrl}?options={"limit":0}${xpathQueryParam}`).pipe(
-			map(response => response.entity.body)
-		);
+		return this.http.get<FemmeResponse<number>>(`${this.femmeDataElementsUrl}?options={"limit":0}${xpathQueryParam}`).pipe(map(response => response.entity.body));
 	}
 
 	getDataElements(offset?: number, limit?: number, query?: FemmeQuery): Observable<DataElement[]> {
-		console.log("AAAAAAAAa");
-		console.log(query);
-		let xpathQueryParam = "";
-		if (query) {
-			if (query.xpath) {
-				xpathQueryParam = `&xpath=${query.xpath}`;
-			} else if (query.ids) {
-				return this.submitDataElementRequest(`/${query.ids[0]}`);
-			}
-		}
-
 		let limitQueryParam = `"limit":${limit}`;
 		let offsetQueryParam = `"offset":${offset}`;
 		let optionsQueryParam = `?options={${limitQueryParam},${offsetQueryParam}}`;
 
-		let queryParams = `${optionsQueryParam}${xpathQueryParam}`;
+		let xpathQueryParam = "";
+		if (query != undefined) {
 
-		return this.submitDataElementsRequest(queryParams);
+			if (query.xpath!= undefined && query.xpath != "") {
+				console.log("xpath");
+				console.log(query.xpath);
+				xpathQueryParam = `&xpath=${query.xpath}`;
+				return this.submitDataElementsRequest(`${optionsQueryParam}${xpathQueryParam}`);
+
+			} else if (query.ids != undefined && query.ids.length > 0) {
+				console.log("ids");
+				console.log(query.ids);
+				let idsParameters = JSON.stringify(query.ids.join('&id=')).replace('"', '').replace('"', '');
+				return this.submitDataElementsRequest(`/list${optionsQueryParam}&id=${idsParameters}`);
+			} else {
+				return this.submitDataElementsRequest(`${optionsQueryParam}`);
+			}
+		} else {
+			console.log("ELEOOOOS");
+			return this.submitDataElementsRequest(`${optionsQueryParam}`);
+		}
+	}
+
+	getCollection(id: string): Observable<Collection> {
+		return this.http.get<FemmeResponse<Collection>>(`${this.femmeCollectionsUrl}`).pipe(
+			map(response => response.entity.body)
+		);
 	}
 
 	private submitDataElementRequest(request: string) {

@@ -13,8 +13,8 @@ public class CoverageGeo {
 	@JsonProperty("id")
 	private String id;
 	
-	@JsonProperty("coverageName")
-	private String coverageName;
+	@JsonProperty("name")
+	private String name;
 	
 	@JsonProperty("created")
 	@JsonSerialize(using = InstantSerializer.class)
@@ -47,12 +47,12 @@ public class CoverageGeo {
 		this.id = id;
 	}
 	
-	public String getCoverageName() {
-		return coverageName;
+	public String getName() {
+		return name;
 	}
 	
-	public void setCoverageName(String coverageName) {
-		this.coverageName = coverageName;
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	public Instant getCreated() {

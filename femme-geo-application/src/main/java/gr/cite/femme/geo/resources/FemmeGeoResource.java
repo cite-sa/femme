@@ -11,6 +11,7 @@ import gr.cite.femme.core.model.BBox;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.geo.api.GeoServiceApi;
 import gr.cite.femme.geo.core.FemmeGeoException;
+import gr.cite.femme.geo.core.GeoJson;
 import gr.cite.femme.geo.engine.mongodb.MongoGeoDatastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Map;
 
 @Path("/")
 @Component
@@ -54,10 +56,25 @@ public class FemmeGeoResource {
 	}
 	
 	@GET
+	@Path("servers/{serverId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getServerById(@PathParam("serverId") String serverId) {
+		try {
+			ServerGeo server = this.geoDatastore.getServerById(serverId);
+			
+			return Response.ok(server).build();
+		} catch (DatastoreException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e.getMessage());
+		}
+	}
+	
+	@GET
 	@Path("servers/{serverId}/coverages")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCoveragesByServerId(@PathParam("serverId") String serverId) {
 		List<CoverageGeo> coverages = this.geoDatastore.getCoveragesByServerId(serverId);
+		setServerName(coverages);
 		return Response.ok(coverages).build();
 	}
 	
@@ -68,15 +85,35 @@ public class FemmeGeoResource {
 		try {
 			CoverageGeo coverage = this.geoDatastore.getCoverageByDataElementId(dataElementId);
 			
-			ServerGeo server = this.geoDatastore.getServerById(coverage.getServerId());
-			coverage.setServerName(server.getServerName());
+			if (coverage == null) throw new NotFoundException("No coverage with dataElementId [" + dataElementId + "]");
+			setServerName(coverage);
 			
 			return Response.ok(coverage).build();
 		} catch (DatastoreException e) {
-			logger.error("Error retrieving coverage with DataElmentId [" + dataElementId + "]", e);
-			throw new WebApplicationException("Error retrieving coverage with DataElmentId [" + dataElementId + "]");
+			logger.error("Error retrieving coverage with dataElementId [" + dataElementId + "]", e);
+			throw new WebApplicationException("Error retrieving coverage with dataElementId [" + dataElementId + "]");
 		}
 	}
+	
+	@GET
+	@Path("coverages/list")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCoveragesByDataElementId(@QueryParam("id") List<String> ids) {
+		try {
+			List<CoverageGeo> coverages = this.geoDatastore.getCoveragesByIds(ids);
+			
+			if (coverages.size() == 0) throw new NotFoundException("No coverage found");
+			setServerName(coverages);
+			
+			return Response.ok(coverages).build();
+			
+		} catch (DatastoreException e) {
+			logger.error("Error retrieving coverages", e);
+			throw new WebApplicationException("Error retrieving coverages");
+		}
+	}
+	
+	
 	
 	@GET
 	@Path("coverages/{id}")
@@ -85,6 +122,7 @@ public class FemmeGeoResource {
 		CoverageGeo coverage;
 		try {
 			coverage = this.geoDatastore.getCoverageById(id);
+			setServerName(coverage);
 		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e.getMessage(), e);
@@ -128,6 +166,18 @@ public class FemmeGeoResource {
 		}
 	}
 	
+	@POST
+	@Path("coverages/intersects")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCoveragesIntersecting(GeoJson bbox) {
+		if (bbox == null) return Response.status(Response.Status.BAD_REQUEST).build();
+		
+		List<CoverageGeo> coverages = this.geoDatastore.getCoveragesIntersectingOrWithin(bbox);
+		setServerName(coverages);
+		
+		return Response.ok(coverages).build();
+	}
+	
 	@GET
 	@Path("coverages/point")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -141,8 +191,19 @@ public class FemmeGeoResource {
 			logger.error(e.getMessage(), e);
 			throw new WebApplicationException(e.getMessage(), e);
 		}
-		
-		
+	}
+	
+	private void setServerName(List<CoverageGeo> coverages) {
+		coverages.forEach(this::setServerName);
+	}
+	
+	private void setServerName(CoverageGeo coverage) {
+		try {
+			ServerGeo server = this.geoDatastore.getServerById(coverage.getServerId());
+			coverage.setServerName(server.getServerName());
+		} catch (DatastoreException e) {
+			logger.error("Error retrieving server for coverage [" + coverage.getId() + "]");
+		}
 	}
 	
 }
