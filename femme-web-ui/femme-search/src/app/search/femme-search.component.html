@@ -1,5 +1,5 @@
 <div class="femme-search-container">
-	<mat-button-toggle-group #group="matButtonToggleGroup" aria-label="Query Type">
+	<mat-button-toggle-group #group="matButtonToggleGroup" aria-label="Query Type" class="query-type-toggle">
 		<mat-button-toggle checked value="Search">Search</mat-button-toggle>
 		<mat-button-toggle value="XPath">XPath</mat-button-toggle>
 	</mat-button-toggle-group>
@@ -7,9 +7,10 @@
 	<form class="fulltext-search-form" *ngIf="group.value=='Search'" (ngSubmit)="fulltextQuery()">
 		<mat-form-field class="search-form-field">
 			<input class ="search-form-field-input"type="text" [placeholder]="group.value" aria-label="Number" matInput [formControl]="searchTerm" [matAutocomplete]="auto">
-			<button mat-icon-button class="search-filters-button" type="button" (click)="filterButtonClick($event)">
+			<!-- <button mat-icon-button class="search-filters-button" type="button" (click)="filterButtonClick($event)">
 				<mat-icon aria-label="Filters">filter_list</mat-icon>
-			</button>
+			</button> -->
+			<mat-spinner *ngIf="loading" [diameter]=25></mat-spinner>
 			<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)">
 				<!-- <mat-option *ngFor="let result of searchResults | async" [value]="result">
 					{{ result.fulltext["testField"] }}
@@ -17,13 +18,13 @@
 							{{ semantic["testField"] }}
 						</mat-option>
 				</mat-option> -->
-				<div *ngFor="let result of searchResults | async">
-					<mat-option *ngIf="!result.semantic" [value]="result">
+				<div *ngFor="let result of searchResults">
+					<mat-option *ngIf="result.semantic.length == 0" [value]="result">
 						{{ result | extractFulltextFields }}
 					</mat-option>
-					<div *ngIf="result.semantic">
+					<div *ngIf="result.semantic.length > 0">
 						<mat-optgroup [label]="result.fulltext[defaultFieldShown]">
-							<mat-option *ngFor="let semantic of result.semantic" [value]='result'>
+							<mat-option *ngFor="let semantic of result.semantic" [value]='semantic'>
 								{{ semantic[defaultFieldShown] }}
 							</mat-option>
 						</mat-optgroup>

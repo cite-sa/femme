@@ -35,8 +35,8 @@ public class ProcessingPipeline {
 			for (MapOperation mapOperation: this.config.getMap()) {
 				try {
 					applyMap(input, format, mapOperation);
-				} catch (OperationNotSupportedException e) {
-					throw new ProcessingPipelineException(e);
+				} catch (IOException | OperationNotSupportedException e) {
+					throw new ProcessingPipelineException("Error in processing pipeline", e);
 				}
 			}
 		}
@@ -62,7 +62,7 @@ public class ProcessingPipeline {
 		return true;
 	}
 
-	private void applyMap(String input, String format, MapOperation map) throws OperationNotSupportedException {
+	private void applyMap(String input, String format, MapOperation map) throws OperationNotSupportedException, IOException {
 		if (map != null) {
 			if (format.equals(map.getFormat())) {
 				List<String> queryResult = MapExecution.applyQuery(map.getQuery(), input, map.getFormat());

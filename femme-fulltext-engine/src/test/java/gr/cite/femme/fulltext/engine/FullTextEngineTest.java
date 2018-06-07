@@ -2,6 +2,7 @@ package gr.cite.femme.fulltext.engine;
 
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.ElasticsearchClient;
+import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.QueryExpander;
 import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +17,8 @@ public class FullTextEngineTest {
 	@Before
 	public void init() throws IOException {
 		ElasticsearchClient elasticsearchClient = new ElasticsearchClient("localhost", 9200, "semantic_search", "taxonomies");
-		TaxonomyRepository taxonomyRepository = new TaxonomyRepository(elasticsearchClient);
+		QueryExpander queryExpander = new QueryExpander(elasticsearchClient);
+		TaxonomyRepository taxonomyRepository = new TaxonomyRepository(elasticsearchClient, queryExpander);
 		this.engine = new FulltextIndexEngine("localhost", 9200, "fulltext_search", taxonomyRepository);
 	}
 

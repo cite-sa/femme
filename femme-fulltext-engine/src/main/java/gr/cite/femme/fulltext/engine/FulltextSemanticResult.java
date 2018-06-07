@@ -4,16 +4,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.fulltext.core.FulltextDocument;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FulltextSemanticResult {
 	
 	@JsonProperty("fulltext")
 	private FulltextDocument fulltextResult;
 	
 	@JsonProperty("semantic")
-	private List<FulltextDocument> semanticResults;
+	private List<FulltextDocument> semanticResults = new ArrayList<>();
 	
 	public FulltextDocument getFulltextResult() {
 		return fulltextResult;

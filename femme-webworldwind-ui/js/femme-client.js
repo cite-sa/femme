@@ -23,7 +23,7 @@ var FemmeClient = (function () {
 		});
 	};
 	
-	var getAllCoverages = function() {
+	var getAllCoverages = function(successCallback, errorCallback) {
 		Earthserver.Client.Utilities.callWS(femmeGeoUrl + "coverages", 'GET', {
 			dataType: "json",
 			onSuccess: function (coverages) {

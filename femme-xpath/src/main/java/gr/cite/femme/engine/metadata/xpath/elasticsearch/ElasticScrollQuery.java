@@ -58,8 +58,10 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		for (IndexableMetadatum result: this.results) {
 			if (includes.size() > 0) {
 				result.setValue(queryJsonTree(
-					originalIncludes.iterator().next(), result.getValue(), originalIncludes.iterator().next().endsWith("#text") || originalIncludes.iterator().next().contains("@"))
-				);
+					originalIncludes.iterator().next(), result.getValue(),
+					result.getOriginalContentType(),
+					originalIncludes.iterator().next().endsWith("#text") || originalIncludes.iterator().next().contains("@")
+				));
 			}
 		}
 	}
@@ -87,7 +89,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 			entity);
 	}
 
-	private String queryJsonTree(String query, String json, boolean getText) throws Throwable {
+	private String queryJsonTree(String query, String json, String contentType, boolean getText) throws Throwable {
 		if (json != null) {
 			JsonNode root = mapper.readTree(json);
 			String[] nodes = query.split("\\.");
@@ -96,15 +98,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 			List<JsonNode> results = new LinkedList<>(Collections.singletonList(root));
 			boolean finalNodeIsArray = extractJsonNodes(nodes, finalNode, results);
 			
-			if (getText) {
-				return serializeFinalNodeText(results);
-			} else {
-				if (finalNodeIsArray) {
-					return serializeFinalArrayNodeToXml(finalNode, results);
-				} else {
-					return serializeFinalNodeToXml(finalNode, results);
-				}
-			}
+			return serializeFinalNode(finalNode, results, contentType, getText, finalNodeIsArray);
 		}
 		
 		return "";
@@ -147,21 +141,50 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		return subResults;
 	}
 	
+	private String serializeFinalNode(String finalNode, List<JsonNode> results, String contentType, boolean getText, boolean isArray) throws Throwable {
+		if (getText) {
+			return serializeFinalNodeText(results);
+		} else {
+			if (isArray) {
+				return serializeFinalArrayNode(finalNode, results, contentType);
+			} else {
+				return serializeFinalNode(finalNode, results, contentType);
+			}
+		}
+	}
+	
 	private String serializeFinalNodeText(List<JsonNode> results) {
 		return results.stream().map(JsonNode::textValue).collect(Collectors.joining("\n "));
 	}
 	
-	private String serializeFinalArrayNodeToXml(String finalNode, List<JsonNode> results) throws IOException, XMLStreamException {
-		return XmlJsonConverter.jsonToXml(
-			"{\"" + finalNode + "\":[" + results.stream().map(JsonNode::toString).collect(Collectors.joining("\n")) + "]}"
-		);
+	private String serializeFinalArrayNode(String finalNode, List<JsonNode> results, String contentType) throws IOException, XMLStreamException {
+		if (contentType.toLowerCase().contains("xml")) {
+			return XmlJsonConverter.femmeJsonToXml(
+				"{\"" + finalNode + "\":[" + results.stream().map(JsonNode::toString).collect(Collectors.joining("\n")) + "]}"
+			);
+		} else if (contentType.toLowerCase().contains("json")) {
+			return XmlJsonConverter.femmeJsonToJson(
+				"{\"" + finalNode + "\":[" + results.stream().map(JsonNode::toString).collect(Collectors.joining("\n")) + "]}"
+			);
+		} else {
+			logger.error("Content type [" + contentType + "] not supported");
+			return "";
+		}
+		
 	}
 	
-	private String serializeFinalNodeToXml(String finalNode, List<JsonNode> results) throws Throwable {
+	private String serializeFinalNode(String finalNode, List<JsonNode> results, String contentType) throws Throwable {
 		try {
 			return results.stream().map(jsonNode -> {
 				try {
-					return XmlJsonConverter.jsonToXml("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
+					if (contentType.toLowerCase().contains("xml")) {
+						return XmlJsonConverter.femmeJsonToXml("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
+					} else if (contentType.toLowerCase().contains("json")) {
+						return XmlJsonConverter.femmeJsonToJson("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
+					} else {
+						logger.error("Content type [" + contentType + "] not supported");
+						return "";
+					}
 				} catch (IOException | XMLStreamException e) {
 					logger.error(e.getMessage(), e);
 					throw new RuntimeException(e);
@@ -233,6 +256,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		String res = query.queryJsonTree(
 				"wcs:CoverageDescriptions.wcs:CoverageDescription.domainSet.gmlrgrid:ReferenceableGridByVectors.gmlrgrid:generalGridAxis",
 				"{\"wcs:CoverageDescriptions\":{\"wcs:CoverageDescription\":{\"domainSet\":{\"gmlrgrid:ReferenceableGridByVectors\":{\"gmlrgrid:generalGridAxis\":[{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}},{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}},{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}}]}}}}}",
+				"xml",
 				false
 		);
 		System.out.println(res);

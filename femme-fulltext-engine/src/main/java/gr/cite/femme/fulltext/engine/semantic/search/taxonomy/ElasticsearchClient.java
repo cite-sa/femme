@@ -7,9 +7,12 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -340,6 +343,15 @@ public class ElasticsearchClient {
 		}
 	}
 	
+	public void insert(Map<String, Object> document) throws SemanticSearchException {
+		try {
+			IndexRequest request = new IndexRequest(this.indexName, this.indexType).source(document).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+			this.client.index(request);
+		} catch (IOException e) {
+			throw new SemanticSearchException("Error inserting document", e);
+		}
+	}
+	
 	public void insert(List<Map<String, Object>> documents) throws SemanticSearchException {
 		BulkRequest request = new BulkRequest();
 		for (Map<String, Object> document: documents) {
@@ -349,7 +361,16 @@ public class ElasticsearchClient {
 		try {
 			this.client.bulk(request);
 		} catch (IOException e) {
-			throw new SemanticSearchException("Error bulk inserting document", e);
+			throw new SemanticSearchException("Error bulk inserting documents", e);
+		}
+	}
+	
+	public void update(String id, Map<String, Object> document) throws SemanticSearchException {
+		try {
+			UpdateRequest request = new UpdateRequest(this.indexName, this.indexType, id).doc(document);
+			this.client.update(request);
+		} catch (IOException e) {
+			throw new SemanticSearchException("Error inserting document", e);
 		}
 	}
 	
@@ -417,6 +438,7 @@ public class ElasticsearchClient {
 	}*/
 	public <T> List<T> getByQuery(SearchSourceBuilder query, Class<T> resultClass) throws SemanticSearchException {
 		SearchRequest searchRequest = new SearchRequest();
+		query.size(1000);
 		searchRequest.source(query);
 		
 		SearchResponse searchResponse;
@@ -434,6 +456,20 @@ public class ElasticsearchClient {
 			throw new SemanticSearchException("Search failed [" + query.toString() + "]", e);
 		}
 	}
+	
+	public List<SearchHit> searchByQuery(SearchSourceBuilder query) throws SemanticSearchException {
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest.source(query);
+		
+		SearchResponse searchResponse;
+		try {
+			searchResponse = this.client.search(searchRequest);
+			return Arrays.asList(searchResponse.getHits().getHits());
+		} catch (IOException e) {
+			throw new SemanticSearchException("Search failed [" + query.toString() + "]", e);
+		}
+	}
+	
 	
 }
 

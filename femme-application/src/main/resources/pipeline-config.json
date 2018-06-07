@@ -28,6 +28,17 @@
 					"array": false
 				}
 			]
+		},
+		"OBIS": {
+			"map": [
+				{
+					"format": "json",
+					"query": "/scientificName",
+					"name": "name",
+					"type": "string",
+					"array": false
+				}
+			]
 		}
 	},
 	"GEO": {

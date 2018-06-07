@@ -47,9 +47,9 @@ var Femme = (function () {
     var bindShowMetadataModalEvent = function() {
         $("#metadata-modal").on('show.bs.modal', function (event) {
             if (event.hasOwnProperty("relatedTarget")) {
-                var coverageId = $(event.relatedTarget).attr("id");
+                // var coverageId = $(event.relatedTarget).attr("id");
                 var dataElementId = $(event.relatedTarget).data("data-element-id");
-                fillMetadataModal(coverageId, dataElementId);
+                fillMetadataModal(dataElementId);
             }
         });
     };
@@ -86,11 +86,18 @@ var Femme = (function () {
             Loader.detach();
         };
 
+        var errorCallback = () => {
+            Loader.detach();
+            console.log("Error retrieving coverages");
+        };
+
         if (coverageIds != undefined && coverageIds.length > 0) {
-            FemmeClient.getCoveragesByIds(coverageIds, successCallback);
+            FemmeClient.getCoveragesByIds(coverageIds, successCallback, errorCallback);
         } else {
             if (serverId != undefined && serverId != "") {
-                FemmeClient.getCoveragesByServer(serverId, successCallback);
+                FemmeClient.getCoveragesByServer(serverId, successCallback, errorCallback);
+            } else {
+                FemmeClient.getAllCoverages(successCallback, errorCallback);
             }
         }
     };
@@ -189,9 +196,6 @@ var Femme = (function () {
     var drawOrDelete = function(button, geo) {
         var dataElementId = button.data("id");
 
-        console.log(dataElementId);
-        console.log(Earthserver.WebWorldWind.drawSchema);
-
         if (button.hasClass("active")) {
             Earthserver.WebWorldWind.deleteSchema(dataElementId);
             Earthserver.WebWorldWind.drawSchema(geo);
@@ -217,10 +221,10 @@ var Femme = (function () {
                 '</div>');
     };
 
-    var fillMetadataModal = function(coverageId, dataElementId) {
-        $("#metadata-modal .modal-title").text(coverageId);
+    var fillMetadataModal = function(dataElementId) {
         FemmeClient.getDataElementById(dataElementId,
             (dataElement) => {
+                $("#metadata-modal .modal-title").text(dataElement.name);
                 appendMetadataToModal(dataElement.metadata[0].value);
             }, () => {
                 alert("No metadata available for coverage " + coverageId);
@@ -244,7 +248,9 @@ var Femme = (function () {
 
     return {
         initialize: initialize,
-        clearCoverages: clearCoverages
+        clearCoverages: clearCoverages,
+        createCoverageAccordion: createCoverageAccordion,
+        fillMetadataModal: fillMetadataModal
     };
   
 })();

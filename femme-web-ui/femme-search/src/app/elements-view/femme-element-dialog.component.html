@@ -6,11 +6,7 @@
 	</mat-card-header>
 	<mat-divider></mat-divider>
 	<mat-card-content>
-		<pre>
-			<code>
-				{{ data.element.metadata[0]?.value | formatXml }}
-			</code>
-		</pre>
+		<pre><code>{{ data.element.metadata[0] | formatMetadatum }}</code></pre>
 	</mat-card-content>
 </mat-card>
 	  

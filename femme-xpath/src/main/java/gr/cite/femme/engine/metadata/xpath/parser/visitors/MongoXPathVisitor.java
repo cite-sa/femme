@@ -76,6 +76,9 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 				this.currentLevelNodes.forEach(node -> {
 					if (predicateMode) {
 						this.filterBuilder.getFilterPath().append("#text");
+					} else if (this.predicateEvaluated) {
+						node.getData().setProjectionNode(this.predicateEvaluated);
+						node.getData().getProjectionPath().append(".#text");
 					} else {
 						node.getData().getNodePath().append(".#text");
 						node.getData().setFilterPayload(true);
@@ -141,6 +144,9 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 						if (predicateMode) {
 							this.filterBuilder.getFilterPath().append("#text");
 						} else {
+							node.getData().setProjectionNode(this.predicateEvaluated);
+							node.getData().getProjectionPath().append(".#text");
+							
 							node.getData().getNodePath().append(".#text");
 							node.getData().setFilterPayload(true);
 						}

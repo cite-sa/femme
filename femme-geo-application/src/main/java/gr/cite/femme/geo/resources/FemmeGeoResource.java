@@ -83,12 +83,21 @@ public class FemmeGeoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCoveragesByDataElementId(@QueryParam("dataElementId") String dataElementId) {
 		try {
-			CoverageGeo coverage = this.geoDatastore.getCoverageByDataElementId(dataElementId);
 			
-			if (coverage == null) throw new NotFoundException("No coverage with dataElementId [" + dataElementId + "]");
-			setServerName(coverage);
+			if (dataElementId != null && dataElementId != "") {
+				CoverageGeo coverage = this.geoDatastore.getCoverageByDataElementId(dataElementId);
+				if (coverage == null) throw new NotFoundException("No coverage with dataElementId [" + dataElementId + "]");
+				setServerName(coverage);
+				
+				return Response.ok(coverage).build();
+			} else {
+				List<CoverageGeo> coverages = this.geoDatastore.getAllCoverages();
+				if (coverages == null || coverages.size() == 0) throw new NotFoundException("No coverages availabnle");
+				setServerName(coverages);
+				
+				return Response.ok(coverages).build();
+			}
 			
-			return Response.ok(coverage).build();
 		} catch (DatastoreException e) {
 			logger.error("Error retrieving coverage with dataElementId [" + dataElementId + "]", e);
 			throw new WebApplicationException("Error retrieving coverage with dataElementId [" + dataElementId + "]");

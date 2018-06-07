@@ -5,12 +5,16 @@
     align-items: center;
 }
 
+.query-type-toggle {
+	margin-bottom: 8px;
+}
+
 .fulltext-search-form {
 	/* width: 100%; */
 	margin: 5px 10px;
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	align-items: flex-end;
 
 	flex: 1;
 }
@@ -20,7 +24,8 @@
 	flex: 1;
 }
 
-.search-form-field-input {
+.search-form-field-input,
+.xpath-form-input {
 	line-height: 25px;
 }
 
@@ -36,7 +41,7 @@
 }
 
 .xpath-form {
-	margin: 5px 10px;
+	margin: 4px 10px;
 	flex: 1;
 }
 
@@ -60,4 +65,10 @@
 
 .field-names-margin {
 	margin: 0 10px;
+}
+
+.mat-spinner {
+	position: absolute;
+	right: 0px;
+	top: 0px;
 }

@@ -26,13 +26,17 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 	@ViewChild(MatPaginator) paginator: MatPaginator;
 
 	@Input()
-	query: Observable<FemmeQuery>;
+	query$: Observable<FemmeQuery>;
+	query: FemmeQuery;
 
 	constructor(private femmeService: FemmeService, private dialog: MatDialog) { }
 
 	ngOnInit() {
 		// this.dataSource.loadDataElements(0, 10);
-		this.query.subscribe(q => this.loadDataElementsPage(q));
+		this.query$.subscribe(q => {
+			this.query = q;
+			this.loadDataElementsPage();
+		});
 	}
 
 	ngAfterViewInit() {
@@ -41,8 +45,8 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 		).subscribe();
 	}
 
-	loadDataElementsPage(query?: FemmeQuery) {
-		this.getDataElementCount(query, () => this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, query));
+	loadDataElementsPage() {
+		this.getDataElementCount(this.query, () => this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, this.query));
 		console.log("pageIndex: " + this.paginator.pageIndex + ", pageSize: " + this.paginator.pageSize);
         // this.dataSource.loadDataElements(this.paginator.pageIndex * this.paginator.pageSize, this.paginator.pageSize, query);
 	}

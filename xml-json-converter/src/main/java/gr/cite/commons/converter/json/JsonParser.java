@@ -5,6 +5,11 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -13,10 +18,15 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 public class JsonParser {
+	private static final Logger logger = LoggerFactory.getLogger(JsonParser.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
+	
 	private static final String DEFAULT_NAMESPACE = "_default";
 	private static final String ATTRIBUTES = "@";
 	private static final String NAMESPACES = "ns";
@@ -134,7 +144,7 @@ public class JsonParser {
 			try {
 				parseSubNodes(field, tree.get(field), xmlWriter);
 			} catch (IOException | XMLStreamException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 		});
 

@@ -2,15 +2,28 @@ package gr.cite.femme.fulltext.engine.elasticsearch;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.engine.FemmeFulltextException;
+import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.SemanticSearchException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.apache.xerces.xs.StringList;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.filter.Filter;
+import org.elasticsearch.search.aggregations.bucket.filter.Filters;
+import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,12 +31,11 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ElasticFulltextIndexClient {
@@ -36,6 +48,8 @@ public class ElasticFulltextIndexClient {
 	private static final String ELASTICSEARCH_TYPE = "elements";
 
 	private RestClient client;
+	private RestHighLevelClient highLevelClient;
+	
 	private String indexAlias;
 	private AtomicBoolean indexAliasCreated;
 
@@ -45,13 +59,14 @@ public class ElasticFulltextIndexClient {
 				ElasticFulltextIndexClient.ELASTICSEARCH_INDEX_ALIAS);
 	}
 
-	public ElasticFulltextIndexClient(String hostName, int port) throws UnknownHostException {
+	public ElasticFulltextIndexClient(String hostName, int port) {
 		this(hostName, port, ElasticFulltextIndexClient.ELASTICSEARCH_INDEX_ALIAS);
 	}
 
-	public ElasticFulltextIndexClient(String hostName, int port, String indexAlias) throws UnknownHostException {
+	public ElasticFulltextIndexClient(String hostName, int port, String indexAlias) {
 		this.indexAlias = indexAlias;
 		this.client = RestClient.builder(new HttpHost(hostName, port, "http")).build();
+		this.highLevelClient = new RestHighLevelClient(RestClient.builder(new HttpHost(hostName, port, "http")));
 	}
 
 	boolean isIndexAliasCreated() {
@@ -364,8 +379,69 @@ public class ElasticFulltextIndexClient {
 		} catch (IOException e) {
 			throw new FemmeFulltextException("Search failed [" + query + "]", e);
 		}
-
-
+	}
+	
+	public <T> List<T> search(SearchSourceBuilder query, Class<T> resultClass) throws SemanticSearchException {
+		SearchRequest searchRequest = new SearchRequest();
+		query.size(1000);
+		searchRequest.source(query);
+		
+		SearchResponse searchResponse;
+		try {
+			searchResponse = this.highLevelClient.search(searchRequest);
+			return Arrays.stream(searchResponse.getHits().getHits()).map(hit -> {
+				try {
+					return mapper.readValue(hit.getSourceAsString(), resultClass);
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+				}
+				return null;
+			}).filter(Objects::nonNull).collect(Collectors.toList());
+		} catch (IOException e) {
+			throw new SemanticSearchException("Search failed [" + query.toString() + "]", e);
+		}
+	}
+	
+	public List<String> aggregate(SearchSourceBuilder query) throws SemanticSearchException {
+		query.aggregation(AggregationBuilders.terms("unique_by_name").field("name.keyword"));
+		SearchRequest searchRequest = new SearchRequest();
+		query.size(1000);
+		searchRequest.source(query);
+		
+		SearchResponse searchResponse;
+		try {
+			searchResponse = this.highLevelClient.search(searchRequest);
+			return getAggregationTerms(searchResponse);
+		} catch (IOException e) {
+			throw new SemanticSearchException("Search failed [" + query.toString() + "]", e);
+		}
+	}
+	
+	private List<String> getAggregationTerms(SearchResponse searchResponse) {
+		Terms aggregationResult = searchResponse.getAggregations().get("unique_by_name");
+		return aggregationResult.getBuckets().stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList());
+	}
+	
+	private Map<String, Float> getHitsAsMap(SearchResponse searchResponse) {
+		Map<String, Float> hits = new HashMap<>();
+		for (SearchHit searchHit: searchResponse.getHits().getHits()) {
+			FulltextDocument doc = serializeSearchHit(searchHit, FulltextDocument.class);
+			if (doc != null) {
+				if (! hits.containsKey(doc.getFulltextField("name").toString())) {
+					hits.put(doc.getFulltextField("name").toString(), searchHit.getScore());
+				}
+			}
+		}
+		return hits;
+	}
+	
+	private <T> T serializeSearchHit(SearchHit searchHit, Class<T> resultClass) {
+		try {
+			return mapper.readValue(searchHit.getSourceAsString(), resultClass);
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 }

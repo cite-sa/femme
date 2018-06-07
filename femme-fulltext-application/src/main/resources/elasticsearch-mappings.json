@@ -20,6 +20,15 @@
 				"metadatumId": {
 					"type": "keyword",
 					"index": true
+				},
+				"name": {
+					"type": "text",
+					"copy_to": "all_fields",
+					"fields": {
+						"keyword": {
+							"type":  "keyword"
+						}
+					}
 				}
 			}
 		}

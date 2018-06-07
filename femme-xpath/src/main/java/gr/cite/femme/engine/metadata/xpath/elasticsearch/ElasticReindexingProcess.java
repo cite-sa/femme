@@ -79,7 +79,7 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 		String metadatumJson;
 		if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
 			try {
-				metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+				metadatumJson = XmlJsonConverter.xmlToFemmeJson(metadatum.getValue());
 			} catch (XMLStreamException e) {
 				throw new MetadataIndexException(e.getMessage(), e);
 			}

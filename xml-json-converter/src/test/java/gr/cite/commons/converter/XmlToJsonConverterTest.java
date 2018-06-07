@@ -27,10 +27,10 @@ public class XmlToJsonConverterTest {
 
 		//http://earthserver.ecmwf.int/rasdaman/ows?service=WCS&version=2.0.1&request=DescribeCoverage&coverageId=pl_geopot
 
-		String json = XmlJsonConverter.xmlToJson(xml);
+		String json = XmlJsonConverter.xmlToFemmeJson(xml);
 		System.out.println(json);
 
-		String xmlFromJson = XmlJsonConverter.jsonToXml(json);
+		String xmlFromJson = XmlJsonConverter.femmeJsonToXml(json);
 		System.out.println(xmlFromJson);
 	}
 }

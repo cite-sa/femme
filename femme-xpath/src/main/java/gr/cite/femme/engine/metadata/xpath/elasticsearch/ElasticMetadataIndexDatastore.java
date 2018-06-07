@@ -198,7 +198,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		
 		ElasticSearchQuery finalQuery = new ElasticSearchQuery();
 		
-		shoulds.stream().forEach(query -> {
+		shoulds.forEach(query -> {
 			//ElasticSearchQuery finalQuery = new ElasticSearchQuery();
 			
 			finalQuery.getIncludes().addAll(query.getIncludes());
@@ -252,7 +252,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 	
 	private ElasticSearchQuery buildElasticsearchQuery(Node<QueryNode> node) {
 		QueryNode nodeData = node.getData();
-		if (!nodeData.getFilterPath().toString().trim().isEmpty() || nodeData.getValue() != null || nodeData.getFilterNodesExpression().getFilterNodes().size() > 0) {
+		if (! nodeData.getFilterPath().toString().trim().isEmpty() || nodeData.getValue() != null || nodeData.getFilterNodesExpression().getFilterNodes().size() > 0) {
 			return buildTermOrNested(nodeData);
 			//} else if (node.getData().getFilterNodes().size() > 0) {
 		} else if (node.isLeaf()) {
@@ -287,6 +287,9 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		
 		if (node.isFilterPayload()) {
 			query.getIncludes().add(node.getNodePath().toString());
+		}
+		if (node.isProjectionNode()) {
+			query.getIncludes().add(node.getNodePath().toString() + node.getProjectionPath().toString());
 		}
 
 		return query;

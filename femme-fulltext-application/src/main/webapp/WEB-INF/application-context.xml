@@ -20,8 +20,12 @@
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.name}" />
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.semantic.index.taxonomies.type}" />
 	</bean>
+	<bean id="queryExpander" class="gr.cite.femme.fulltext.engine.semantic.search.taxonomy.QueryExpander" >
+		<constructor-arg ref="taxonomyClient"/>
+	</bean>
 	<bean id="taxonomyRepository" class="gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyRepository" >
 		<constructor-arg ref="taxonomyClient"/>
+		<constructor-arg ref="queryExpander"/>
 	</bean>
 
 	<bean id="fulltextIndexEngine" class="gr.cite.femme.fulltext.engine.FulltextIndexEngine">

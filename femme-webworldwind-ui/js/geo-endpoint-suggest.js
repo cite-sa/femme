@@ -39,7 +39,8 @@ var GeoEndpointSuggest = (function () {
 		});
 	
 		this.asgEndpoint.bind('selectionchanged', function (e) {
-			clearCoverages();
+			// clearCoverages();
+			CoverageTagsInput.destroy();
 			
 			var serverIds = self.asgEndpoint.CiteAutoSuggest('getSelectedValues');
 	

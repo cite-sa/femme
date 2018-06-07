@@ -207,36 +207,36 @@
 
 	var displaySelectedCoverages = function(coverages) {
 		coverages.forEach(coverage => {
-			createCoverageAccordion(coverage);
+			Femme.createCoverageAccordion(coverage);
 			$("#show").prop("disabled", false);
 		});
 		deleteSearchPolygon();
 	};
 
-	var getServerName = function(coverage) {
-		Earthserver.Client.Utilities.callWS(femmeGeoUrl + 'servers/' + coverage.serverId, 'GET', {
-			dataType: "json",
-			onSuccess: function (server) {
-				coverage.serverName = server.serverName;
-			},
-			onError: function () {
-				alert("Error retrieving collection name");
-			}
-		});
-	};
+	// var getServerName = function(coverage) {
+	// 	Earthserver.Client.Utilities.callWS(femmeGeoUrl + 'servers/' + coverage.serverId, 'GET', {
+	// 		dataType: "json",
+	// 		onSuccess: function (server) {
+	// 			coverage.serverName = server.serverName;
+	// 		},
+	// 		onError: function () {
+	// 			alert("Error retrieving collection name");
+	// 		}
+	// 	});
+	// };
 
-	var getDataElement = function(coverage) {
-		Earthserver.Client.Utilities.callWS(femmeUrl + 'dataElements/' + coverage.dataElementId, 'GET', {
-			dataType: "json",
-			onSuccess: function (data) {
-				createCoverageAccordion(coverage);
-				$("#show").prop("disabled", false);
-			},
-			onError: function () {
-				alert("Error retrieving intersecting coverages info");
-			}
-		});
-	};
+	// var getDataElement = function(coverage) {
+	// 	Earthserver.Client.Utilities.callWS(femmeUrl + 'dataElements/' + coverage.dataElementId, 'GET', {
+	// 		dataType: "json",
+	// 		onSuccess: function (data) {
+	// 			Femme.createCoverageAccordion(coverage);
+	// 			$("#show").prop("disabled", false);
+	// 		},
+	// 		onError: function () {
+	// 			alert("Error retrieving intersecting coverages info");
+	// 		}
+	// 	});
+	// };
 
 	var handlePick = function(recognizer) {
 		
@@ -283,7 +283,7 @@
 
 	var handleCoveragePick = function(pickObject) {
 		var dataElementId = pickObject.userObject.userProperties.dataElementId;
-		fillMetadataModalonClick(dataElementId);
+		Femme.fillMetadataModal(dataElementId);
 		$("#metadata-modal").modal("show");
 	};
 
@@ -387,36 +387,18 @@
 	};
 
 	var drawPolygon = function(coverage, coverageGeography, area, centroid) {
-		var boundaries = [];
-		var altitude = 0;
-	
-		boundaries.push(new WorldWind.Position(coverageGeography[0][1], coverageGeography[0][0], altitude));
-		boundaries.push(new WorldWind.Position(coverageGeography[1][1], coverageGeography[1][0], altitude));
-		boundaries.push(new WorldWind.Position(coverageGeography[2][1], coverageGeography[2][0], altitude));
-		boundaries.push(new WorldWind.Position(coverageGeography[3][1], coverageGeography[3][0], altitude));
-		boundaries.push(new WorldWind.Position(coverageGeography[4][1], coverageGeography[4][0], altitude));
-	
-		var attributes = new WorldWind.ShapeAttributes(null);
-		attributes.drawInterior = true;
-		attributes.interiorColor = new WorldWind.Color(0, 0, 0, 0.5);
-		attributes.drawOutline = true;
-		attributes.outlineColor = WorldWind.Color.BLUE;
-		attributes.applyLighting = true;
+		var boundaries = buildBoundaries(coverageGeography);
+		var attributes = buildAttributes();
+		var highlightAttributes = buildHighlightAttributes(attributes);
 	
 		var polygon = new WorldWind.SurfacePolygon(boundaries, attributes);
 		polygon.enabled = true;
 		polygon.displayName = coverage.dataElementId;
 		polygon.name = coverage.dataElementId;
-	
-		var highlightAttributes = new WorldWind.ShapeAttributes(attributes);
-		highlightAttributes.imageScale = 0.6;
-		highlightAttributes.drawInterior = true;
-		highlightAttributes.outlineColor = WorldWind.Color.RED;
-		highlightAttributes.interiorColor = new WorldWind.Color(1, 1, 1, 0);
-		polygon.highlightAttributes = highlightAttributes;
 		polygon.pathType = WorldWind.RHUMB_LINE;
 		polygon.label = coverage.dataElementId;
-	
+		polygon.highlightAttributes = highlightAttributes;
+		
 		polygon.userProperties = {
 			type: "coverage",
 			id: coverage.id,
@@ -430,9 +412,39 @@
 		wwd.redraw();
 	};
 
-	var getCentroid = function(x1, y1, x2, y2) {
-		return [x, y] = [(x2 + x1) / 2, (y2 + y1) / 2];
-	};
+	var buildBoundaries = function(coverageGeography) {
+		var boundaries = [];
+		var altitude = 0;
+
+		boundaries.push(new WorldWind.Position(coverageGeography[0][1], coverageGeography[0][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[1][1], coverageGeography[1][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[2][1], coverageGeography[2][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[3][1], coverageGeography[3][0], altitude));
+		boundaries.push(new WorldWind.Position(coverageGeography[4][1], coverageGeography[4][0], altitude));
+
+		return boundaries;
+	}
+
+	var buildAttributes = function() {
+		var attributes = new WorldWind.ShapeAttributes(null);
+		attributes.drawInterior = true;
+		attributes.interiorColor = new WorldWind.Color(0, 0, 0, 0.5);
+		attributes.drawOutline = true;
+		attributes.outlineColor = WorldWind.Color.BLUE;
+		attributes.applyLighting = true;
+
+		return attributes;
+	}
+
+	var buildHighlightAttributes = function(attributes) {
+		var highlightAttributes = new WorldWind.ShapeAttributes(attributes);
+		highlightAttributes.imageScale = 0.6;
+		highlightAttributes.drawInterior = true;
+		highlightAttributes.outlineColor = WorldWind.Color.RED;
+		highlightAttributes.interiorColor = new WorldWind.Color(1, 1, 1, 0);
+
+		return highlightAttributes;
+	}
 
 	Earthserver.WebWorldWind.deleteSchema = function(name) {
 		var renderablesToBeDeleted = [];
@@ -449,10 +461,6 @@
 	Earthserver.WebWorldWind.clear = function() {
 		polygonsLayer.removeAllRenderables();
 		wwd.redraw();
-	};
-
-	var findDistance = function(point1Lon, point1Lat, point2Lon, point2Lat) {
-		return Math.sqrt(Math.pow((point2Lon - point1Lon), 2) + Math.pow((point2Lat - point1Lat), 2));
 	};
 
 	var drawPlacemark = function(coverage, coverageGeography) {
@@ -507,6 +515,14 @@
 		wwd.navigator.range = 5e5;
 		wwd.goTo(new WorldWind.Location(centroid[0], centroid[1], bigNavRange));
 		wwd.redraw();
+	};
+
+	var getCentroid = function(x1, y1, x2, y2) {
+		return [x, y] = [(x2 + x1) / 2, (y2 + y1) / 2];
+	};
+
+	var findDistance = function(point1Lon, point1Lat, point2Lon, point2Lat) {
+		return Math.sqrt(Math.pow((point2Lon - point1Lon), 2) + Math.pow((point2Lat - point1Lat), 2));
 	};
 	
 	var canvasInfo = function() {

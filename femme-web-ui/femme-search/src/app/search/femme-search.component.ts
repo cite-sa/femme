@@ -6,7 +6,6 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 
 import { FemmeSearchService } from '@app/services/femme-search.service';
 import { FulltextSearchResult } from '@app/models/fulltext-search-result';
-import { DataElement } from '@app/models/data-element';
 import { FemmeQuery } from '@app/models/femme-query';
 import { MatAutocompleteSelectedEvent } from '@angular/material';
 
@@ -30,9 +29,10 @@ import { MatAutocompleteSelectedEvent } from '@angular/material';
 export class FemmeSearchComponent {
 	expansionTypes = ["Broader", "Narrower", "Related"];
 
-	// queryType: string;
+	loading = false;
+
 	searchTerm : FormControl = new FormControl();
-	searchResults: Observable<Array<FulltextSearchResult>>;
+	searchResults: FulltextSearchResult[];
 	expansionType: string;
 
 	defaultFieldShown = "name";
@@ -43,6 +43,7 @@ export class FemmeSearchComponent {
 
 	@Output()
 	queryEvent = new EventEmitter<FemmeQuery>();
+
 
 	@HostListener('document:click', ['$event']) clickedOutside($event) {
 		if ($event.which !== 3) {
@@ -55,38 +56,92 @@ export class FemmeSearchComponent {
 			debounceTime(400) 
 		).subscribe(term => {
 			if (typeof term === "string") {
-				this.searchResults = this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined);
+				this.loading = true;
+				this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined)
+				.subscribe(
+					(results) => this.searchResults = results,
+					(error) => console.log(error),
+					() => this.loading = false
+				);
 			}
 		});
 	}
 
 	elementToDisplayValue(element: FulltextSearchResult) {
+		console.log("elementToDisplayValue");
+		console.log(element);
 		if (element != undefined) {
-			let propertyNames: string[] = Object.getOwnPropertyNames(element.fulltext);
-			let projectedFields =  propertyNames.filter(propertyName => (propertyName != "metadatumId") && (propertyName != "elementId"));
-			return projectedFields.map(field => element.fulltext[field]).join(" - ");
+			if (element.fulltext) {
+				let propertyNames: string[] = Object.getOwnPropertyNames(element.fulltext);
+				let projectedFields =  propertyNames.filter(propertyName => (propertyName != "metadatumId") && (propertyName != "elementId"));
+				return projectedFields.map(field => element.fulltext[field]).join(" - ");
+			} else {
+				return element["name"];
+			}
 		}
 	}
 
 	selectFromAutocomplete(event: MatAutocompleteSelectedEvent) {
-		this.emitQueryEvent([event.option.value.fulltext.elementId]);
+		console.log("selectFromAutocomplete");
+		console.log(event);
+		if (event.option.value.fulltext) {
+			let query = {
+				metadataField: {
+					field: "name",
+					value: event.option.value.fulltext.name
+				}
+			}
+			this.searchService.searchExact(query).subscribe(
+					elements => {
+						console.log(elements);
+						let elementIds = elements.map(element => element.fulltext.elementId);
+						this.emitQueryEvent(elementIds);
+					},
+					error => console.log(error),
+					() => this.loading = false
+				);
+		} else {
+			let query = {
+				metadataField: {
+					field: "name",
+					value: event.option.value.name
+				}
+			}
+			this.searchService.searchExact(query).subscribe(
+					elements => {
+						console.log(elements);
+						let elementIds = elements.map(element => element.fulltext.elementId);
+						this.emitQueryEvent(elementIds);
+					},
+					error => console.log(error),
+					() => this.loading = false
+				);
+		}
 	}
 
 	fulltextQuery() {
+		// this.loading = true;
 		let term: string = this.searchTerm.value;
 
 		if (term == undefined && term == "") {
 			this.emitQueryEvent();
+			this.loading = false;
 		} else {
-			this.searchByTerm(term);
+			this.searchByTerm(term, () => this.loading = false);
 		}
 	}
 
-	private searchByTerm(term: string) {
+	private searchByTerm(term: string, completedCallbak) {
 		this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined)
 				.pipe(
 					map(results => results.map(result => result.fulltext.elementId))
-				).subscribe(ids => this.emitQueryEvent(ids));
+				).subscribe(
+					ids => this.emitQueryEvent(ids),
+					error => console.log(error),
+					() => {
+						if (completedCallbak) completedCallbak();
+					}
+			);
 	}
 
 	xpathQuery() {

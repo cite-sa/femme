@@ -18,13 +18,24 @@ export class FemmeSearchService {
 	search(searchField: string, searchTerm: string, expansionType: string): Observable<Array<FulltextSearchResult>> {
 		console.log(searchField);
 		let query = {
-			expand: expansionType,
+			expand: undefined,
 			autocompleteField: {
 				"field": searchField,
 				"value": searchTerm
 			}
 		}
 
+		if (expansionType != undefined && expansionType != null && expansionType != "") {
+			query.expand = {
+				direction: expansionType,
+				maxBroader: 5
+			};
+		}
+
+		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}`, query);
+	}
+
+	searchExact(query): Observable<Array<FulltextSearchResult>> {
 		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}`, query);
 	}
 }

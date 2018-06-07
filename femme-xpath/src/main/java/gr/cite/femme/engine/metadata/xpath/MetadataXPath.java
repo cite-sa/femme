@@ -67,8 +67,14 @@ public class MetadataXPath {
 		String metadatumJson;
 		if (MediaType.APPLICATION_XML.equals(metadatum.getContentType()) || MediaType.TEXT_XML.equals(metadatum.getContentType())) {
 			try {
-				metadatumJson = XmlJsonConverter.xmlToJson(metadatum.getValue());
+				metadatumJson = XmlJsonConverter.xmlToFemmeJson(metadatum.getValue());
 			} catch (XMLStreamException e) {
+				throw new MetadataIndexException(e.getMessage(), e);
+			}
+		} else if (metadatum.getContentType().toLowerCase().contains("json")) {
+			try {
+				metadatumJson = XmlJsonConverter.jsonToFemmeJson(metadatum.getValue());
+			} catch (IOException e) {
 				throw new MetadataIndexException(e.getMessage(), e);
 			}
 		} else {
@@ -170,6 +176,8 @@ public class MetadataXPath {
 			metadatum.setId(indexableMetadatum.getMetadatumId());
 			metadatum.setElementId(indexableMetadatum.getElementId());
 			metadatum.setContentType(indexableMetadatum.getOriginalContentType());
+			
+			
 			metadatum.setValue(indexableMetadatum.getValue());
 			
 			return metadatum;

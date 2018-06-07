@@ -1,3 +1,4 @@
+import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from "@angular/common/http";
@@ -14,19 +15,20 @@ import { FemmeSearchService } from '@app/services/femme-search.service';
 import { FemmeService } from "@app/services/femme.service";
 import { FemmeElementDialogComponent } from '@app/elements-view/femme-element-dialog.component';
 import { FemmeElementsTableComponent } from "@app/elements-view/femme-elements-table.component";
-import { MatDialogContainer } from "@angular/material";
 import { ExtractFulltextFieldsPipe } from './search/extract-fulltext-fields.pipe';
-import { FormatXmlPipe } from "@app/elements-view/format-xml.pipe";
+import { FormatMetadatumPipe } from "@app/elements-view/format-metadatum.pipe";
+import { SpinnerService } from "@app/shared/spinner/spinner.service";
 
 @NgModule({
 	declarations: [
 		AppComponent,
+		SpinnerComponent,
 		FemmeNavbarComponent,
 		FemmeSearchComponent,
 		FemmeElementsTableComponent,
 		FemmeElementDialogComponent,
 		ExtractFulltextFieldsPipe,
-		FormatXmlPipe
+		FormatMetadatumPipe
 	],
 	imports: [
 		BrowserModule,
@@ -41,6 +43,7 @@ import { FormatXmlPipe } from "@app/elements-view/format-xml.pipe";
 		FemmeElementDialogComponent
 	],
 	providers: [
+		SpinnerService,
 		FemmeService,
 		FemmeSearchService
 	],

@@ -4,6 +4,8 @@ import com.google.common.io.Resources;
 import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.engine.FulltextIndexEngine;
 import gr.cite.femme.fulltext.engine.FemmeFulltextException;
+import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.MarineSpeciesTaxon;
+import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyTerm;
 import gr.cite.femme.fulltext.engine.semantic.search.taxonomy.TaxonomyParserSkosApi;
 import org.elasticsearch.common.Strings;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -24,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 @Component
 @Path("admin")
@@ -90,6 +93,13 @@ public class FulltextIndexAdminResource {
 		}
 
 		return Response.ok().build();
+	}
+	
+	@POST
+	@Path("taxa/marineSpecies")
+	public Response storeMarineSpeciesTaxa(MarineSpeciesTaxon marineSpeciesTaxon) {
+		List<TaxonomyTerm> taxa = this.engine.storeTaxonomyTermsTree(marineSpeciesTaxon);
+		return Response.ok("Marine Species taxa successfully stored [" + taxa.size() + "]").build();
 	}
 	
 	@POST

@@ -123,7 +123,7 @@ public class MongoXPathTest {
 				.queryParam("coverageId", "hrl0000c067_07_if185l_trr3")
 				.request().get(String.class);
 
-		String json = XmlJsonConverter.xmlToJson(xml);
+		String json = XmlJsonConverter.xmlToFemmeJson(xml);
 
 		List<MaterializedPathsNode> nodes = PathMaterializer.materialize(new ObjectId().toString(), json);
 		materializedPaths.insertMany(nodes);

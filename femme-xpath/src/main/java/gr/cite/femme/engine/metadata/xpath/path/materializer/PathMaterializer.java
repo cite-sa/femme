@@ -197,7 +197,7 @@ public class PathMaterializer {
 			 .queryParam("coverageId", "hrl0000c067_07_if185l_trr3")
 			 .request().get(String.class);
 
-		String json = XmlJsonConverter.xmlToJson(xml);
+		String json = XmlJsonConverter.xmlToFemmeJson(xml);
 
 		//		 System.out.println(json);
 

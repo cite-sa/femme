@@ -284,11 +284,12 @@ public class MongoMetadataStore implements MetadataStore {
 
 	private MongoMetadataCollection getMetadataStore(Metadatum metadatum) throws MetadataStoreException {
 		if (metadatum.getContentType() != null) {
-			if (metadatum.getContentType().toLowerCase().contains("json")) {
+			/*if (metadatum.getContentType().toLowerCase().contains("json")) {
 				return metadataMongoCollection;
 			} else {
 				return metadataGridFS;
-			}
+			}*/
+			return metadataGridFS;
 		} else {
 			throw new MetadataStoreException("No metadata content type provided");
 		}
@@ -296,13 +297,11 @@ public class MongoMetadataStore implements MetadataStore {
 	}
 	
 	private boolean isIndexable(Metadatum metadatum) {
-		return metadatum.getContentType() != null
-				&& (metadatum.getContentType().toLowerCase().contains("xml")
-				|| metadatum.getContentType().toLowerCase().contains("json"));
+		return metadatum.getContentType() != null && (metadatum.getContentType().toLowerCase().contains("xml") || metadatum.getContentType().toLowerCase().contains("json"));
 	}
 
 	private boolean isXPathable(Metadatum metadatum) {
-		return metadatum.getContentType() != null && (metadatum.getContentType().toLowerCase().contains("xml"));
+		return metadatum.getContentType() != null && (metadatum.getContentType().toLowerCase().contains("xml") || metadatum.getContentType().toLowerCase().contains("json"));
 	}
 
 	private boolean isFemmeInIndexMode() {

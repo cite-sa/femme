@@ -49,7 +49,10 @@ public class QueryNode {
 	private String value;
 	
 	private boolean isPredicateNode = false;
+	
 	private boolean isProjectionNode = false;
+	private StringBuilder projectionPath = new StringBuilder();
+	
 	private List<FilterNode> filterNodes = new ArrayList<>();
 	private FilterNodesExpression filterNodesExpression = new FilterNodesExpression();
 
@@ -105,14 +108,22 @@ public class QueryNode {
 		isProjectionNode = projectionNode;
 	}
 	
-	/*public List<FilterNode> getFilterNodes() {
-		return filterNodes;
+	public StringBuilder getProjectionPath() {
+		return projectionPath;
 	}
 	
-	public void setFilterNodes(List<FilterNode> filterNodes) {
-		this.filterNodes = filterNodes;
+	public void setProjectionPath(StringBuilder projectionPath) {
+		this.projectionPath = projectionPath;
 	}
-	*/
+	
+	/*public List<FilterNode> getFilterNodes() {
+			return filterNodes;
+		}
+		
+		public void setFilterNodes(List<FilterNode> filterNodes) {
+			this.filterNodes = filterNodes;
+		}
+		*/
 	public FilterNodesExpression getFilterNodesExpression() {
 		return filterNodesExpression;
 	}
