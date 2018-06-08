@@ -35,6 +35,7 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 		// this.dataSource.loadDataElements(0, 10);
 		this.query$.subscribe(q => {
 			this.query = q;
+			this.paginator.pageIndex = 0;
 			this.loadDataElementsPage();
 		});
 	}

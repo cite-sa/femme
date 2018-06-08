@@ -188,7 +188,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>femme-geo-application</finalName>
+		<finalName>femme-geo</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

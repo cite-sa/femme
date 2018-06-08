@@ -4,12 +4,9 @@
 		<mat-button-toggle value="XPath">XPath</mat-button-toggle>
 	</mat-button-toggle-group>
 	
-	<form class="fulltext-search-form" *ngIf="group.value=='Search'" (ngSubmit)="fulltextQuery()">
+	<form class="fulltext-search-form" *ngIf="group.value=='Search'" [formGroup]="fulltextQueryForm" (ngSubmit)="fulltextQuery()">
 		<mat-form-field class="search-form-field">
-			<input class ="search-form-field-input"type="text" [placeholder]="group.value" aria-label="Number" matInput [formControl]="searchTerm" [matAutocomplete]="auto">
-			<!-- <button mat-icon-button class="search-filters-button" type="button" (click)="filterButtonClick($event)">
-				<mat-icon aria-label="Filters">filter_list</mat-icon>
-			</button> -->
+			<input class ="search-form-field-input"type="text" [placeholder]="group.value" aria-label="Number" matInput formControlName="searchTerm" [matAutocomplete]="auto">
 			<mat-spinner *ngIf="loading" [diameter]=25></mat-spinner>
 			<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)">
 				<!-- <mat-option *ngFor="let result of searchResults | async" [value]="result">
@@ -31,17 +28,10 @@
 					</div>	
 				</div>
 			</mat-autocomplete>
-			<div class="field-names mat-elevation-z4" [@collapse]="showFields" (click)="stopProp($event)">
-				<label class="field-names-margin">Fields:</label>
-				<mat-radio-group name="search-field-selector" [(ngModel)]="searchField">
-					<mat-radio-button class="field-names-margin" value="all_fields">All</mat-radio-button>
-					<mat-radio-button class="field-names-margin" value="name">Name</mat-radio-button>
-				</mat-radio-group>
-			</div>
 		</mat-form-field>
 
 		<mat-form-field class="expansion-type-selector">
-			<mat-select placeholder="Expansion" [(value)]="expansionType">
+			<mat-select placeholder="Expansion" [(value)]="expansionTypeValue" formControlName="expansionType">
 				<mat-option>None</mat-option>
 				<mat-option *ngFor="let type of expansionTypes" [value]="type">{{ type }}</mat-option>
 			</mat-select>

@@ -7,7 +7,7 @@ gr.cite.femme.datastore.metadata.db.port=27017
 gr.cite.femme.datastore.metadata.db.name=femme-db-pa
 gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
 
-gr.cite.femme.datastore.metadata.index.db.host=localhost
+gr.cite.femme.datastore.metadata.index.db.host=es-devel1.local.cite.gr
 gr.cite.femme.datastore.metadata.index.db.port=9200
 gr.cite.femme.datastore.metadata.index.db.name=metadataindex
 

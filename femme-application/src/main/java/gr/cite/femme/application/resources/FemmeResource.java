@@ -265,7 +265,7 @@ public class FemmeResource {
 
 		String message;
 		if (elements.isEmpty()) {
-			message = "No " + elementType.getSimpleName() + "found";
+			message = "No " + elementType.getSimpleName() + " found";
 			logger.info(message);
 			throw new FemmeApplicationException(message, Response.Status.NOT_FOUND.getStatusCode());
 		} else {

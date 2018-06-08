@@ -1,6 +1,5 @@
 package gr.cite.femme.fulltext.application.resources;
 
-import gr.cite.femme.fulltext.core.FulltextDocument;
 import gr.cite.femme.fulltext.core.FulltextSearchQueryMessenger;
 import gr.cite.femme.fulltext.engine.FemmeFulltextException;
 import gr.cite.femme.fulltext.engine.FulltextIndexEngine;

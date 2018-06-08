@@ -47,6 +47,12 @@
 			<groupId>skos-api</groupId>
 			<artifactId>distribution</artifactId>
 			<version>3.2</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!--<dependency>
 			<groupId>org.elasticsearch.client</groupId>

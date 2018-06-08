@@ -1,6 +1,5 @@
 import { Component, Output, EventEmitter, HostListener } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { FormControl, FormGroup, FormBuilder } from '@angular/forms';
 import { debounceTime, map } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
@@ -31,9 +30,10 @@ export class FemmeSearchComponent {
 
 	loading = false;
 
-	searchTerm : FormControl = new FormControl();
+	fulltextQueryForm: FormGroup;
+	// searchTerm : FormControl = new FormControl();
 	searchResults: FulltextSearchResult[];
-	expansionType: string;
+	expansionTypeValue: string;
 
 	defaultFieldShown = "name";
 	showFields: string = "hide";
@@ -44,32 +44,42 @@ export class FemmeSearchComponent {
 	@Output()
 	queryEvent = new EventEmitter<FemmeQuery>();
 
+	constructor(private searchService: FemmeSearchService, private fb: FormBuilder) {
+		this.fulltextQueryForm = this.fb.group({
+			searchTerm: '',
+			expansionType: ''
+		  });
 
-	@HostListener('document:click', ['$event']) clickedOutside($event) {
-		if ($event.which !== 3) {
-			this.showFields = 'hide';
-		}
-	  }
+		this.fulltextQueryForm.valueChanges
+			.pipe(debounceTime(400))
+			.subscribe(query => {
+				console.log("VALUE CHANGED");
+				console.log(query);
 
-	constructor(private searchService: FemmeSearchService) {
-		this.searchTerm.valueChanges.pipe(
-			debounceTime(400) 
-		).subscribe(term => {
-			if (typeof term === "string") {
-				this.loading = true;
-				this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined)
-				.subscribe(
-					(results) => this.searchResults = results,
-					(error) => console.log(error),
-					() => this.loading = false
-				);
-			}
-		});
+				let term: any = query.searchTerm;
+				let expansionType: string = query.expansionType ? query.expansionType.toLowerCase() : undefined;
+
+				if (typeof term !== "string") {
+					if (term.fulltext) {
+						term = term.fulltext.name;
+					}
+				}
+
+				console.log(term);
+
+				if (typeof term === "string") {
+					this.loading = true;
+					this.searchService.search(this.searchField, term, expansionType)
+					.subscribe(
+						(results) => this.searchResults = results,
+						(error) => console.log(error),
+						() => this.loading = false
+					);
+				}
+			});
 	}
 
 	elementToDisplayValue(element: FulltextSearchResult) {
-		console.log("elementToDisplayValue");
-		console.log(element);
 		if (element != undefined) {
 			if (element.fulltext) {
 				let propertyNames: string[] = Object.getOwnPropertyNames(element.fulltext);
@@ -82,66 +92,45 @@ export class FemmeSearchComponent {
 	}
 
 	selectFromAutocomplete(event: MatAutocompleteSelectedEvent) {
-		console.log("selectFromAutocomplete");
-		console.log(event);
 		if (event.option.value.fulltext) {
-			let query = {
-				metadataField: {
-					field: "name",
-					value: event.option.value.fulltext.name
-				}
-			}
-			this.searchService.searchExact(query).subscribe(
-					elements => {
-						console.log(elements);
-						let elementIds = elements.map(element => element.fulltext.elementId);
-						this.emitQueryEvent(elementIds);
-					},
-					error => console.log(error),
-					() => this.loading = false
-				);
+			this.searchExact(event.option.value.fulltext.name, () => this.loading = false);
 		} else {
-			let query = {
-				metadataField: {
-					field: "name",
-					value: event.option.value.name
-				}
-			}
-			this.searchService.searchExact(query).subscribe(
-					elements => {
-						console.log(elements);
-						let elementIds = elements.map(element => element.fulltext.elementId);
-						this.emitQueryEvent(elementIds);
-					},
-					error => console.log(error),
-					() => this.loading = false
-				);
+			this.searchExact(event.option.value.name, () => this.loading = false);
 		}
 	}
 
 	fulltextQuery() {
-		// this.loading = true;
-		let term: string = this.searchTerm.value;
+		let term: any = this.fulltextQueryForm.value.searchTerm;
+		console.log("SUBMIT");
+		console.log(term);
 
-		if (term == undefined && term == "") {
+		if (term == undefined) {
 			this.emitQueryEvent();
-			this.loading = false;
 		} else {
-			this.searchByTerm(term, () => this.loading = false);
+			let searchTerm: string;
+			searchTerm = typeof term === "string" ? term : term.fulltext["name"];
+			this.searchExact(searchTerm);
 		}
 	}
 
-	private searchByTerm(term: string, completedCallbak) {
-		this.searchService.search(this.searchField, term, this.expansionType ? this.expansionType.toLowerCase() : undefined)
-				.pipe(
-					map(results => results.map(result => result.fulltext.elementId))
-				).subscribe(
-					ids => this.emitQueryEvent(ids),
-					error => console.log(error),
-					() => {
-						if (completedCallbak) completedCallbak();
-					}
-			);
+	private searchExact(term: string, completedCallbak?: Function) {
+		let query = {
+			metadataField: {
+				field: "name",
+				value: term
+			}
+		}
+
+		this.searchService.searchExact(query).subscribe(
+			elements => {
+				let elementIds = elements.map(element => element.fulltext.elementId);
+				this.emitQueryEvent(elementIds);
+			},
+			error => console.log(error),
+			() => {
+				if (completedCallbak) completedCallbak();
+			}
+		)
 	}
 
 	xpathQuery() {
@@ -156,14 +145,4 @@ export class FemmeSearchComponent {
 		this.queryEvent.emit(query);
 	}
 
-	stopProp(event: any) {
-		event.stopPropagation();
-	}
-
-	filterButtonClick(event: any) {
-		if (event.which !== 1) {
-			event.stopPropagation();
-			this.showFields = this.showFields === 'hide' ? 'show' : 'hide';
-		}
-	}
 }

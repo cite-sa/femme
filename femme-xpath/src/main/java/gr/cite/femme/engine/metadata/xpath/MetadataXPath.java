@@ -149,7 +149,7 @@ public class MetadataXPath {
 		end = System.currentTimeMillis();
 		logger.info("[" + xPath + "] ElasticSearch query time: " + (end - start) + " ms");
 		
-		start = System.currentTimeMillis();
+ 		start = System.currentTimeMillis();
 		List<Metadatum> metadata = transformXPathResultToMetadata(xPathResult);
 		end = System.currentTimeMillis();
 		logger.info("[" + xPath + "] IndexableMetadatum to Metadatum transformation time: " + (end - start) + " ms");
