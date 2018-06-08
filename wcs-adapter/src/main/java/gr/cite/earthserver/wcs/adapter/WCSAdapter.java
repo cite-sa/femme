@@ -22,8 +22,6 @@ import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
-import gr.cite.femme.core.utils.Pair;
-import jersey.repackaged.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -225,7 +224,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 	
 	@Override
 	public List<String> getCoverageIds() throws FemmeException, FemmeClientException {
-		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(Sets.newHashSet("id")).build();
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().include(new HashSet<>(Collections.singletonList("id"))).build();
 		return this.femmeClient.findDataElements(null, options, null)
 				.stream().map(Element::getId).collect(Collectors.toList());
 	}
@@ -254,7 +253,7 @@ public class WCSAdapter implements WCSAdapterAPI {
 				.map(collectionFilterValue -> CriterionBuilderClient.root().eq(filterKey, collectionFilterValue).end())
 				.collect(Collectors.toList());
 		
-		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).include(Sets.newHashSet("name")).build();
+		QueryOptionsMessenger options = QueryOptionsMessenger.builder().limit(limit).offset(offset).include(new HashSet<>(Collections.singletonList("name"))).build();
 		
 		return this.femmeClient.findDataElements(
 				QueryClient.query().addCriterion(CriterionBuilderClient.root().inAnyCollection(serverFilterCriteria).end()),
