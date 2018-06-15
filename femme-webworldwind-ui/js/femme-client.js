@@ -1,12 +1,12 @@
 var FemmeClient = (function () {
 	
-	var serverUrl = "http://localhost";
-	// var serverUrl = "http://earthserver-devel.vhosts.cite.gr/"
+	// var serverUrl = "http://localhost";
+	var serverUrl = "http://earthserver-devel.vhosts.cite.gr/"
 
-	// var femmePort = "";
-	var femmePort = ":8080/";
-	// var femmeGeoPort = "";
-	var femmeGeoPort = ":8083/";
+	var femmePort = "";
+	var femmeGeoPort = "";
+	// var femmePort = ":8080/";
+	// var femmeGeoPort = ":8083/";
 
 	var femmeUrl = serverUrl + femmePort + "femme/";
 	var femmeGeoUrl = serverUrl + femmeGeoPort + "femme-geo/";
@@ -73,12 +73,25 @@ var FemmeClient = (function () {
 		});
 	};
 
+	var getServersByCrs = function(crs, successCallback, errorCallback) {
+		Earthserver.Client.Utilities.callWS(femmeGeoUrl + "servers?crs=" + crs, 'GET', {
+			dataType: "json",
+			contentType: undefined,
+			onSuccess: function (servers) {
+				if (successCallback) successCallback(servers);
+			},
+			onError: function () {
+				if (errorCallback) errorCallback();
+			}
+		});
+	};
+
 	return {
 		getDataElementById: getDataElementById,
 		getAllCoverages: getAllCoverages,
 		getCoveragesByIds: getCoveragesByIds,
 		getCoveragesByServer: getCoveragesByServer,
-		getCoveragesIntersectingOrWithinBBox: getCoveragesIntersectingOrWithinBBox
+		getCoveragesIntersectingOrWithinBBox: getCoveragesIntersectingOrWithinBBox,
+		getServersByCrs: getServersByCrs
 	};
-  
   })();

@@ -1,7 +1,7 @@
 import { environment } from '@env/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs/operators';
+import { map, expand } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
 import { FulltextSearchResult } from '@app/models/fulltext-search-result';
@@ -32,7 +32,9 @@ export class FemmeSearchService {
 			};
 		}
 
-		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}`, query);
+		console.log(query);
+
+		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}?${query.expand == undefined ? 'unique=true' : ''}`, query);
 	}
 
 	searchExact(query): Observable<Array<FulltextSearchResult>> {

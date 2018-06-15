@@ -2,5 +2,5 @@ import { FulltextDocument } from "@app/models/fulltext-document";
 
 export class FulltextSearchResult {
 	fulltext: FulltextDocument;
-	semantic: Array<FulltextDocument>;
+	semantic: FulltextDocument[][];
 }

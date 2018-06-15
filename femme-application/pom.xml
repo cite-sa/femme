@@ -163,12 +163,12 @@
 			<version>${jersey.version}</version>
 			<scope>test</scope>
 		</dependency>-->
-		<dependency>
+		<!--<dependency>
 			<groupId>gr.cite.earthserver</groupId>
 			<artifactId>wcs-adapter</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency>-->
 
 		<!--<dependency>
 			<groupId>org.apache.tomcat.maven</groupId>

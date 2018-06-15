@@ -1,5 +1,6 @@
 package gr.cite.femme.geo.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.femme.core.geo.CoverageGeo;
 import gr.cite.femme.geo.api.GeoServiceApi;
 import gr.cite.femme.geo.core.FemmeGeoException;
@@ -18,6 +19,8 @@ import java.util.List;
 @Component
 public class GeoService implements GeoServiceApi {
 	private static final Logger logger = LoggerFactory.getLogger(GeoService.class);
+	private static final ObjectMapper mapper = new ObjectMapper();
+	
 	private MongoGeoDatastore mongoGeoDatastore;
 	
 	@Inject
@@ -27,10 +30,9 @@ public class GeoService implements GeoServiceApi {
 	
 	@Override
 	public List<CoverageGeo> getCoveragesByBboxString(String bBox) throws FemmeGeoException {
-		GeoJsonObject geoJsonObject;
 		try {
-			geoJsonObject = GeoUtils.getBBoxFromString(bBox);
-			return mongoGeoDatastore.getCoveragesByPolygon(geoJsonObject);
+			GeoJsonObject geoJson = GeoUtils.getBBoxFromString(bBox);
+			return mongoGeoDatastore.getCoveragesByPolygon(geoJson);
 		} catch (IOException | FactoryException e) {
 			throw new FemmeGeoException("Error on querying coverage by bbox", e);
 		}

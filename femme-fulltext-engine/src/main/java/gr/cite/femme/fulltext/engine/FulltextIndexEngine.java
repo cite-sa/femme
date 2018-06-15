@@ -25,8 +25,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FulltextIndexEngine {
@@ -95,14 +97,18 @@ public class FulltextIndexEngine {
 		this.indexClient.deleteByQuery(deleteQuery, this.indexName);
 	}
 
-	public List<FulltextSemanticResult> search(FulltextSearchQueryMessenger query) throws FemmeFulltextException, IOException, SemanticSearchException {
+	public List<FulltextSemanticResult> search(FulltextSearchQueryMessenger query, boolean unique) throws FemmeFulltextException, IOException, SemanticSearchException {
 		if (query.getAutocompleteField() != null) {
 			if (query.getExpand() != null) {
 				List<TaxonomyTerm> autocompleteTaxonomyTerms = this.taxonomyRepository.autocompleteTaxonomyTerm(query.getAutocompleteField().getValue());
 				
 				return expandTaxonomyTerms(autocompleteTaxonomyTerms, query);
 			} else {
-				return toFulltextSemanticResults(searchUnique(buildAutocompleteQuery(query)));
+				if (unique) {
+					return toFulltextSemanticResults(aggregate(buildAutocompleteQuery(query)));
+				} else {
+					return toFulltextSemanticResults(search(buildAutocompleteQuery(query)));
+				}
 			}
 		} else if (query.getMetadataField() != null) {
 			if (query.getExpand() != null) {
@@ -139,7 +145,7 @@ public class FulltextIndexEngine {
 			query.setMetadataField(field);
 			
 			try {
-				result.setSemanticResults(aggregate(buildExpandedQuery(query)));
+				result.setSemanticResults(searchUniqueByScore(buildExpandedQuery(query)));
 			} catch (SemanticSearchException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -173,6 +179,18 @@ public class FulltextIndexEngine {
 			return result;
 			
 		}).collect(Collectors.toList());*/
+	}
+	
+	private List<List<FulltextDocument>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
+		Map<Float, Set<String>> uniques = this.indexClient.searchUniqueByScore(query);
+		//List<List<FulltextDocument>>> uniqueDocs = new HashMap<>();
+		
+		return uniques.values().stream().map(scoreAndNames -> scoreAndNames.stream().map(name -> {
+			FulltextDocument doc = new FulltextDocument();
+			doc.setFulltextField("name", name);
+			return doc;
+		}).collect(Collectors.toList())).collect(Collectors.toList());
+		
 	}
 	
 	private List<FulltextSemanticResult> toFulltextSemanticResults(List<FulltextDocument> fulltextDocuments) {

@@ -73,7 +73,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 				(includes.size() > 0 && payloadLazy ? "," : "") +
 				(payloadLazy ? "\"excludes\":[\"value\"]" : "") +
 			"}," +
-			(query != null ? query + "," : "") +
+			(query != null && ! "".equals(query) ? query + "," : "") +
 			"\"sort\" : [\"_doc\"]," +
 			"\"size\":  1000" +
 		"}";
@@ -176,20 +176,24 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private String serializeFinalNode(String finalNode, List<JsonNode> results, String contentType) throws Throwable {
 		try {
 			return results.stream().map(jsonNode -> {
-				try {
-					if (contentType.toLowerCase().contains("xml")) {
-						return XmlJsonConverter.femmeJsonToXml("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
-					} else if (contentType.toLowerCase().contains("json")) {
-						return XmlJsonConverter.femmeJsonToJson("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
-					} else {
-						logger.error("Content type [" + contentType + "] not supported");
-						return "";
+				if (! jsonNode.isMissingNode()) {
+					try {
+						if (contentType.toLowerCase().contains("xml")) {
+							return XmlJsonConverter.femmeJsonToXml("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
+						} else if (contentType.toLowerCase().contains("json")) {
+							return XmlJsonConverter.femmeJsonToJson("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
+						} else {
+							logger.error("Content type [" + contentType + "] not supported");
+							return null;
+						}
+					} catch (IOException | XMLStreamException e) {
+						logger.error(e.getMessage(), e);
+						//throw new RuntimeException(e);
 					}
-				} catch (IOException | XMLStreamException e) {
-					logger.error(e.getMessage(), e);
-					throw new RuntimeException(e);
 				}
-			}).collect(Collectors.joining("\n"));
+				
+				return null;
+			}).filter(Objects::nonNull).collect(Collectors.joining("\n"));
 		} catch (Exception e) {
 			throw e.getCause();
 		}

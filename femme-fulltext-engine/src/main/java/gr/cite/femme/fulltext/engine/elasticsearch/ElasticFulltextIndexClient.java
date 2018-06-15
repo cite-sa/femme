@@ -125,7 +125,7 @@ public class ElasticFulltextIndexClient {
 			logger.error(e.getMessage(), e);
 			throw new FemmeFulltextException("Index " + indexName + " existence check failed", e);
 		}
-		return indexExistenceResponse.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
+		return indexExistenceResponse.getStatusLine().getStatusCode() != 404;
 	}
 
 	boolean aliasExists(String indexAlias) throws FemmeFulltextException {
@@ -135,7 +135,7 @@ public class ElasticFulltextIndexClient {
 		} catch (IOException e) {
 			throw new FemmeFulltextException("Index alias " + indexAlias + " existence check failed", e);
 		}
-		return aliasExistenceResponse.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
+		return aliasExistenceResponse.getStatusLine().getStatusCode() != 404;
 	}
 
 	void createIndexAliasAssociation(String indexName) throws FemmeFulltextException {
@@ -315,7 +315,7 @@ public class ElasticFulltextIndexClient {
 		} catch (IOException e) {
 			throw new FemmeFulltextException("Mapping existence check failed", e);
 		}
-		return mapping.getStatusLine().getStatusCode() != javax.ws.rs.core.Response.Status.NOT_FOUND.getStatusCode();
+		return mapping.getStatusLine().getStatusCode() != 404;
 	}
 
 	public void insert(String document) throws FemmeFulltextException {
@@ -420,6 +420,34 @@ public class ElasticFulltextIndexClient {
 	private List<String> getAggregationTerms(SearchResponse searchResponse) {
 		Terms aggregationResult = searchResponse.getAggregations().get("unique_by_name");
 		return aggregationResult.getBuckets().stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList());
+	}
+	
+	public Map<Float, Set<String>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
+		SearchRequest searchRequest = new SearchRequest();
+		query.size(1000);
+		searchRequest.source(query);
+		
+		SearchResponse searchResponse;
+		try {
+			searchResponse = this.highLevelClient.search(searchRequest);
+			return getHitsAsScoreMapWithUniqueHits(searchResponse);
+		} catch (IOException e) {
+			throw new SemanticSearchException("Search failed [" + query.toString() + "]", e);
+		}
+	}
+	
+	private Map<Float, Set<String>> getHitsAsScoreMapWithUniqueHits(SearchResponse searchResponse) {
+		Map<Float, Set<String>> hits = new HashMap<>();
+		
+		for (SearchHit searchHit: searchResponse.getHits().getHits()) {
+			//FulltextDocument doc = serializeSearchHit(searchHit, FulltextDocument.class);
+			if (! hits.containsKey(searchHit.getScore())) {
+				hits.put(searchHit.getScore(), new HashSet<>(Arrays.asList(searchHit.getSourceAsMap().get("name").toString())));
+			} else {
+				hits.get(searchHit.getScore()).add(searchHit.getSourceAsMap().get("name").toString());
+			}
+		}
+		return hits;
 	}
 	
 	private Map<String, Float> getHitsAsMap(SearchResponse searchResponse) {

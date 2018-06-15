@@ -13,8 +13,8 @@
         <module>../metadata-schema-analyzer</module>
         <module>../femme-core</module>
         <module>../femme-client</module>
-        <!--<module>../wcs-adapter</module>-->
-        <module>../femme-xpath</module>
+        <module>../wcs-adapter</module>
+    <module>../femme-xpath</module>
         <module>../femme-engine</module>
         <module>../femme-application</module>
 

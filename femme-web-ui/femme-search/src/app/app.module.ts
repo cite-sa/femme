@@ -1,4 +1,3 @@
-import { SpinnerComponent } from '@app/shared/spinner/spinner.component';
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from "@angular/common/http";
@@ -17,12 +16,10 @@ import { FemmeElementDialogComponent } from '@app/elements-view/femme-element-di
 import { FemmeElementsTableComponent } from "@app/elements-view/femme-elements-table.component";
 import { ExtractFulltextFieldsPipe } from './search/extract-fulltext-fields.pipe';
 import { FormatMetadatumPipe } from "@app/elements-view/format-metadatum.pipe";
-import { SpinnerService } from "@app/shared/spinner/spinner.service";
 
 @NgModule({
 	declarations: [
 		AppComponent,
-		SpinnerComponent,
 		FemmeNavbarComponent,
 		FemmeSearchComponent,
 		FemmeElementsTableComponent,
@@ -43,7 +40,6 @@ import { SpinnerService } from "@app/shared/spinner/spinner.service";
 		FemmeElementDialogComponent
 	],
 	providers: [
-		SpinnerService,
 		FemmeService,
 		FemmeSearchService
 	],

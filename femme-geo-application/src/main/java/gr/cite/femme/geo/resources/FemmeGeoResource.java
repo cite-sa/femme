@@ -84,7 +84,7 @@ public class FemmeGeoResource {
 	public Response getCoveragesByDataElementId(@QueryParam("dataElementId") String dataElementId) {
 		try {
 			
-			if (dataElementId != null && dataElementId != "") {
+			if (dataElementId != null && ! "".equals(dataElementId)) {
 				CoverageGeo coverage = this.geoDatastore.getCoverageByDataElementId(dataElementId);
 				if (coverage == null) throw new NotFoundException("No coverage with dataElementId [" + dataElementId + "]");
 				setServerName(coverage);
@@ -167,7 +167,7 @@ public class FemmeGeoResource {
 		if (bbox == null) return Response.status(Response.Status.BAD_REQUEST).build();
 		
 		try {
-			List<CoverageGeo> coverageGeo = geoServiceApi.getCoveragesByBboxString(bbox);
+			List<CoverageGeo> coverageGeo = this.geoServiceApi.getCoveragesByBboxString(bbox);
 			return Response.ok(coverageGeo).build();
 		} catch (FemmeGeoException e) {
 			logger.error(e.getMessage(), e);
@@ -177,6 +177,7 @@ public class FemmeGeoResource {
 	
 	@POST
 	@Path("coverages/intersects")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCoveragesIntersecting(GeoJson bbox) {
 		if (bbox == null) return Response.status(Response.Status.BAD_REQUEST).build();

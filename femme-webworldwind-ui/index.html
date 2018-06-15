@@ -1,100 +1,106 @@
 <!doctype html>
 <html>
+	<head lang="en">
+		<title>Femme WebWorldWind</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<head lang="en">
-	<title>Index</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-	<!-- <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script> -->
-	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="libs/js/vkBeautify/vkbeautify.js"></script>
 
-	<!-- <script src="http://code.jquery.com/ui/1.12.0/jquery-ui.js" integrity="sha256-0YPKAwZP7Mp3ALMRVB2i8GXeEndvCq3eSl/WsAl1Ryk=" crossorigin="anonymous"></script> -->
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script src="libs/bootstrap3-typeahead/bootstrap3-typeahead.js"></script>
+		<script type="text/javascript" src="libs/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
+		<link rel="stylesheet" href="libs/bootstrap-tagsinput/dist/bootstrap-tagsinput.css" />
 
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<!-- <script src="http://worldwindserver.net/webworldwind/worldwind.min.js" type="text/javascript"></script> -->
+		<script src="https://files.worldwind.arc.nasa.gov/artifactory/web/0.9.0/worldwind.js" type="text/javascript"></script>
 
-	<link rel="stylesheet" type="text/css" href="css/index.css" />
+		<link rel="stylesheet" type="text/css" href="libs/js/general/widgets/autosuggest/jquery.autoSuggest.css"/>
+		<link rel="stylesheet" type="text/css" href="libs/js/general/widgets/autosuggest/jquery.cite.autosuggest.css"/>
+		<script src="libs/js/general/namespace.js"></script>
+		<script src="libs/js/general/utilities.js"></script>
+		<script src="libs/js/general/widgets/jquery.cite.basecontrol.js"></script>
+		<script src="libs/js/general/widgets/autosuggest/jquery.autoSuggest.js"></script>
+		<script src="libs/js/general/widgets/autosuggest/jquery.cite.autosuggest.js"></script>
 
-	<script src="libs/js/bootstrap-carousel.js"></script>
-</head>
+		<script src="js/loader.js"></script>
+		<script src="js/femme-client.js"></script>
+		<script src="js/www.js"></script>
+		<script src="js/coverage-tags-input.js"></script>
+		<script src="js/geo-endpoint-suggest.js"></script>
+		<script src="js/femme.js"></script>
+		<script src="js/main.js"></script>
 
-<body>
+		<script src="libs/js/highlight.pack.js"></script>
+		
+		<link rel="stylesheet" href="libs/css/default.css">
+		<link rel="stylesheet" href="css/loader.css">
+		<link rel="stylesheet" href="css/femme.css">
 
-	<nav class="navbar navbar-default navbar-fixed-top navbar-inverse" id="service-navbar">
-		<div class="container-fluid">
-			<div class="navbar-header pull-left">
-				<a href="http://www.earthserver.eu" class="navbar-brand earthserver-logo">
-					<img alt="EarthServer Logo" src="images/earthserver_logo.png" class="img-responsive">
-				</a>
+		<link rel="stylesheet" href="../navbar.css">
+
+		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+	</head>
+	<body>
+		<nav class="navbar navbar-default navbar-fixed-top" id="service-navbar">
+			<div class="container-fluid">
+				<div class="navbar-header pull-left">
+					<a href="http://www.earthserver.eu" class="navbar-brand earthserver-logo">
+						<img alt="EarthServer Logo" src="../earthserver_logo.png" class="img-responsive">
+					</a>
+				</div>
+				<ul class="nav navbar-nav">
+					<li class="active"><a href=".">Explore</a></li>
+					<li><a href="../search">Search</a></li>
+					<li><a href="../xwcps">xWCPS</a></li>
+					<li><a href="../harvester">Harvester</a></li>
+				</ul>
 			</div>
-			<ul class="nav navbar-nav">
-				<li class="active"><a href="index.html">Home</a></li>
-				<li><a href="femme.html">Femme</a></li>
-			</ul>
-
-		</div>
-	</nav>
-
-	<div class="container-fluid">
-
-		<div class="row content">
-			<!--<div class = "col-sm-3 text-left"></div>	-->
-			<div class="col-md-10 text-left">
-				<div id="myCarousel" class="carousel slide" data-ride="carousel">
-					<!-- Indicators -->
-					<ol class="carousel-indicators">
-						<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-						<li data-target="#myCarousel" data-slide-to="1"></li>
-						<li data-target="#myCarousel" data-slide-to="2"></li>
-						<li data-target="#myCarousel" data-slide-to="3"></li>
-						<li data-target="#myCarousel" data-slide-to="4"></li>
-						<li data-target="#myCarousel" data-slide-to="5"></li>
-					</ol>
-
-					<!-- Wrapper for slides -->
-					<div class="carousel-inner" role="listbox">
-						<div class="item active">
-							<img src="images/femme.png" alt="FEMME">
-							<div class="carousel-caption">
-								<h3>FEMME</h3>
-								<p>Explore coverage metadata on a Nasa Web World Wind digital globe.</p>
+		</nav>
+		<div id="femme">
+			<div id="femme-container" class="">
+				<div id="metadata-container" class = "container-fluid">
+					<div id="close-metadata-display"><span class="glyphicon glyphicon-menu-hamburger"></span></div>
+					<div id="query-container" class="row">
+						<div class="col-xs-12">
+							<div class="form-group" id="servers-form">
+								<label for="server-select">Select a WCS Server</label>
+								<div class="asgEndpoint"></div>
+							</div>
+							<div class="form-group">
+								<label for="coverage-tags-input">Coverages</label>
+								<input id="coverage-tags-input" class="bootstrap-tagsinput">
+							</div>
+							<div class="form-group">
+								<label for="xpath-input">XPath</label>
+								<input class="form-control" id="xpath-input" placeholder="XPath">
+							</div>
+							<div id="buttons">
+								<span id="get-coverages-btn" class="btn btn-success">Get Coverages</span>
+								<span id="clear-coverages-btn" class="btn btn-danger">Clear Coverages</span>
 							</div>
 						</div>
-
-						<div class="item">
-							<img src="images/harvester.png" alt="Harvester">
-							<div class="carousel-caption">
-								<h3>Harvester</h3>
-								<p>Harvest Wcs Servers with Femme's harvester component.</p>
-							</div>
-						</div>
-
-						<div class="item">
-							<img src="images/query.png" alt="XWCPS">
-							<div class="carousel-caption">
-								<h3>xWCPS</h3>
-								<p>Use xWCPS query language.</p>
-							</div>
-						</div>
-
 					</div>
-
-					<!-- Left and right controls -->
-					<a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-						<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-						<span class="sr-only">Previous</span>
-					</a>
-					<a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-						<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-						<span class="sr-only">Next</span>
-					</a>
+					<div class="row coverage-container">
+						<div class="col-xs-12">
+							<div id="metadata-panel-group" class="panel-group" id="accordion" role="tablist" aria-multiselectable="true"></div>
+						</div>
+					</div>
+				</div>
+				<div id="view-on-map" >
+					<div id="canvas-container">
+						<canvas id="coverageCanvas">Not supported</canvas>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-
-</body>
-
+	</body>
 </html>

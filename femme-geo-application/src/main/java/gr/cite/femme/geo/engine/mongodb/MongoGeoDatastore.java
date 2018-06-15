@@ -1,6 +1,7 @@
 package gr.cite.femme.geo.engine.mongodb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -218,15 +219,35 @@ public class MongoGeoDatastore {
 		String query = GeoUtils.buildGeoWithinQuery(jsonString);
 		logger.debug("query:" + query);
 		
-		List<CoverageGeo> results = new ArrayList<>();
-		this.mongoClient.getCoverages().find(Document.parse(query)).into(results);
-		
-		return results;
+		return this.mongoClient.getCoverages().find(Document.parse(query)).into(new ArrayList<>());
 	}
 	
 	public List<CoverageGeo> getCoverageByCoords(double longitude, double latitude, double radius) {
 		Point refPoint = new Point(new Position(longitude, latitude));
 		return this.mongoClient.getCoverages().find(Filters.near(CoverageGeoCodec.LOC, refPoint, radius, radius)).into(new ArrayList<>());
+	}
+	
+	public List<CoverageGeo> getCoveragesWithin(String bbox) throws IOException {
+		ObjectNode geo = (ObjectNode) mapper.readTree(bbox);
+		
+		ObjectNode crs = mapper.createObjectNode();
+		ObjectNode property = mapper.createObjectNode();
+		ObjectNode geometry = mapper.createObjectNode();
+		
+		crs.put("type","name");
+		crs.set("properties", property.put("name", "urn:x-mongodb:crs:strictwinding:EPSG:4326"));
+		
+		geo.set("crs", crs);
+		geometry.set("$geometry", geo);
+		
+		Document geoDoc = Document.parse(mapper.writeValueAsString(geometry));
+		
+		return this.mongoClient.getCoverages().find(Filters.geoWithin(CoverageGeoCodec.LOC, geoDoc)).into(new ArrayList<>());
+	}
+	
+	public List<CoverageGeo> getCoveragesWithin(GeoJson bbox) {
+		List<Position> positions = bbox.getCoordinates().get(0).stream().map(Position::new).collect(Collectors.toList());
+		return this.mongoClient.getCoverages().find(Filters.geoWithin(CoverageGeoCodec.LOC, new Polygon(positions))).into(new ArrayList<>());
 	}
 	
 	public List<CoverageGeo> getCoveragesIntersectingOrWithin(GeoJson bbox) {

@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, Output, EventEmitter, HostListener, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormBuilder } from '@angular/forms';
 import { debounceTime, map } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -6,7 +6,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { FemmeSearchService } from '@app/services/femme-search.service';
 import { FulltextSearchResult } from '@app/models/fulltext-search-result';
 import { FemmeQuery } from '@app/models/femme-query';
-import { MatAutocompleteSelectedEvent } from '@angular/material';
+import { MatAutocompleteSelectedEvent, MatAutocomplete, MatAutocompleteTrigger } from '@angular/material';
 
 @Component({
 	selector: 'femme-search',
@@ -29,6 +29,7 @@ export class FemmeSearchComponent {
 	expansionTypes = ["Broader", "Narrower", "Related"];
 
 	loading = false;
+	@ViewChild(MatAutocompleteTrigger) autoTrigger: MatAutocompleteTrigger;
 
 	fulltextQueryForm: FormGroup;
 	// searchTerm : FormControl = new FormControl();
@@ -73,7 +74,10 @@ export class FemmeSearchComponent {
 					.subscribe(
 						(results) => this.searchResults = results,
 						(error) => console.log(error),
-						() => this.loading = false
+						() => {
+							this.loading = false;
+							this.autoTrigger.openPanel();
+						}
 					);
 				}
 			});
@@ -95,7 +99,9 @@ export class FemmeSearchComponent {
 		if (event.option.value.fulltext) {
 			this.searchExact(event.option.value.fulltext.name, () => this.loading = false);
 		} else {
-			this.searchExact(event.option.value.name, () => this.loading = false);
+			this.searchExact(event.option.value.name, () => {
+				this.loading = false;
+			});
 		}
 	}
 

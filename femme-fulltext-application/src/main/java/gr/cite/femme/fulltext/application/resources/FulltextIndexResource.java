@@ -41,12 +41,13 @@ public class FulltextIndexResource {
 	@POST
 	@Path("elements")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response search(FulltextSearchQueryMessenger query) throws FemmeFulltextException, IOException, SemanticSearchException {
+	public Response search(FulltextSearchQueryMessenger query, @QueryParam("unique") Boolean unique) throws FemmeFulltextException, IOException, SemanticSearchException {
 		if (query == null) throw new FemmeFulltextException("Query body is required", Response.Status.BAD_REQUEST.getStatusCode());
 		
 		List<FulltextSemanticResult> results = new ArrayList<>();
 		try {
-			results = this.engine.search(query);
+			if (unique == null) unique = false;
+			results = this.engine.search(query, unique);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}

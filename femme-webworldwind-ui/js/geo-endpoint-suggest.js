@@ -2,7 +2,6 @@ var GeoEndpointSuggest = (function () {
 	
 	var initialize = function() {
 		var self = this;
-		var getServerEndpointsUrl = femmeGeoUrl + "servers?crs=EPSG:4326";
 		this.asgEndpoint = $('.asgEndpoint');
 	
 		this.asgEndpoint.CiteAutoSuggest({
@@ -16,20 +15,17 @@ var GeoEndpointSuggest = (function () {
 			highlightMatches: true,
 			watermarkText: 'Available WCS Servers',
 			retrieveSuggestionsCallback: function (text, filters, limit, callback) {
-				Earthserver.Client.Utilities.callWS(getServerEndpointsUrl, 'GET', {
-					dataType: "json",
-					contentType: undefined,
-					onSuccess: function (data) {
-						callback(data);
-						numberOfWCSServerEndpoints = data.length;
+				FemmeClient.getServersByCrs("EPSG:4326",
+					(servers) => {
+						callback(servers);
+						numberOfWCSServerEndpoints = servers.length;
 						return numberOfWCSServerEndpoints;
-					},
-					onError: function () {
+					}, () => {
 						numberOfWCSServerEndpoints = 0;
 						alert("No endpoints available");
 						return numberOfWCSServerEndpoints;
 					}
-				});
+				);
 			},
 			maximumSelections: function (numberOfWCSServerEndpoints) {
 				return numberOfWCSServerEndpoints.value;

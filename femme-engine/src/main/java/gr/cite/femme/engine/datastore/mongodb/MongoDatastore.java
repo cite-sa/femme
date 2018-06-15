@@ -131,7 +131,7 @@ public class MongoDatastore implements Datastore {
 
 	@Override
 	public DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException {
-		return addToCollection(dataElement, QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(collectionId)).end()));
+		return addToCollection(dataElement, QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, generateId(collectionId)).end()));
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class MongoDatastore implements Datastore {
 
 			try {
 				updated = (T) this.mongoClient.getCollection(element.getClass()).findOneAndUpdate(
-						Filters.eq(FieldNames.ID, new ObjectId(element.getId())),
+						Filters.eq(FieldNames.ID, generateId(element.getId())),
 						new Document().append("$set", element),
 						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
 			} catch (Exception e) {
@@ -223,7 +223,7 @@ public class MongoDatastore implements Datastore {
 
 			updated = this.mongoClient.getCollection(elementSubType)
 				.findOneAndUpdate(
-						Filters.eq(FieldNames.ID, new ObjectId(id)),
+						Filters.eq(FieldNames.ID, generateId(id)),
 						Updates.combine(updates),
 						new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 				);
@@ -243,7 +243,7 @@ public class MongoDatastore implements Datastore {
 	public <T extends Element> T delete(String id, Class<T> elementSubtype) throws DatastoreException {
 		T deletedElement;
 		try {
-			deletedElement = this.mongoClient.getCollection(elementSubtype).findOneAndDelete(Filters.eq(FieldNames.ID, new ObjectId(id)));
+			deletedElement = this.mongoClient.getCollection(elementSubtype).findOneAndDelete(Filters.eq(FieldNames.ID, generateId(id)));
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException(e);
 		}
@@ -253,8 +253,8 @@ public class MongoDatastore implements Datastore {
 
 	@Override
 	public <T extends Element> T findElementAndUpdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType) {
-		Bson addUpdate = Updates.addEachToSet(FieldNames.METADATA, addMetadataIds.stream().map(metadatumId -> new Document(FieldNames.ID, new ObjectId(metadatumId))).collect(Collectors.toList()));
-		List<Bson> removeUpdates = removeMetadataIds.stream().map(metadatumId -> Updates.pullByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.ID, new ObjectId(metadatumId)))).collect(Collectors.toList());
+		Bson addUpdate = Updates.addEachToSet(FieldNames.METADATA, addMetadataIds.stream().map(metadatumId -> new Document(FieldNames.ID, generateId(metadatumId))).collect(Collectors.toList()));
+		List<Bson> removeUpdates = removeMetadataIds.stream().map(metadatumId -> Updates.pullByFilter(Filters.eq(FieldNames.METADATA + "." + FieldNames.ID, generateId(metadatumId)))).collect(Collectors.toList());
 
 		List<Bson> updates = new ArrayList<>();
 		updates.add(addUpdate);
@@ -263,7 +263,7 @@ public class MongoDatastore implements Datastore {
 		updates.add(Updates.currentDate(FieldNames.SYSTEMIC_METADATA + "." + FieldNames.MODIFIED));
 
 		return this.mongoClient.getCollection(elementSubType).findOneAndUpdate(
-				Filters.eq(FieldNames.ID, new ObjectId(id)),
+				Filters.eq(FieldNames.ID, generateId(id)),
 				Updates.combine(updates),
 				new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
 	}
@@ -343,7 +343,7 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public <T extends Element> T get(String id, Class<T> elementSubtype) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).first();
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, generateId(id)).end()), elementSubtype).first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id [" + id + "]", e);
 		}
@@ -352,7 +352,7 @@ public class MongoDatastore implements Datastore {
 	@Override
 	public <T extends Element> T get(String id, Class<T> elementSubtype, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException {
 		try {
-			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()), elementSubtype).options(options).first();
+			return find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, generateId(id)).end()), elementSubtype).options(options).first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException(elementSubtype.getSimpleName() + " retrieval: invalid id [" + id + "]", e);
 		}

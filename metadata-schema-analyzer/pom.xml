@@ -38,11 +38,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>${jersey.version}</version>
-        </dependency>
+        </dependency>-->
     </dependencies>
 
     <build>

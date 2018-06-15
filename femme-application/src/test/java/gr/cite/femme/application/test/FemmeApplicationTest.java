@@ -9,9 +9,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import gr.cite.femme.client.FemmeClient;
+/*import gr.cite.femme.client.FemmeClient;
 import gr.cite.femme.client.FemmeException;
-import gr.cite.femme.client.api.FemmeClientAPI;
+import gr.cite.femme.client.api.FemmeClientAPI;*/
 import gr.cite.femme.core.dto.ElementList;
 import org.apache.commons.lang3.RandomUtils;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -34,14 +34,14 @@ public class FemmeApplicationTest {
 	private static final String FEMME_GEO_URL = "http://localhost:8090/femme-geo";
 
 	private WebTarget webTarget;
-	private FemmeClientAPI femmeClient;
+	//private FemmeClientAPI femmeClient;
 	//private WCSAdapterAPI wcsAdapter;
 	
 	
 	@Before
 	public void init() {
 		this.webTarget = ClientBuilder.newClient().register(JacksonFeature.class).target(FemmeApplicationTest.FEMME_URL);
-		this.femmeClient = new FemmeClient(FemmeApplicationTest.FEMME_URL);
+		//this.femmeClient = new FemmeClient(FemmeApplicationTest.FEMME_URL);
 		//this.wcsAdapter = new WCSAdapter(FemmeApplicationTest.FEMME_URL, FemmeApplicationTest.FEMME_GEO_URL);
 	}
 

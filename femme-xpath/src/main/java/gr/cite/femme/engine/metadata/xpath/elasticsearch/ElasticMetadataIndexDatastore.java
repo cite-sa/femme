@@ -203,28 +203,43 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			
 			finalQuery.getIncludes().addAll(query.getIncludes());
 			
-			query.getIndicesPerQuery().forEach((subQuery, indices) -> {
-				if (subQuery != null && ! subQuery.isEmpty()) {
-					finalQuery.addQuery("\"query\":{" +
-							"\"bool\":{" +
-								"\"filter\":[" +
-									elementIdsFilter +
-									"{" +
-										"\"bool\":{" +
-											"\"should\":[" +
-											subQuery +
-											"]" +
-										"}" +
-									"}" +
-								"]" +
-							"}" +
-						"}", indices);
-				}
-			});
+			query.getIndicesPerQuery().forEach((subQuery, indices) -> finalQuery.addQuery(stringifySubquery(subQuery, elementIdsFilter), indices));
 			
 		});
 		
 		return Collections.singletonList(finalQuery);
+	}
+	
+	private String stringifySubquery(String subQuery, String elementIdsFilter) {
+		/*return subQuery != null && ! subQuery.isEmpty() ?
+				   "\"query\":{" +
+					   		"\"bool\":{" +
+					   			"\"filter\":[" +
+					   				elementIdsFilter +
+					   				"{" +
+					   					"\"bool\":{" +
+					   						"\"should\":[" +
+					   							subQuery +
+					   						"]" +
+					   					"}" +
+					   				"}" +
+					   			"]" +
+					   		"}" +
+					   "}" :
+			"";*/
+		
+		return "\"query\":{" +
+					"\"bool\":{" +
+						"\"filter\":[" +
+				   (elementIdsFilter != null ? elementIdsFilter : "" ) +
+							"{" +
+								"\"bool\":{" +
+									"\"should\":[" + (subQuery != null ? subQuery : "") + "]" +
+							  	"}" +
+							"}" +
+				   		"]" +
+					"}" +
+				"}";
 	}
 
 	private List<ElasticSearchQuery> buildShoulds(Node<QueryNode> root) {

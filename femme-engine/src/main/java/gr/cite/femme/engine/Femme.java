@@ -29,6 +29,7 @@ import gr.cite.femme.engine.query.execution.mongodb.QueryExecutorFactory;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import gr.cite.femme.fulltext.client.FulltextException;
 import gr.cite.femme.fulltext.client.FulltextIndexClientAPI;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +68,11 @@ public class Femme {
 	
 	public String insertOrUpdateElement(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
 		Element updatedElement = null;
-		String id = exists(element);
+		Element existing = exists(element);
 		
-		if (id != null) {
-			element.setId(id);
+		if (existing != null) {
+			//element.setId(id);
+			merge(existing, element);
 			updatedElement = updateElement(element);
 		} else {
 			insertElement(element);
@@ -83,7 +85,7 @@ public class Femme {
 		return updatedElement != null ? null : element.getId();
 	}
 	
-	private String exists(Element element) throws FemmeException {
+	private Element exists(Element element) throws FemmeException {
 		Element existingElement = null;
 		try {
 			if (element instanceof DataElement) {
@@ -95,7 +97,13 @@ public class Femme {
 			throw new FemmeException("Error on " + element.getClass().getSimpleName() + " existence check");
 		}
 		
-		return existingElement != null ? existingElement.getId() : null;
+		return existingElement;
+	}
+	
+	private <T extends Element> void merge(T existingElement, T newElement) {
+		newElement.setId(existingElement.getId());
+		if (newElement.getSystemicMetadata() == null) newElement.setSystemicMetadata(new SystemicMetadata());
+		newElement.getSystemicMetadata().setCreated(existingElement.getSystemicMetadata().getCreated());
 	}
 
 	private void insertElement(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
@@ -314,8 +322,8 @@ public class Femme {
 		}
 
 		try {
-			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, this.datastore.generateId(id)).end()))
-					.options(options).xPath(xPath).execute().first();
+			return query(elementSubType).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.ID, new ObjectId(id)).end()))
+							 .options(options).xPath(xPath).execute().first();
 		} catch (IllegalArgumentException e) {
 			throw new DatastoreException("Invalid " + elementSubType.getSimpleName() + " id: [" + id + "]");
 		}

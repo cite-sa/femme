@@ -35,7 +35,6 @@
 		// wwd.addLayer(new WorldWind.BingAerialLayer());
 		wwd.addLayer(new WorldWind.BMNGLayer());
 		wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
-		// wwd.addLayer(new WorldWind.AtmosphereLayer());
 
 		searchLayer = new WorldWind.RenderableLayer("SearchLayer");
 		searchLayer.enabled = true;
@@ -63,10 +62,12 @@
 		$("body")
 			.keydown(event => {
 				if (event.which == 17) {
-					deleteSearchPolygon();
-					ctrlDown = true;
-					initialCtrlClickPosition = undefined;
-					lastCtrlClickPosition = undefined;
+					if (! ctrlDown) {
+						deleteSearchPolygon();
+						ctrlDown = true;
+						initialCtrlClickPosition = undefined;
+						lastCtrlClickPosition = undefined;
+					}
 				}
 			})
 			.keyup(event => {
@@ -133,13 +134,18 @@
 					} else {
 						if (! lastCtrlClickPosition) {
 							createSearchPolygon();
+							lastCtrlClickPosition = pickObject.position;
+							lastCtrlClickPosition.altitude = 0;
+
+							buildBoundariesOfSearchPolygon();
+							renderSearchPolygon();
+						} else {
+							lastCtrlClickPosition = pickObject.position;
+							lastCtrlClickPosition.altitude = 0;
+
+							buildBoundariesOfSearchPolygon();
+							wwd.redraw();
 						}
-
-						lastCtrlClickPosition = pickObject.position;
-						lastCtrlClickPosition.altitude = 0;
-
-						buildBoundariesOfSearchPolygon();
-						renderSearchPolygon();
 					}
 				}	
 			}

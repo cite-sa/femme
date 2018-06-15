@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gr.cite.femme.fulltext.core.FulltextDocument;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FulltextSemanticResult {
@@ -13,8 +15,10 @@ public class FulltextSemanticResult {
 	@JsonProperty("fulltext")
 	private FulltextDocument fulltextResult;
 	
+	/*@JsonProperty("semantic")
+	private List<FulltextDocument> semanticResults = new ArrayList<>();*/
 	@JsonProperty("semantic")
-	private List<FulltextDocument> semanticResults = new ArrayList<>();
+	private List<List<FulltextDocument>> semanticResults = new ArrayList<>();
 	
 	public FulltextDocument getFulltextResult() {
 		return fulltextResult;
@@ -24,11 +28,11 @@ public class FulltextSemanticResult {
 		this.fulltextResult = fulltextResult;
 	}
 	
-	public List<FulltextDocument> getSemanticResults() {
+	public List<List<FulltextDocument>> getSemanticResults() {
 		return semanticResults;
 	}
 	
-	public void setSemanticResults(List<FulltextDocument> semanticResults) {
+	public void setSemanticResults(List<List<FulltextDocument>> semanticResults) {
 		this.semanticResults = semanticResults;
 	}
 }

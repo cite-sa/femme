@@ -1,8 +1,5 @@
 package gr.cite.commons.utils.hash;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,18 +39,5 @@ public class HashGeneratorUtils {
 		}
 		return sb.toString();
 	}
-
-	public static void main(String[] args) throws HashGenerationException {
-		Client client = ClientBuilder.newClient();
-		WebTarget webTarget = client.target("http://access.planetserver.eu:8080/rasdaman/ows");
-
-		String xml = webTarget
-				.queryParam("service", "WCS")
-				.queryParam("version", "2.0.1")
-				.queryParam("request", "DescribeCoverage")
-				.queryParam("coverageId", "hrl0000c067_07_if185l_trr3")
-				.request().get(String.class);
-
-		System.out.println(HashGeneratorUtils.generateMD5(xml));
-	}
+	
 }

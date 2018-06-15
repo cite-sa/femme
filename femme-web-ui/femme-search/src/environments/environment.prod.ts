@@ -1,8 +1,8 @@
 export const environment = {
 	production: true,
-	femmeBaseUrl: "http://localhost:8080/femme",
+	femmeBaseUrl: "http://earthserver-devel.vhosts.cite.gr/femme",
 	femmeCollectionsEndpoint: "/collections",
 	femmeDataElementsEndpoint: "/dataElements",
-	femmeSearchBaseUrl: "http://localhost:8081/femme-fulltext",
+	femmeSearchBaseUrl: "http://earthserver-devel.vhosts.cite.gr/femme-fulltext",
 	femmeSearchEndpoint: "/elements"
 };

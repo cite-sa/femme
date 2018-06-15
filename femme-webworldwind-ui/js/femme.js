@@ -1,14 +1,3 @@
-var serverUrl = "http://localhost";
-// var serverUrl = "http://earthserver-devel.vhosts.cite.gr/"
-
-// var femmePort = "";
-var femmePort = ":8080/";
-// var femmeGeoPort = "";
-var femmeGeoPort = ":8083/";
-
-var femmeUrl = serverUrl + femmePort + "femme/";
-var femmeGeoUrl = serverUrl + femmeGeoPort + "femme-geo/";
-
 var numberOfWCSServerEndpoints = undefined;
 // var coverage = undefined;
 // var serverCoverages = [];
@@ -102,34 +91,34 @@ var Femme = (function () {
         }
     };
 
-    var buildRequestUrl = function(endpointId, coverageIds, xPath, includeMetadata) {
-        var requestUrl = femmeUrl;
+    // var buildRequestUrl = function(endpointId, coverageIds, xPath, includeMetadata) {
+    //     var requestUrl = femmeUrl;
 
-        requestUrl += endpointId != undefined && endpointId != "" ? "collections/" + endpointId + "/" : "";
-        requestUrl += coverageIds != undefined && coverageIds.length > 0 ? "dataElements/list?": "dataElements?";
+    //     requestUrl += endpointId != undefined && endpointId != "" ? "collections/" + endpointId + "/" : "";
+    //     requestUrl += coverageIds != undefined && coverageIds.length > 0 ? "dataElements/list?": "dataElements?";
 
-        var optionsUrl = '';
-        if (coverageIds != undefined && coverageIds.length > 0) {
-            coverageIds.forEach((coverageId, index) => {
-                if (index != 0) {
-                    if (optionsUrl != '') optionsUrl += "&";
-                }
-                optionsUrl += "id=" + coverageId;
-            });
-        }
-        if (xPath && xPath != '') {
-            if (optionsUrl != '') optionsUrl += "&";
-            optionsUrl += "xpath=" + xPath;
-        }
-        if (!includeMetadata) {
-            if (optionsUrl != '') optionsUrl += "&";
-            optionsUrl += 'options={"exclude":["metadata"]}';
-        }
+    //     var optionsUrl = '';
+    //     if (coverageIds != undefined && coverageIds.length > 0) {
+    //         coverageIds.forEach((coverageId, index) => {
+    //             if (index != 0) {
+    //                 if (optionsUrl != '') optionsUrl += "&";
+    //             }
+    //             optionsUrl += "id=" + coverageId;
+    //         });
+    //     }
+    //     if (xPath && xPath != '') {
+    //         if (optionsUrl != '') optionsUrl += "&";
+    //         optionsUrl += "xpath=" + xPath;
+    //     }
+    //     if (!includeMetadata) {
+    //         if (optionsUrl != '') optionsUrl += "&";
+    //         optionsUrl += 'options={"exclude":["metadata"]}';
+    //     }
 
-        requestUrl += optionsUrl;
+    //     requestUrl += optionsUrl;
 
-        return requestUrl;
-    };
+    //     return requestUrl;
+    // };
 
     var createCoverageAccordion = function(coverage) {
         var processCoverage = coverage && coverage.hasOwnProperty("geometry") && coverage.geometry != null && canBeDrawed(coverage.geometry);

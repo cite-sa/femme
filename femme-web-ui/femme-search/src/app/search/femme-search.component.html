@@ -6,7 +6,7 @@
 	
 	<form class="fulltext-search-form" *ngIf="group.value=='Search'" [formGroup]="fulltextQueryForm" (ngSubmit)="fulltextQuery()">
 		<mat-form-field class="search-form-field">
-			<input class ="search-form-field-input"type="text" [placeholder]="group.value" aria-label="Number" matInput formControlName="searchTerm" [matAutocomplete]="auto">
+			<input class ="search-form-field-input" type="text" [placeholder]="group.value" aria-label="Number" matInput formControlName="searchTerm" [matAutocomplete]="auto">
 			<mat-spinner *ngIf="loading" [diameter]=25></mat-spinner>
 			<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)">
 				<!-- <mat-option *ngFor="let result of searchResults | async" [value]="result">
@@ -21,9 +21,18 @@
 					</mat-option>
 					<div *ngIf="result.semantic.length > 0">
 						<mat-optgroup [label]="result.fulltext[defaultFieldShown]">
-							<mat-option *ngFor="let semantic of result.semantic" [value]='semantic'>
-								{{ semantic[defaultFieldShown] }}
-							</mat-option>
+							<ng-container *ngFor="let group of result.semantic">
+									<mat-option *ngFor="let doc of group" [value]='doc'>
+										{{ doc[defaultFieldShown] }}
+									</mat-option>
+								<div *ngIf="result.semantic.length > 1" class="semantic-group-separator"></div>
+							</ng-container>
+							<!-- <mat-option *ngFor="let docsPerScore of result.semantic.values()">
+								aaaaaaaaaa -->
+									<!-- <mat-option *ngFor="let doc of docsPerScore" [value]='doc'> -->
+											<!-- {{ docsPerScore[0][defaultFieldShown] }} -->
+									<!-- </mat-option> -->
+							<!-- </mat-option> -->
 						</mat-optgroup>
 					</div>	
 				</div>

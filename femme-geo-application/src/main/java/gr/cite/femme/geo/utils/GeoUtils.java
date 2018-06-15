@@ -25,35 +25,26 @@ public class GeoUtils {
     private static final ObjectMapper mapper = new ObjectMapper();
     public static final String DEFAULT_CRS = "EPSG:4326";
 
-
     public static GeoJsonObject getBBoxFromString(String bBoxInput) throws IOException, FactoryException {
         String[] bounds = bBoxInput.split(",");
-        GeoJsonObject geoJson = null;
-        if(bounds.length == 4){
-            double[] bBounds = Arrays.stream(bounds)
-                    .mapToDouble(Double::parseDouble)
-                    .toArray();
-
-            return  getGeoJsonFromBBoxInput(bBounds);
+        if (bounds.length == 4) {
+            double[] bBounds = Arrays.stream(bounds).mapToDouble(Double::parseDouble).toArray();
+            return getGeoJsonFromBBoxInput(bBounds);
         }
 
-        return geoJson;
-
+        return null;
     }
 
     public static GeoJsonObject getGeoJsonFromBBoxInput(double[] bBounds) throws FactoryException, IOException {
         CoordinateReferenceSystem defaultCrs = CRS.decode(GeoUtils.DEFAULT_CRS);
         //Revert bounds minX, minY, maxX, maxY to -> xMin,xMax,yMin,yMax
 
-        ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[0],bBounds[2],bBounds[1],bBounds[3],
-                defaultCrs
-        );
+        ReferencedEnvelope envelope = new ReferencedEnvelope(bBounds[0], bBounds[2], bBounds[1], bBounds[3], defaultCrs);
         com.vividsolutions.jts.geom.Polygon geometry = JTS.toGeometry(envelope);
 
         GeometryJSON geomJSON = new GeometryJSON();
         String boundingBoxJSON = geomJSON.toString(geometry);
-        GeoJsonObject geoJson = mapper.readValue(boundingBoxJSON, GeoJsonObject.class);
-        return geoJson;
+        return mapper.readValue(boundingBoxJSON, GeoJsonObject.class);
     }
 
     public static String buildGeoWithinQuery(String geoJson) throws IOException {
@@ -62,16 +53,16 @@ public class GeoUtils {
         ObjectNode parent = JsonNodeFactory.instance.objectNode();
         ObjectNode crs = JsonNodeFactory.instance.objectNode();
         ObjectNode property = JsonNodeFactory.instance.objectNode();
-
-
-        ObjectNode geo= (ObjectNode) mapper.readTree(geoJson);
+        
+        ObjectNode geo = (ObjectNode) mapper.readTree(geoJson);
 
         crs.put("type","name");
-        crs.set("properties",property.put("name","urn:x-mongodb:crs:strictwinding:EPSG:4326" ));
-        geo.set("crs",crs);
-        geometry.set("$geometry",geo);
-        node.set("$geoWithin",geometry);
-        parent.set("loc",node);
+        crs.set("properties", property.put("name","urn:x-mongodb:crs:strictwinding:EPSG:4326"));
+        geo.set("crs", crs);
+        geometry.set("$geometry", geo);
+        node.set("$geoWithin", geometry);
+        parent.set("loc", node);
+        
         return mapper.writeValueAsString(parent);
     }
 
