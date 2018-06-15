@@ -176,7 +176,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private String serializeFinalNode(String finalNode, List<JsonNode> results, String contentType) throws Throwable {
 		try {
 			return results.stream().map(jsonNode -> {
-				if (! jsonNode.isMissingNode()) {
+				//if (! jsonNode.isMissingNode()) {
 					try {
 						if (contentType.toLowerCase().contains("xml")) {
 							return XmlJsonConverter.femmeJsonToXml("{\"" + finalNode + "\":" + jsonNode.toString() + "}");
@@ -188,11 +188,9 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 						}
 					} catch (IOException | XMLStreamException e) {
 						logger.error(e.getMessage(), e);
-						//throw new RuntimeException(e);
+						throw new RuntimeException(e);
 					}
-				}
-				
-				return null;
+				//}
 			}).filter(Objects::nonNull).collect(Collectors.joining("\n"));
 		} catch (Exception e) {
 			throw e.getCause();

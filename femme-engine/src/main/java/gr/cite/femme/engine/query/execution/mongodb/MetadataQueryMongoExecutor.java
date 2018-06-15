@@ -139,8 +139,10 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	}
 	
 	private void setReturnedMetadata(List<T> elements) {
+		//System.out.println(this.metadataXPathResults.stream().map(Metadatum::getElementId).collect(Collectors.joining(", ", "[", "]" )));
 		elements.forEach(element -> {
 			if (this.metadataXPathResults != null) {
+				//System.out.print(element.getId() + ", ");
 				List<Metadatum> xPathResult = filterElementMetadataByXPathResults(element);
 				if (this.metadataXPathResults.size() > 0) {
 					element.setMetadata(xPathResult);

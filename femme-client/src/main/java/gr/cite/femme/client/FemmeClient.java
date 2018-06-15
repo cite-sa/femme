@@ -346,7 +346,7 @@ public class FemmeClient implements FemmeClientAPI {
 		logger.debug("FeMME request [" + target.getUri() + "]");
 		logger.debug("FeMME request [" + target.toString() + "]");
 
-		Response response = target.request().get(Response.class);
+		Response response = target.request().accept(MediaType.APPLICATION_JSON).get();
 
 		FemmeResponse<ElementList<DataElement>> femmeResponse = response.readEntity(new GenericType<FemmeResponse<ElementList<DataElement>>>(){});
 		if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {

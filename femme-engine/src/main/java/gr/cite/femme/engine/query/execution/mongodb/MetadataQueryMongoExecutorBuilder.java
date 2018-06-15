@@ -111,7 +111,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 				//this.query = null;
 			}
 
-			this.queryExecutor.find(this.query);
+			//this.queryExecutor.find(this.query);
 			this.queryExecutor.options(this.options != null ? this.options : QueryOptionsMessenger.builder().build());
 
 			return this.queryExecutor;
