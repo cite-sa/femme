@@ -109,6 +109,8 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 				}
 				
 				//this.query = null;
+			} else {
+				this.queryExecutor.find(this.query);
 			}
 
 			//this.queryExecutor.find(this.query);
