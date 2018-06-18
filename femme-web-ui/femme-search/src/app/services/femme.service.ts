@@ -43,13 +43,12 @@ export class FemmeService {
 			} else if (query.ids != undefined && query.ids.length > 0) {
 				console.log("ids");
 				console.log(query.ids);
-				let idsParameters = JSON.stringify(query.ids.join('&id=')).replace('"', '').replace('"', '');
-				return this.submitDataElementsRequest(`/list${optionsQueryParam}&id=${idsParameters}`);
+				// let ids = JSON.stringify(query.ids.join('&id=')).replace('"', '').replace('"', '');
+				return this.submitDataElementListRequest(`/list${optionsQueryParam}`, query.ids);
 			} else {
 				return this.submitDataElementsRequest(`${optionsQueryParam}`);
 			}
 		} else {
-			console.log("ELEOOOOS");
 			return this.submitDataElementsRequest(`${optionsQueryParam}`);
 		}
 	}
@@ -72,7 +71,13 @@ export class FemmeService {
 		);
 	}
 
+	private submitDataElementListRequest(request: string, ids: string[]) {
+		return this.http.post<FemmeResponse<DataElementList>>(`${this.femmeDataElementsUrl}${request}`, ids).pipe(
+			map(response => response.entity.body.elements)
+		);
+	}
+
 	getDataElement(id: string): Observable<DataElement> {
-		return this.http.get<DataElement>(`${this.femmeDataElementsUrl}/id`);
+		return this.http.get<DataElement>(`${this.femmeDataElementsUrl}/${id}`);
 	}
 }

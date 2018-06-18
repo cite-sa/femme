@@ -26,7 +26,7 @@ import { MatAutocompleteSelectedEvent, MatAutocomplete, MatAutocompleteTrigger }
 	]
 })
 export class FemmeSearchComponent {
-	expansionTypes = ["Broader", "Narrower", "Related"];
+	expansionTypes = ["All", "Broader", "Narrower", "Related"];
 
 	loading = false;
 	@ViewChild(MatAutocompleteTrigger) autoTrigger: MatAutocompleteTrigger;
@@ -44,6 +44,8 @@ export class FemmeSearchComponent {
 
 	@Output()
 	queryEvent = new EventEmitter<FemmeQuery>();
+	@Output()
+	loadingEvent = new EventEmitter<boolean>();
 
 	constructor(private searchService: FemmeSearchService, private fb: FormBuilder) {
 		this.fulltextQueryForm = this.fb.group({
@@ -52,7 +54,7 @@ export class FemmeSearchComponent {
 		  });
 
 		this.fulltextQueryForm.valueChanges
-			.pipe(debounceTime(400))
+			.pipe(debounceTime(600))
 			.subscribe(query => {
 				console.log("VALUE CHANGED");
 				console.log(query);
@@ -70,17 +72,63 @@ export class FemmeSearchComponent {
 
 				if (typeof term === "string") {
 					this.loading = true;
+					this.loadingEvent.emit(true);
+
 					this.searchService.search(this.searchField, term, expansionType)
 					.subscribe(
-						(results) => this.searchResults = results,
+						// (results) => this.searchResults = results,
+						(results) => {
+							if (results.length > 0) {
+								if (expansionType != undefined) {
+									this.loadingEvent.emit(false);
+									this.handleExpansionQuery(results);
+								} else {
+									this.loadingEvent.emit(false);
+									this.handlePlainQuery(results);
+								}
+							}
+						},
 						(error) => console.log(error),
 						() => {
 							this.loading = false;
+							// this.loadingEvent.emit(false);
 							this.autoTrigger.openPanel();
 						}
 					);
+
+					if (expansionType == undefined) {
+						this.searchUniqueTermsInCaseOfPlainQuery(term);
+					}
 				}
 			});
+	}
+
+	handleExpansionQuery(results: FulltextSearchResult[]) {
+		this.searchResults = results;
+		let ids = [];
+		results[0].semantic.forEach(res => {
+			res.forEach(r => {
+				ids = ids.concat(r.docs.map(doc => doc.elementId));
+			});
+		});
+		console.log(ids);
+		this.emitQueryEvent(ids);
+	}
+
+	handlePlainQuery(results: FulltextSearchResult[]) {
+		let ids = results.map(re => re.fulltext.elementId);
+		this.emitQueryEvent(ids);
+	}
+
+	searchUniqueTermsInCaseOfPlainQuery(term: string) {
+		this.searchService.searchUnique(this.searchField, term)
+			.subscribe(results => {
+				this.searchResults = results;
+			}),
+			(error) => console.log(error),
+			() => {
+				
+			}
 	}
 
 	elementToDisplayValue(element: FulltextSearchResult) {
@@ -90,20 +138,20 @@ export class FemmeSearchComponent {
 				let projectedFields =  propertyNames.filter(propertyName => (propertyName != "metadatumId") && (propertyName != "elementId"));
 				return projectedFields.map(field => element.fulltext[field]).join(" - ");
 			} else {
-				return element["name"];
+				return element;
 			}
 		}
 	}
 
-	selectFromAutocomplete(event: MatAutocompleteSelectedEvent) {
-		if (event.option.value.fulltext) {
-			this.searchExact(event.option.value.fulltext.name, () => this.loading = false);
-		} else {
-			this.searchExact(event.option.value.name, () => {
-				this.loading = false;
-			});
-		}
-	}
+	// selectFromAutocomplete(event: MatAutocompleteSelectedEvent) {
+	// 	if (event.option.value.fulltext) {
+	// 		this.searchExact(event.option.value.fulltext.name, () => this.loading = false);
+	// 	} else {
+	// 		this.searchExact(event.option.value, () => {
+	// 			this.loading = false;
+	// 		});
+	// 	}
+	// }
 
 	fulltextQuery() {
 		let term: any = this.fulltextQueryForm.value.searchTerm;

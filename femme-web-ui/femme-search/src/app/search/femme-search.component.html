@@ -8,7 +8,8 @@
 		<mat-form-field class="search-form-field">
 			<input class ="search-form-field-input" type="text" [placeholder]="group.value" aria-label="Number" matInput formControlName="searchTerm" [matAutocomplete]="auto">
 			<mat-spinner *ngIf="loading" [diameter]=25></mat-spinner>
-			<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)">
+			<!-- <mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue" (optionSelected)="selectFromAutocomplete($event)"> -->
+				<mat-autocomplete #auto="matAutocomplete" [displayWith]="elementToDisplayValue">
 				<!-- <mat-option *ngFor="let result of searchResults | async" [value]="result">
 					{{ result.fulltext["testField"] }}
 					<mat-option *ngFor="let semantic of result.semantic" [value]="semantic">
@@ -22,8 +23,8 @@
 					<div *ngIf="result.semantic.length > 0">
 						<mat-optgroup [label]="result.fulltext[defaultFieldShown]">
 							<ng-container *ngFor="let group of result.semantic">
-									<mat-option *ngFor="let doc of group" [value]='doc'>
-										{{ doc[defaultFieldShown] }}
+									<mat-option *ngFor="let doc of group" [value]='doc.term'>
+										{{ doc.term }}
 									</mat-option>
 								<div *ngIf="result.semantic.length > 1" class="semantic-group-separator"></div>
 							</ng-container>
@@ -41,7 +42,7 @@
 
 		<mat-form-field class="expansion-type-selector">
 			<mat-select placeholder="Expansion" [(value)]="expansionTypeValue" formControlName="expansionType">
-				<mat-option>None</mat-option>
+				<mat-option>Plain</mat-option>
 				<mat-option *ngFor="let type of expansionTypes" [value]="type">{{ type }}</mat-option>
 			</mat-select>
 		</mat-form-field>

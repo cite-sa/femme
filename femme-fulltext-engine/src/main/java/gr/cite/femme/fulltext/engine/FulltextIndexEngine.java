@@ -22,13 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class FulltextIndexEngine {
@@ -145,7 +139,11 @@ public class FulltextIndexEngine {
 			query.setMetadataField(field);
 			
 			try {
-				result.setSemanticResults(searchUniqueByScore(buildExpandedQuery(query)));
+				List<List<FulltextSemanticResultSemantic>> resultss = searchUniqueByScore(buildExpandedQuery(query)).stream().map(res ->
+					res.entrySet().stream().map(entry -> new FulltextSemanticResultSemantic(entry.getKey(), entry.getValue())).collect(Collectors.toList())
+				).collect(Collectors.toList());
+				
+				result.setSemanticResults(resultss);
 			} catch (SemanticSearchException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -181,15 +179,23 @@ public class FulltextIndexEngine {
 		}).collect(Collectors.toList());*/
 	}
 	
-	private List<List<FulltextDocument>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
-		Map<Float, Set<String>> uniques = this.indexClient.searchUniqueByScore(query);
+	private List<Map<String, List<FulltextDocument>>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
+		Map<Float, Map<String, List<FulltextDocument>>> a = this.indexClient.searchUniqueByScore(query);
+		List<Map<String, List<FulltextDocument>>> list = new ArrayList<>();
+		
+		List<Float> scoresByValue = a.keySet().stream().sorted((f1, f2) -> Float.compare(f2, f1)).collect(Collectors.toList());
+		scoresByValue.forEach(score -> list.add(a.get(score)));
+		
+		return list;
+		
+		//List<FulltextDocument> uniques = this.indexClient.searchUniqueByScore(query);
 		//List<List<FulltextDocument>>> uniqueDocs = new HashMap<>();
 		
-		return uniques.values().stream().map(scoreAndNames -> scoreAndNames.stream().map(name -> {
+		/*return uniques.values().stream().map(scoreAndNames -> scoreAndNames.stream().map(name -> {
 			FulltextDocument doc = new FulltextDocument();
 			doc.setFulltextField("name", name);
 			return doc;
-		}).collect(Collectors.toList())).collect(Collectors.toList());
+		}).collect(Collectors.toList())).collect(Collectors.toList());*/
 		
 	}
 	

@@ -29,6 +29,9 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 	query$: Observable<FemmeQuery>;
 	query: FemmeQuery;
 
+	@Input()
+	loading$: Observable<boolean>;
+
 	constructor(private femmeService: FemmeService, private dialog: MatDialog) { }
 
 	ngOnInit() {
@@ -44,6 +47,11 @@ export class FemmeElementsTableComponent implements OnInit, AfterViewInit {
 		this.paginator.page.pipe(
 			tap(() => this.loadDataElementsPage())
 		).subscribe();
+
+		this.loading$.subscribe(loading => {
+			console.log(loading);
+			this.dataSource.loader().next(loading)
+		});
 	}
 
 	loadDataElementsPage() {
@@ -116,14 +124,18 @@ export class FemmeDataSource extends DataSource<DataElement> {
 			catchError(() => of([])),
 			finalize(() => this.loadingSubject.next(false))
 		).subscribe((dataElements: DataElement[]) => {
-			dataElements.forEach((dataElement: DataElement) => {
-				dataElement.collections.forEach(dataElementCollection => {
-					this.femmeService.getCollection(dataElementCollection.id).subscribe(collection => {
-						dataElementCollection.name = collection.name;
-					})
-				})
-			})
+			// dataElements.forEach((dataElement: DataElement) => {
+			// 	dataElement.collections.forEach(dataElementCollection => {
+			// 		this.femmeService.getCollection(dataElementCollection.id).subscribe(collection => {
+			// 			dataElementCollection.name = collection.name;
+			// 		})
+			// 	})
+			// })
 			this.dataElementsSubject.next(dataElements);
 		});
+	}
+
+	loader() {
+		return this.loadingSubject;
 	}
 }

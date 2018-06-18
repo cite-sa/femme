@@ -4,5 +4,6 @@ export const environment = {
 	femmeCollectionsEndpoint: "/collections",
 	femmeDataElementsEndpoint: "/dataElements",
 	femmeSearchBaseUrl: "http://earthserver-devel.vhosts.cite.gr/femme-fulltext",
-	femmeSearchEndpoint: "/elements"
+	femmeSearchEndpoint: "/elements",
+	maxBroader: 2
 };

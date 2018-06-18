@@ -12,6 +12,7 @@ import { FulltextSearchResult } from '@app/models/fulltext-search-result';
 export class FemmeSearchService {
 	private femmeSearchBaseUrl: string = environment.femmeSearchBaseUrl;
 	private femmeSearchUrl: string = environment.femmeSearchBaseUrl + environment.femmeSearchEndpoint;
+	private maxBroader: number = environment.maxBroader;
 
 	constructor(private http: HttpClient) { }
 
@@ -28,11 +29,21 @@ export class FemmeSearchService {
 		if (expansionType != undefined && expansionType != null && expansionType != "") {
 			query.expand = {
 				direction: expansionType,
-				maxBroader: 5
+				maxBroader: this.maxBroader
 			};
 		}
 
-		console.log(query);
+		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}?${query.expand == undefined ? 'unique=false' : ''}`, query);
+	}
+
+	searchUnique(searchField: string, searchTerm: string): Observable<Array<FulltextSearchResult>> {
+		let query = {
+			expand: undefined,
+			autocompleteField: {
+				"field": searchField,
+				"value": searchTerm
+			}
+		}
 
 		return this.http.post<Array<FulltextSearchResult>>(`${this.femmeSearchUrl}?${query.expand == undefined ? 'unique=true' : ''}`, query);
 	}

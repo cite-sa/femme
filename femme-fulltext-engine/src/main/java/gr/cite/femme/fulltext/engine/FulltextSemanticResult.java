@@ -18,7 +18,7 @@ public class FulltextSemanticResult {
 	/*@JsonProperty("semantic")
 	private List<FulltextDocument> semanticResults = new ArrayList<>();*/
 	@JsonProperty("semantic")
-	private List<List<FulltextDocument>> semanticResults = new ArrayList<>();
+	private List<List<FulltextSemanticResultSemantic>> semanticResults = new ArrayList<>();
 	
 	public FulltextDocument getFulltextResult() {
 		return fulltextResult;
@@ -28,11 +28,11 @@ public class FulltextSemanticResult {
 		this.fulltextResult = fulltextResult;
 	}
 	
-	public List<List<FulltextDocument>> getSemanticResults() {
+	public List<List<FulltextSemanticResultSemantic>> getSemanticResults() {
 		return semanticResults;
 	}
 	
-	public void setSemanticResults(List<List<FulltextDocument>> semanticResults) {
+	public void setSemanticResults(List<List<FulltextSemanticResultSemantic>> semanticResults) {
 		this.semanticResults = semanticResults;
 	}
 }

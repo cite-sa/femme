@@ -9,5 +9,6 @@ export const environment = {
 	femmeCollectionsEndpoint: "/collections",
 	femmeDataElementsEndpoint: "/dataElements",
 	femmeSearchBaseUrl: "http://localhost:8081/femme-fulltext",
-	femmeSearchEndpoint: "/elements"
+	femmeSearchEndpoint: "/elements",
+	maxBroader: 2
 };

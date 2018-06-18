@@ -3,6 +3,7 @@ package gr.cite.femme.application.resources;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -354,10 +355,10 @@ public class FemmeResource {
 			logger.info("Query on DataElements: " + query.build());
 		}
 		
-		
 		FemmeResponse<ElementList<DataElement>> femmeResponse = new FemmeResponse<>();
 		try {
 			List<DataElement> dataElements = this.femme.query(DataElement.class).find(query).xPath(xPath).options(options).execute().list();
+			
 			ElementList<DataElement> dataElementList = new ElementList<>(dataElements);
 			
 			if (dataElementList.getSize() == 0) {
@@ -376,6 +377,48 @@ public class FemmeResource {
 		
 		return Response.ok().entity(femmeResponse).build();
 
+	}
+	
+	@POST
+	@Path(FemmeResource.DATA_ELEMENTS_PATH + "/list")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response findDataElementsByIdsInBody(List<String> ids, @QueryParam("options") QueryOptionsMessenger options, @QueryParam("xpath") String xPath) throws FemmeApplicationException {
+		FemmeResponse<ElementList<DataElement>> femmeResponse = new FemmeResponse<>();
+		try {
+			if (options != null) {
+				if (options.getOffset() != null && options.getLimit() != null) {
+					int offset = options.getOffset() < ids.size() ? options.getOffset() : ids.size();
+					int limit = options.getOffset() + options.getLimit() < ids.size() ? options.getOffset() + options.getLimit() : ids.size();
+					ids = ids.subList(offset, limit);
+				}
+			}
+			
+			List<DataElement> dataElements = ids.stream().map(id -> {
+				try {
+					return this.femme.get(DataElement.class, id, xPath);
+				} catch (DatastoreException | MetadataStoreException e) {
+					logger.error(e.getMessage(), e);
+					return null;
+				}
+			}).filter(Objects::nonNull).collect(Collectors.toList());
+			
+			ElementList<DataElement> dataElementList = new ElementList<>(dataElements);
+			
+			if (dataElementList.getSize() == 0) {
+				logger.info("No data elements found");
+				throw new FemmeApplicationException("No data elements found", Response.Status.NOT_FOUND.getStatusCode());
+			} else {
+				femmeResponse.setStatus(Response.Status.OK.getStatusCode())
+					.setMessage(dataElementList.getSize() + " data elements found")
+					.setEntity(new FemmeResponseEntity<>(uriInfo.getRequestUri().toString(), dataElementList));
+			}
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+		}
+		
+		return Response.ok().entity(femmeResponse).build();
 	}
 	
 	@GET

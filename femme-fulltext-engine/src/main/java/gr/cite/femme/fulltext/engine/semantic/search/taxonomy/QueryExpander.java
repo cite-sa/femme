@@ -87,10 +87,15 @@ public class QueryExpander {
 		TaxonomyTerm sourceTerm = findSourceTerm(term);
 		
 		Map<Integer, List<TaxonomyTerm>> expansionTerms;
-		if ("broader".equals(expansionQuery.getDirection())) {
-			expansionTerms = getBroaderTerms(sourceTerm, expansionQuery);
+		if ("all".equals(expansionQuery.getDirection())) {
+			Map<Integer, List<TaxonomyTerm>> narrowerTerms = getNarrowerTerms(sourceTerm, -1);
+			Map<Integer, List<TaxonomyTerm>> broaderTerms = getBroaderTerms(sourceTerm, expansionQuery.getMaxBroader());
+			
+			expansionTerms = mergeBroaderAndNarrower(narrowerTerms, broaderTerms);
+		} else if ("broader".equals(expansionQuery.getDirection())) {
+			expansionTerms = getBroaderTerms(sourceTerm, expansionQuery.getMaxBroader());
 		} else if ("narrower".equals(expansionQuery.getDirection())) {
-			expansionTerms = getNarrowerTerms(sourceTerm, expansionQuery);
+			expansionTerms = getNarrowerTerms(sourceTerm, -1);
 		} else {
 			throw new IllegalArgumentException("Expansion type must be specified. Available options are: broader, narrower, related");
 		}
@@ -98,7 +103,33 @@ public class QueryExpander {
 		return buildExpansionQuery(expansionTerms, field);
 	}
 	
-	private Map<Integer, List<TaxonomyTerm>>  getNarrowerTerms(TaxonomyTerm sourceTerm, ExpansionQuery expansionQuery) {
+	private Map<Integer, List<TaxonomyTerm>> mergeBroaderAndNarrower(Map<Integer, List<TaxonomyTerm>> narrowerTerms, Map<Integer, List<TaxonomyTerm>> broaderTerms) {
+		Map<Integer, List<TaxonomyTerm>> terms = new HashMap<>();
+		
+		//terms.putAll(broaderTerms);
+		for (Map.Entry<Integer, List<TaxonomyTerm>> entry: broaderTerms.entrySet()) {
+			initOrAddList(entry, terms);
+		}
+		for (Map.Entry<Integer, List<TaxonomyTerm>> entry: narrowerTerms.entrySet()) {
+			initOrAddList(entry, terms);
+		}
+		
+		return terms;
+	}
+	
+	private void initOrAddList(Map.Entry<Integer, List<TaxonomyTerm>> entry, Map<Integer, List<TaxonomyTerm>> terms) {
+		if (terms.containsKey(entry.getKey())) {
+			Set<TaxonomyTerm> temp1 = new HashSet<>(terms.get(entry.getKey()));
+			Set<TaxonomyTerm> temp2 = new HashSet<>(entry.getValue());
+			temp1.addAll(temp2);
+			
+			terms.put(entry.getKey(), new ArrayList<>(temp1));
+		} else {
+			terms.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+		}
+	}
+	
+	private Map<Integer, List<TaxonomyTerm>>  getNarrowerTerms(TaxonomyTerm sourceTerm, Integer maxLevel) {
 		Set<TaxonomyTerm> allTaxonomyTerms = new HashSet<>();
 		List<TaxonomyTerm> currentLevelTerms = Collections.singletonList(sourceTerm);
 		allTaxonomyTerms.addAll(currentLevelTerms);
@@ -108,7 +139,7 @@ public class QueryExpander {
 		expandedResults.put(level, currentLevelTerms);
 		
 		
-		while (! currentLevelTerms.isEmpty() && (expansionQuery.getMaxNarrower() == -1 || level < expansionQuery.getMaxNarrower())) {
+		while (! currentLevelTerms.isEmpty() && (maxLevel == -1 || level < maxLevel)) {
 			level++;
 			
 			currentLevelTerms = getNonDuplicateNextLevelTerms(currentLevelTerms, "narrower", allTaxonomyTerms);
@@ -121,7 +152,7 @@ public class QueryExpander {
 		return expandedResults;
 	}
 	
-	private Map<Integer, List<TaxonomyTerm>> getBroaderTerms(TaxonomyTerm sourceTerm, ExpansionQuery expansionQuery) {
+	private Map<Integer, List<TaxonomyTerm>> getBroaderTerms(TaxonomyTerm sourceTerm, Integer maxLevel) {
 		int level = 0;
 		Map<Integer, List<TaxonomyTerm>> expandedResults = new HashMap<>();
 		
@@ -129,13 +160,17 @@ public class QueryExpander {
 		uniqueTaxonomyTerms.add(sourceTerm);
 		List<TaxonomyTerm> currentLevelTerms = Collections.singletonList(sourceTerm);
 		
-		List<TaxonomyTerm> childrenTerms = getAllChildrenTerms(currentLevelTerms, uniqueTaxonomyTerms);
+		/*List<TaxonomyTerm> childrenTerms = getAllChildrenTerms(currentLevelTerms, uniqueTaxonomyTerms);
+		childrenTerms.addAll(currentLevelTerms);
+		uniqueTaxonomyTerms.addAll(childrenTerms);*/
+		
+		List<TaxonomyTerm> childrenTerms = new ArrayList<>();
 		childrenTerms.addAll(currentLevelTerms);
 		uniqueTaxonomyTerms.addAll(childrenTerms);
 		
 		expandedResults.put(level, childrenTerms);
 		
-		while (! currentLevelTerms.isEmpty() && (expansionQuery.getMaxBroader() == -1 || level < expansionQuery.getMaxBroader())) {
+		while (! currentLevelTerms.isEmpty() && (maxLevel == -1 || level < maxLevel)) {
 			level++;
 			
 			currentLevelTerms = getNonDuplicateNextLevelTerms(currentLevelTerms, "broader", uniqueTaxonomyTerms);
@@ -186,6 +221,8 @@ public class QueryExpander {
 	
 	private List<String> getExpansionIds(String type, TaxonomyTerm taxonomyTerm) {
 		switch (type) {
+			case "all":
+				return taxonomyTerm.getBroader();
 			case "broader":
 				return taxonomyTerm.getBroader();
 			case "narrower":
@@ -207,13 +244,23 @@ public class QueryExpander {
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 		Float maxBoost = new Integer(expandedResults.size()).floatValue();
 		
-		expandedResults.forEach((key, value) -> {
-			Float boost = (maxBoost - key);
+		int max = 1023;
+		int total = 0;
+		for (Map.Entry<Integer, List<TaxonomyTerm>> expandedResult: expandedResults.entrySet()) {
+			if (total == max) break;
 			
-			value.forEach(taxonomyTerm -> taxonomyTerm.getLabel().stream()
-						  .map(label -> QueryBuilders.constantScoreQuery(QueryBuilders.termQuery(field + ".keyword", label)).boost(boost))
-						  .forEach(boolQueryBuilder::should));
-		});
+			Float boost = (maxBoost - expandedResult.getKey());
+			
+			for (TaxonomyTerm taxonomyTerm: expandedResult.getValue()) {
+				if (total == max) break;
+				
+				taxonomyTerm.getLabel().stream()
+					.map(label -> QueryBuilders.constantScoreQuery(QueryBuilders.termQuery(field + ".keyword", label)).boost(boost))
+					.forEach(boolQueryBuilder::should);
+				
+				total++;
+			}
+		}
 		
 		searchRequestBuilder.query(boolQueryBuilder);
 		return searchRequestBuilder;

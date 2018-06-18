@@ -383,7 +383,7 @@ public class ElasticFulltextIndexClient {
 	
 	public <T> List<T> search(SearchSourceBuilder query, Class<T> resultClass) throws SemanticSearchException {
 		SearchRequest searchRequest = new SearchRequest();
-		query.size(1000);
+		query.size(5000);
 		searchRequest.source(query);
 		
 		SearchResponse searchResponse;
@@ -405,7 +405,7 @@ public class ElasticFulltextIndexClient {
 	public List<String> aggregate(SearchSourceBuilder query) throws SemanticSearchException {
 		query.aggregation(AggregationBuilders.terms("unique_by_name").field("name.keyword"));
 		SearchRequest searchRequest = new SearchRequest();
-		query.size(1000);
+		query.size(5000);
 		searchRequest.source(query);
 		
 		SearchResponse searchResponse;
@@ -422,9 +422,9 @@ public class ElasticFulltextIndexClient {
 		return aggregationResult.getBuckets().stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList());
 	}
 	
-	public Map<Float, Set<String>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
+	public Map<Float, Map<String, List<FulltextDocument>>> searchUniqueByScore(SearchSourceBuilder query) throws SemanticSearchException {
 		SearchRequest searchRequest = new SearchRequest();
-		query.size(1000);
+		query.size(5000);
 		searchRequest.source(query);
 		
 		SearchResponse searchResponse;
@@ -436,17 +436,38 @@ public class ElasticFulltextIndexClient {
 		}
 	}
 	
-	private Map<Float, Set<String>> getHitsAsScoreMapWithUniqueHits(SearchResponse searchResponse) {
-		Map<Float, Set<String>> hits = new HashMap<>();
+	private Map<Float, Map<String, List<FulltextDocument>>> getHitsAsScoreMapWithUniqueHits(SearchResponse searchResponse) {
+		Map<Float, Map<String, List<FulltextDocument>>> hits = new HashMap<>();
 		
+		//return Arrays.stream(searchResponse.getHits().getHits()).map(searchHit -> serializeSearchHit(searchHit, FulltextDocument.class)).collect(Collectors.toList());
 		for (SearchHit searchHit: searchResponse.getHits().getHits()) {
-			//FulltextDocument doc = serializeSearchHit(searchHit, FulltextDocument.class);
-			if (! hits.containsKey(searchHit.getScore())) {
-				hits.put(searchHit.getScore(), new HashSet<>(Arrays.asList(searchHit.getSourceAsMap().get("name").toString())));
-			} else {
-				hits.get(searchHit.getScore()).add(searchHit.getSourceAsMap().get("name").toString());
+			FulltextDocument doc = serializeSearchHit(searchHit, FulltextDocument.class);
+			
+			if (doc != null) {
+				
+				if (! hits.containsKey(searchHit.getScore())) {
+					
+					Map<String, List<FulltextDocument>> internalMap = new LinkedHashMap<>();
+					List<FulltextDocument> l = new ArrayList<>();
+					l.add(doc);
+					internalMap.put(doc.getFulltextField("name").toString(), l);
+					hits.put(searchHit.getScore(), internalMap);
+					//hits.put(searchHit.getScore(), new HashSet<>(Arrays.asList(searchHit.getSourceAsMap().get("name").toString())));
+				} else {
+					if (hits.get(searchHit.getScore()).containsKey(doc.getFulltextField("name").toString())) {
+						if (doc.getFulltextField("name") != null) {
+							hits.get(searchHit.getScore()).get(doc.getFulltextField("name").toString()).add(doc);
+						}
+					} else {
+						List<FulltextDocument> l = new ArrayList<>();
+						l.add(doc);
+						hits.get(searchHit.getScore()).put(doc.getFulltextField("name").toString(), l);
+					}
+					//hits.get(searchHit.getScore()).add(searchHit.getSourceAsMap().get("name").toString());
+				}
 			}
 		}
+		
 		return hits;
 	}
 	

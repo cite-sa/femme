@@ -7,7 +7,8 @@
 		<ng-container matColumnDef="name">
 			<th mat-header-cell *matHeaderCellDef>Name</th>
 			<!-- <td mat-cell *matCellDef="let element">{{ element.name }}</td> -->
-			<td mat-cell *matCellDef="let element"><a [href]="element.endpoint" target="_blank">{{ element.name }}</a></td>
+			<!-- <td mat-cell *matCellDef="let element"><a [href]="element.endpoint" target="_blank">{{ element.name }}</a></td> -->
+			<td mat-cell *matCellDef="let element">{{ element.name }}</td>
 		</ng-container>
 
 		<!-- <ng-container matColumnDef="endpoint">
