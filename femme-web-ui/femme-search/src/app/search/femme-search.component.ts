@@ -60,7 +60,6 @@ export class FemmeSearchComponent {
 				console.log(query);
 
 				let term: any = query.searchTerm;
-				let expansionType: string = query.expansionType ? query.expansionType.toLowerCase() : undefined;
 
 				if (typeof term !== "string") {
 					if (term.fulltext) {
@@ -71,36 +70,44 @@ export class FemmeSearchComponent {
 				console.log(term);
 
 				if (typeof term === "string") {
-					this.loading = true;
-					this.loadingEvent.emit(true);
-
-					this.searchService.search(this.searchField, term, expansionType)
-					.subscribe(
-						// (results) => this.searchResults = results,
-						(results) => {
-							if (results.length > 0) {
-								if (expansionType != undefined) {
-									this.loadingEvent.emit(false);
-									this.handleExpansionQuery(results);
-								} else {
-									this.loadingEvent.emit(false);
-									this.handlePlainQuery(results);
-								}
-							}
-						},
-						(error) => console.log(error),
-						() => {
-							this.loading = false;
-							// this.loadingEvent.emit(false);
-							this.autoTrigger.openPanel();
-						}
-					);
-
-					if (expansionType == undefined) {
-						this.searchUniqueTermsInCaseOfPlainQuery(term);
-					}
+					this.executeQuery(term, query.expansionType);
 				}
 			});
+	}
+
+	private executeQuery(term: string, expansion: string) {
+		let expansionType: string = expansion ? expansion.toLowerCase() : undefined;
+		
+		this.loading = true;
+		this.loadingEvent.emit(true);
+
+		this.searchService.search(this.searchField, term, expansionType)
+		.subscribe(
+			// (results) => this.searchResults = results,
+			(results) => {
+				this.loadingEvent.emit(false);
+				if (results.length > 0) {
+					if (expansionType != undefined) {
+						this.handleExpansionQuery(results);
+					} else {
+						this.handlePlainQuery(results);
+					}
+				}
+			},
+			(error) => {
+				this.loadingEvent.emit(false);
+				console.log(error)
+			},
+			() => {
+				this.loading = false;
+				this.loadingEvent.emit(false);
+				this.autoTrigger.openPanel();
+			}
+		);
+
+		if (expansionType == undefined) {
+			this.searchUniqueTermsInCaseOfPlainQuery(term);
+		}
 	}
 
 	handleExpansionQuery(results: FulltextSearchResult[]) {
@@ -154,16 +161,19 @@ export class FemmeSearchComponent {
 	// }
 
 	fulltextQuery() {
-		let term: any = this.fulltextQueryForm.value.searchTerm;
+		let term: string = this.fulltextQueryForm.value.searchTerm;
+		let expansionType: string = this.fulltextQueryForm.value.expansionType;
+
 		console.log("SUBMIT");
 		console.log(term);
 
-		if (term == undefined) {
+		if (term == undefined || term == "") {
 			this.emitQueryEvent();
 		} else {
-			let searchTerm: string;
-			searchTerm = typeof term === "string" ? term : term.fulltext["name"];
-			this.searchExact(searchTerm);
+			// let searchTerm: string;
+			// searchTerm = typeof term === "string" ? term : term.fulltext["name"];
+			// this.searchExact(searchTerm);
+			this.executeQuery(term, expansionType);
 		}
 	}
 
