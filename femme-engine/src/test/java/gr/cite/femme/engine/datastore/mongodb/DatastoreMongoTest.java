@@ -7,14 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import gr.cite.femme.core.exceptions.InvalidQueryOperationException;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.engine.query.construction.mongodb.CriterionMongo;
 import gr.cite.femme.engine.query.construction.mongodb.QueryMongo;
 import org.apache.commons.lang3.RandomUtils;
 import org.bson.types.ObjectId;
-import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +35,13 @@ public class DatastoreMongoTest {
 	@Before
 	public void init() {
 		/*mongo = new MongoDatastore(fongoRule.getDatabase("femme-db"));*/
-		mongo = new MongoDatastore();
+		//mongo = new MongoDatastore();
 	}
 	
-	@After
+	/*@After
 	public void close() {
 		mongo.close();
-	}
+	}*/
 	
 	/*@Test
 	public void queryDataElement() {

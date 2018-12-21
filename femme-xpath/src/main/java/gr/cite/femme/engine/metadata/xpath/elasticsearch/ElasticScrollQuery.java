@@ -26,7 +26,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private boolean firstScroll = true;
-	private ElasticMetadataIndexDatastoreClient client;
+	private ElasticMetadataIndexDatastoreRepository client;
 	private String scrollId;
 	private Response indexResponse;
 	private List<IndexableMetadatum> results;
@@ -34,7 +34,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	public ElasticScrollQuery() {
 	
 	}
-	public ElasticScrollQuery(ElasticMetadataIndexDatastoreClient client) {
+	public ElasticScrollQuery(ElasticMetadataIndexDatastoreRepository client) {
 		this.client = client;
 	}
 

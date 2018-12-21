@@ -38,9 +38,9 @@ public class QueryMongo implements Query<CriterionMongo> {
 		return criteria;
 	}
 	
-	public Document build() {
+	public QueryMongoBuildResult build() {
 		List<Document> list = criteria.stream().map(CriterionMongo::build).collect(Collectors.toList());
-		return list.size() == 1 ? list.get(0) : new Document().append("$and", list); 
+		return new QueryMongoBuildResult(list.size() == 1 ? list.get(0) : new Document().append("$and", list));
 		
 		/*String getQueryExecutor = "{";
 		Iterator<CriterionMongo> criteriaIterator = criteria.iterator();
@@ -56,7 +56,7 @@ public class QueryMongo implements Query<CriterionMongo> {
 
 	@Override
 	public String toString() {
-		return build().toJson();
+		return build().get().toJson();
 	}
 	
 	public static QueryMongo fromString(String queryJson) throws IOException {

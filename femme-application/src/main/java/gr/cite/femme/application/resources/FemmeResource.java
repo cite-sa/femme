@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import gr.cite.femme.application.exception.FemmeApplicationException;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 //import gr.cite.femme.core.dto.DataElementList;
 import gr.cite.femme.core.dto.FemmeResponse;
 import gr.cite.femme.core.dto.FemmeResponseEntity;
@@ -100,12 +100,12 @@ public class FemmeResource {
 		FemmeResponseEntity<Collection> entity = new FemmeResponseEntity<>();
 
 		try {
-			Collection collection = this.femme.query(Collection.class).find(QueryMongo.query().addCriterion(CriterionBuilderMongo.root().eq(FieldNames.NAME, name).end())).execute().first();
+			Collection collection = this.femme.getCollectionByName(name);
 			if (collection == null) {
 				throw new FemmeApplicationException("No collection with name " + name + " found", Response.Status.NOT_FOUND.getStatusCode());
 			}
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage("Collection " + name + " found").setEntity(entity);
-		} catch (DatastoreException | MetadataStoreException e) {
+		} catch (DatastoreException e) {
 			logger.error(e.getMessage(), e);
 			throw new FemmeApplicationException(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}

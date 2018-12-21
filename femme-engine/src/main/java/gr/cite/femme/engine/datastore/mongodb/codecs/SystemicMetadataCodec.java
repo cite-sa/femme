@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.model.Status;
 import org.bson.BsonReader;

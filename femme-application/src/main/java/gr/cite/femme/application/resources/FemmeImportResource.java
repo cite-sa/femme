@@ -131,9 +131,9 @@ public class FemmeImportResource {
 
 		Response response = this.resourceContext.getResource(FemmeAdminResource.class).insertCollection(collection);
 		Import existingImport = this.imports.get(id);
-		if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
-			existingImport.setCollectionId(collection.getId());
-		}
+		//if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
+		existingImport.setCollectionId(collection.getId());
+		//}
 
 		try {
 			List<DataElement> existingDataElements = this.femme.getDataElementsByCollection(collection.getId());

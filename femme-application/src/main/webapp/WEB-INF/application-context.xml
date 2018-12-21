@@ -1,101 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
-   
-	<context:property-placeholder location="WEB-INF/femme.properties.prod" />
+
+	<context:property-placeholder location="WEB-INF/femme.properties.devel" />
 	<context:annotation-config/>
-	<context:component-scan base-package="gr.cite.femme.application"/>
+	<context:component-scan base-package="gr.cite.femme"/>
 
-	<!--<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore" destroy-method="close">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.schema.index.db.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.name}"/>
-	</bean>
-
-	<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore" destroy-method="close">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.index.db.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.name}"/>
-		<constructor-arg ref="metadataSchemaIndexDatastore"/>
-	</bean>
-
-	<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.engine.metadata.xpath.MetadataXPath" destroy-method="close">
-		<constructor-arg ref="metadataSchemaIndexDatastore"/>
-		<constructor-arg ref="metadataIndexDatastore"/>
-	</bean>-->
-
-	<!--<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.db.port}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
-		&lt;!&ndash;<constructor-arg ref="metadataXPath"/>&ndash;&gt;
-	</bean>-->
-
-	<bean id="datastore" name="datastore" class="gr.cite.femme.engine.datastore.mongodb.MongoDatastore" destroy-method="close">
-		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.host}"/>
-		<constructor-arg type="int" value="${gr.cite.femme.datastore.db.port}"/>
+	<bean id="collectionDatastoreRepository" name="collectionDatastoreRepository" class="gr.cite.femme.engine.datastore.mongodb.repositories.CollectionMongoDatastoreRepository">
+		<constructor-arg value="${gr.cite.femme.datastore.db.host}"/>
 		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.name}"/>
+		<constructor-arg type="boolean" value="${gr.cite.femme.datastore.db.sharding}"/>
 	</bean>
 
+	<bean id="dataElementDatastoreRepository" name="dataElementDatastoreRepository" class="gr.cite.femme.engine.datastore.mongodb.repositories.DataElementMongoDatastoreRepository">
+		<constructor-arg value="${gr.cite.femme.datastore.db.host}"/>
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.db.name}"/>
+		<constructor-arg type="boolean" value="${gr.cite.femme.datastore.db.sharding}"/>
+	</bean>
 
+	<bean id="datastoreRepositoryProvider" name="datastoreRepositoryProvider" class="gr.cite.femme.core.datastores.DatastoreRepositoryProvider">
+		<constructor-arg ref="collectionDatastoreRepository" />
+		<constructor-arg ref="dataElementDatastoreRepository" />
+	</bean>
 
-	<!--<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
-		<constructor-arg ref="datastore"/>
-		<constructor-arg ref="metadataStore"/>
-		<constructor-arg ref="fulltextClient"/>
-	</bean>-->
+	<bean id="datastore" name="datastore" class="gr.cite.femme.engine.datastore.mongodb.MongoDatastore">
+		<constructor-arg ref="datastoreRepositoryProvider" />
+	</bean>
 
-   <bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
-   		<constructor-arg ref="femme" />
-   </bean>
+	<bean id="femmeAdminResource" class="gr.cite.femme.application.resources.FemmeAdminResource">
+		<constructor-arg type="java.lang.String" value="${gr.cite.femme.url}"/>
+		<constructor-arg ref="femme" />
+	</bean>
 	<bean id="femmeResource" class="gr.cite.femme.application.resources.FemmeResource">
-   		<constructor-arg ref="femme" />
-   </bean>
+		<constructor-arg ref="femme" />
+	</bean>
 	<bean id="femmeImportResource" class="gr.cite.femme.application.resources.FemmeImportResource">
 		<constructor-arg ref="femme" />
 	</bean>
 
 	<beans profile="no_index_mode">
-		<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.host}"/>
-			<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.db.port}"/>
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
+		<bean id="metadatastoreRepository" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadatastoreRepository" destroy-method="close">
+			<constructor-arg value="${gr.cite.femme.metadatastore.db.host}"/>
+			<constructor-arg type="java.lang.String" value="${gr.cite.femme.metadatastore.db.name}"/>
+			<constructor-arg type="boolean" value="${gr.cite.femme.metadatastore.db.sharding}"/>
 		</bean>
-		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
+		<bean id="metadatastore" name="metadatastore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore">
+			<constructor-arg ref="metadatastoreRepository"/>
+		</bean>
+
+		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme" destroy-method="close">
 			<constructor-arg ref="datastore"/>
-			<constructor-arg ref="metadataStore"/>
+			<constructor-arg ref="metadatastore"/>
 		</bean>
 	</beans>
 
 	<beans profile="index_mode">
-		<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore" destroy-method="close">
+		<bean id="metadataSchemaDatastoreRepository" name="metadataSchemaDatastoreRepository" class="gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaDatastoreRepository" destroy-method="close">
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.host}"/>
 			<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.schema.index.db.port}"/>
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.schema.index.db.name}"/>
 		</bean>
+		<bean id="metadataSchemaIndexDatastore" name="metadataSchemaIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaDatastore">
+			<constructor-arg ref="metadataSchemaDatastoreRepository"/>
+		</bean>
 
-		<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore" destroy-method="close">
+		<bean id="metadataIndexDatastoreRepository" name="metadataIndexDatastoreRepository" class="gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastoreRepository" destroy-method="close">
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.host}"/>
 			<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.index.db.port}"/>
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.index.db.name}"/>
+		</bean>
+		<bean id="metadataIndexDatastore" name="metadataIndexDatastore" class="gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore">
+			<constructor-arg ref="metadataIndexDatastoreRepository"/>
 			<constructor-arg ref="metadataSchemaIndexDatastore"/>
 		</bean>
-
-		<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.engine.metadata.xpath.MetadataXPath" destroy-method="close">
+		<bean id="metadataXPath" name="metadataXPath" class="gr.cite.femme.engine.metadata.xpath.MetadataXPath">
 			<constructor-arg ref="metadataSchemaIndexDatastore"/>
 			<constructor-arg ref="metadataIndexDatastore"/>
 		</bean>
-		<bean id="metadataStore" name="metadataStore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore" destroy-method="close">
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.host}"/>
-			<constructor-arg type="int" value="${gr.cite.femme.datastore.metadata.db.port}"/>
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.name}"/>
-			<constructor-arg type="java.lang.String" value="${gr.cite.femme.datastore.metadata.db.bucket.name}"/>
+
+		<bean id="metadatastoreRepository" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadatastoreRepository" destroy-method="close">
+			<constructor-arg value="${gr.cite.femme.metadatastore.db.host}"/>
+			<constructor-arg type="java.lang.String" value="${gr.cite.femme.metadatastore.db.name}"/>
+			<constructor-arg type="boolean" value="${gr.cite.femme.metadatastore.db.sharding}"/>
+		</bean>
+
+		<bean id="metadatastore" name="metadatastore" class="gr.cite.femme.engine.metadatastore.mongodb.MongoMetadataStore">
+			<constructor-arg ref="metadatastoreRepository"/>
 			<constructor-arg ref="metadataXPath"/>
 		</bean>
 
@@ -103,13 +97,11 @@
 			<constructor-arg type="java.lang.String" value="${gr.cite.femme.fulltext.endpoint}"/>
 		</bean>
 
-		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme">
+		<bean id="femme" name="femme" class="gr.cite.femme.engine.Femme" destroy-method="close">
 			<constructor-arg ref="datastore"/>
-			<constructor-arg ref="metadataStore"/>
+			<constructor-arg ref="metadatastore"/>
 			<property name="fulltextClient" ref="fulltextClient"/>
 		</bean>
 	</beans>
 
-	<!--<context:annotation-config/>
-	<context:component-scan base-package="gr.cite.femme.application"/>-->
 </beans>

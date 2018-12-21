@@ -15,7 +15,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
 import gr.cite.femme.engine.datastore.mongodb.codecs.MetadatumJson;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
 
 public class MetadataJsonCollection implements MongoMetadataCollection {

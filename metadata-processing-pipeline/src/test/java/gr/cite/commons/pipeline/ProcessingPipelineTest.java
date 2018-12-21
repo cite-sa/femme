@@ -1,13 +1,19 @@
 package gr.cite.commons.pipeline;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import gr.cite.commons.pipeline.config.PipelineConfiguration;
 import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
+import gr.cite.commons.pipeline.exceptions.ProcessingPipelineHandlerException;
+import gr.cite.commons.pipelinenew.Pipeline;
+import gr.cite.pipelinenew.step.PipelineStep;
 import org.junit.Test;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class ProcessingPipelineTest {
@@ -245,7 +251,7 @@ public class ProcessingPipelineTest {
 		System.out.println(mapper.writeValueAsString(pipelineConfig));
 	}
 
-	//@Test
+	@Test
 	public void processTest() throws IOException, ProcessingPipelineException {
 		ProcessingPipeline pipeline = new ProcessingPipeline();
 
@@ -253,5 +259,26 @@ public class ProcessingPipelineTest {
 		System.out.println(output);
 	}
 	
+	@Test
+	public void newProcessTest() throws ProcessingPipelineHandlerException, OperationNotSupportedException, IOException {
+		String config = Resources.toString(Resources.getResource("pipeline-config_new.json"), Charsets.UTF_8);
+		
+		List<PipelineStep> steps = mapper.readValue(config, new TypeReference<List<PipelineStep>>(){});
+		Pipeline pipeline = new Pipeline(steps.toArray(new PipelineStep[0]));
+		
+		/*MapStep mapStep = new MapStep();
+		
+		Map<String, String> mappings = new HashMap<>();
+		
+		mappings.put("name", "//*[local-name()='CoverageId']/text()");
+		mappings.put("lowerCorner", "//*[local-name()='lowerCorner']/text()");
+		
+		mapStep.setMappings(mappings);
+		mapStep.setFormat(Format.XML);
+		
+		Pipeline pipeline1 = new Pipeline(mapStep);*/
+		
+		Object results = pipeline.process(input);
+	}
 
 }

@@ -9,9 +9,9 @@ import gr.cite.femme.core.query.construction.Query;
 
 import java.util.List;
 
-public interface MetadataQueryExecutor<T extends Element> extends QueryExecutor<T> {
-	MetadataQueryExecutor<T> options(QueryOptionsMessenger options);
-	MetadataQueryExecutor<T> find(Query<? extends Criterion> query);
+public interface MetadataQueryExecutor<T extends Element> extends ElementQueryExecutor<T> {
+	/*MetadataQueryExecutor<T> options(QueryOptionsMessenger options);
+	MetadataQueryExecutor<T> find(Query<? extends Criterion> query);*/
 	MetadataQueryExecutor<T> xPath(String xPath) throws DatastoreException, MetadataStoreException;
 	MetadataQueryExecutor<T> xPath(List<String> elementIds, String xPath) throws DatastoreException, MetadataStoreException;
 	MetadataQueryExecutor<T> xPathInMemory(String xPath) throws DatastoreException, MetadataStoreException;

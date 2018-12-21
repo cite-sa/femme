@@ -1,64 +1,42 @@
 {
 	"FULLTEXT": {
-		"WCS": {
-			"map": [
-				{
-					"format": "xml",
-					"query": "//wcs:CoverageId/text()",
-					"name": "name",
-					"type": "string",
-					"array": false
+		"WCS": [
+			{
+				"operation": "map",
+				"format": "xml",
+				"mappings": {
+					"name": "//*[local-name()='CoverageId']/text()"
 				}
-			]
-		},
-		"OAIPMH": {
-			"map": [
-				{
-					"format": "xml",
-					"query": "/*[local-name()='dc']//*[local-name()='title']/text()",
-					"name": "title",
-					"type": "string",
-					"array": false
-				},
-				{
-					"format": "xml",
-					"query": "/*[local-name()='dc']//*[local-name()='creator']/text()",
-					"name": "creator",
-					"type": "string",
-					"array": false
+			}
+		],
+		"OAIPMH": [
+			{
+				"operation": "map",
+				"format": "xml",
+				"mappings": {
+					"name": "/*[local-name()='dc']//*[local-name()='title']/text()"
 				}
-			]
-		},
-		"OBIS": {
-			"map": [
-				{
-					"format": "json",
-					"query": "/scientificName",
-					"name": "name",
-					"type": "string",
-					"array": false
+			},
+			{
+				"operation": "map",
+				"format": "xml",
+				"mappings": {
+					"name": "/*[local-name()='dc']//*[local-name()='creator']/text()"
 				}
-			]
-		}
+			}
+		],
+		"OBIS": [
+			{
+				"operation": "map",
+				"format": "json",
+				"mappings": {
+					"name": "/scientificName"
+				}
+			}
+		]
 	},
 	"GEO": {
-		"WCS": {
-			"map": [
-				{
-					"format": "xml",
-					"query": "//*[local-name()='lowerCorner']/text()",
-					"name": "lowerCorner",
-					"type": "string",
-					"array": false
-				},
-				{
-					"format": "xml",
-					"query": "//*[local-name()='upperCorner']/text()",
-					"name": "upperCorner",
-					"type": "string",
-					"array": false
-				}
-			]
-		}
+		"WCS": [
+		]
 	}
 }

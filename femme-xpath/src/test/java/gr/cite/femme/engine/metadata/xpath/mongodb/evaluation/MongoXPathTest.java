@@ -9,9 +9,8 @@ import gr.cite.femme.engine.metadata.xpath.MetadataXPath;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.ElasticMetadataIndexDatastore;
-import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore;
+import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaDatastore;
 import org.bson.types.ObjectId;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,14 +48,14 @@ public class MongoXPathTest {
 	public void initXPathClient() throws UnknownHostException, MetadataIndexException {
 		/*xPathDatastore = new MongoMetadataAndSchemaIndexDatastore();*/
 
-		MetadataSchemaIndexDatastore schemaIndexDatastore = new MongoMetadataSchemaIndexDatastore();
+		MetadataSchemaIndexDatastore schemaIndexDatastore = null;
 		xPath = new MetadataXPath(schemaIndexDatastore, new ElasticMetadataIndexDatastore(schemaIndexDatastore));
 	}
 
-	@After
+	/*@After
 	public void closeMongoClient() throws IOException {
 		xPath.close();
-	}
+	}*/
 
 	//@Test
 	public void index() throws IOException, MetadataIndexException, HashGenerationException {

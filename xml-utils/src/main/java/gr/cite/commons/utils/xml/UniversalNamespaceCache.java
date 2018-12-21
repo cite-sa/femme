@@ -13,7 +13,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class UniversalNamespaceCache implements NamespaceContext {
-	private static final String DEFAULT_NS = "DEFAULT";
+	private static final String DEFAULT_NS = "default";
 	private Map<String, String> prefix2Uri = new HashMap<String, String>();
 	private Map<String, String> uri2Prefix = new HashMap<String, String>();
 
@@ -99,7 +99,7 @@ public class UniversalNamespaceCache implements NamespaceContext {
 	 * @return uri
 	 */
 	public String getNamespaceURI(String prefix) {
-		if (prefix == null || prefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
+		if (prefix == null || prefix.equals(XMLConstants.DEFAULT_NS_PREFIX) || prefix.equals(DEFAULT_NS)) {
 			return prefix2Uri.get(DEFAULT_NS);
 		} else {
 			return prefix2Uri.get(prefix);

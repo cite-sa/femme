@@ -1,6 +1,6 @@
 package gr.cite.femme.engine.datastore.mongodb.codecs;
 
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.model.Collection;
@@ -9,7 +9,6 @@ import org.bson.BsonType;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CollectionCodec extends ElementCodec<Collection> {

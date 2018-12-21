@@ -1,6 +1,7 @@
 package gr.cite.femme.engine.datastore.mongodb.utils;
 
 import gr.cite.femme.core.model.Element;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.model.Metadatum;
 import org.bson.Document;
 import org.bson.types.ObjectId;

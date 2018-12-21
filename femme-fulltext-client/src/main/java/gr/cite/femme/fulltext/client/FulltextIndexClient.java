@@ -33,6 +33,19 @@ public class FulltextIndexClient implements FulltextIndexClientAPI {
 			throw new FulltextException("Error on fulltext indexing element [" + elementId + "]: " + response.readEntity(String.class));
 		}
 	}
+	
+	@Override
+	public void update(String elementId, String metadatumId, Map<String, Object> fields) throws FulltextException {
+		FulltextDocument doc = new FulltextDocument();
+		doc.setElementId(elementId);
+		doc.setMetadatumId(metadatumId);
+		doc.setFulltextFields(fields);
+		
+		Response response = this.target.path("admin").path("elements").path(elementId).request().post(Entity.entity(doc, MediaType.APPLICATION_JSON));
+		if (response.getStatus() >= 400 && response.getStatus() <= 599) {
+			throw new FulltextException("Error on fulltext updating element [" + elementId + "]: " + response.readEntity(String.class));
+		}
+	}
 
 	@Override
 	public void delete(String id) {

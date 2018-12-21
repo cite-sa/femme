@@ -57,7 +57,7 @@ public class CriteriaQueryTest {
 		
 		QueryMongo query = QueryMongo.query().addCriterion(criterion);
 		
-		System.out.println("String: " + query.build().toJson());
+		System.out.println("String: " + query.build().get().toJson());
 		
 		
 		String queryJson = mapper.writeValueAsString(query);

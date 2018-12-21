@@ -1,12 +1,10 @@
 package gr.cite.femme.engine;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import gr.cite.commons.pipeline.ProcessingPipeline;
-import gr.cite.commons.pipeline.exceptions.ProcessingPipelineException;
+import gr.cite.commons.pipelinenew.Pipeline;
 import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.datastores.Datastore;
 import gr.cite.femme.core.datastores.MetadataStore;
 import gr.cite.femme.core.exceptions.DatastoreException;
@@ -17,7 +15,6 @@ import gr.cite.femme.core.model.Collection;
 import gr.cite.femme.core.model.DataElement;
 import gr.cite.femme.core.model.Element;
 import gr.cite.femme.core.model.Metadatum;
-import gr.cite.femme.core.model.Status;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.construction.Query;
@@ -33,24 +30,29 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Femme {
 	private static final Logger logger = LoggerFactory.getLogger(Femme.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private static final String PIPELINE_CONFIG_FILE = "pipeline-config.json";
-
+	
 	private Datastore datastore;
 	private MetadataStore metadataStore;
 	private FulltextIndexClientAPI fulltextClient;
 
 	private PipelineTypesConfiguration pipelineConfiguration;
+	
+	private ExecutorService auxiliaryServicesExecutor = Executors.newFixedThreadPool(20);
 	
 	@Inject
 	public Femme(Datastore datastore, MetadataStore metadataStore) throws IOException {
@@ -66,23 +68,33 @@ public class Femme {
 		this.fulltextClient = fulltextClient;
 	}
 	
-	public String insertOrUpdateElement(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
-		Element updatedElement = null;
-		Element existing = exists(element);
-		
-		if (existing != null) {
-			//element.setId(id);
-			merge(existing, element);
-			updatedElement = updateElement(element);
-		} else {
-			insertElement(element);
-			
-			if (this.fulltextClient != null) {
-				insertInFulltextIndex(element);
+	@PreDestroy
+	public void close() {
+		try {
+			System.out.println("Attempt to shutdown executor");
+			this.auxiliaryServicesExecutor.shutdown();
+			this.auxiliaryServicesExecutor.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			logger.error("Tasks interrupted");
+		} finally {
+			if (! this.auxiliaryServicesExecutor.isTerminated()) {
+				logger.error("Cancel non-finished tasks");
+				this.auxiliaryServicesExecutor.shutdownNow();
 			}
+			
+			logger.error("shutdown finished");
 		}
-
-		return updatedElement != null ? null : element.getId();
+	}
+	
+	public String upsert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
+		Element existing = exists(element);
+		if (existing == null) {
+			insert(element);
+			return element.getId();
+		} else {
+			update(existing.getId(), element);
+			return null;
+		}
 	}
 	
 	private Element exists(Element element) throws FemmeException {
@@ -100,6 +112,29 @@ public class Femme {
 		return existingElement;
 	}
 	
+	public String insert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
+		insertElement(element);
+		
+		if (this.fulltextClient != null) {
+			insertInFulltextIndex(element);
+		}
+
+		return element.getId();
+	}
+	
+	public Element update(String id, Element element) throws DatastoreException, MetadataStoreException, FemmeException {
+		Element existing = exists(element);
+		
+		if (existing == null) throw new IllegalArgumentException("[" + id + "] Element does not exist");
+		
+		merge(existing, element);
+		Element updated = updateElement(element);
+		
+		updateInAuxiliaryServices(element);
+		
+		return updated;
+	}
+	
 	private <T extends Element> void merge(T existingElement, T newElement) {
 		newElement.setId(existingElement.getId());
 		if (newElement.getSystemicMetadata() == null) newElement.setSystemicMetadata(new SystemicMetadata());
@@ -112,11 +147,6 @@ public class Femme {
 		}
 
 		element.getMetadata().forEach(metadatum -> metadatum.setElementId(element.getId()));
-
-		if (element.getSystemicMetadata() == null) {
-			element.setSystemicMetadata(new SystemicMetadata());
-		}
-		element.getSystemicMetadata().setStatus(Status.ACTIVE);
 
 		this.datastore.insert(element);
 		
@@ -176,6 +206,55 @@ public class Femme {
 		
 		return metadatum.getId();
 	}
+	
+	private void insertInAuxiliaryServices(Element element) {
+		this.auxiliaryServicesExecutor.submit(() -> {
+			if (this.fulltextClient != null) {
+				insertInFulltextIndex(element);
+			}
+		});
+		
+		// TODO Insert into geo service
+		/*this.auxiliaryServicesExecutor.submit(() -> {
+		
+		});*/
+	}
+	
+	private void insertInFulltextIndex(Element element) {
+		if (! this.pipelineConfiguration.isEmpty()) {
+			Pipeline pipeline = this.pipelineConfiguration.getPipelineForDatastoreTypeAndElementType(DatastoreType.FULLTEXT, element.getType());
+			
+			for (Metadatum metadatum : element.getMetadata()) {
+				try {
+					if (this.fulltextClient != null) {
+						this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue()));
+					}
+				} catch (FulltextException | OperationNotSupportedException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+		}
+	}
+	
+	private void updateInAuxiliaryServices(Element element) {
+		this.auxiliaryServicesExecutor.submit(() -> updateInFulltextIndex(element));
+	}
+	
+	private void updateInFulltextIndex(Element element) {
+		if (! this.pipelineConfiguration.isEmpty()) {
+			Pipeline pipeline = this.pipelineConfiguration.getPipelineForDatastoreTypeAndElementType(DatastoreType.FULLTEXT, element.getType());
+			
+			for (Metadatum metadatum : element.getMetadata()) {
+				try {
+					if (this.fulltextClient != null) {
+						this.fulltextClient.update(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue()));
+					}
+				} catch (FulltextException | OperationNotSupportedException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+		}
+	}
 
 	public <T extends Element> T updateElement(T element) throws DatastoreException, MetadataStoreException {
 		T updatedElement = null;
@@ -217,14 +296,14 @@ public class Femme {
 
 	public void deleteElement(String elementId, Class<? extends Element> elementSubtype) throws FemmeException {
 		try {
-			this.datastore.delete(elementId, elementSubtype);
-			this.metadataStore.deleteAll(elementId);
+			Element element = this.datastore.get(elementId, elementSubtype);
+			if (element == null) throw new IllegalArgumentException("[" + elementId + "] No " + elementSubtype.getSimpleName() + " found");
+			
+			this.datastore.delete(element, elementSubtype);
+			this.metadataStore.delete(element);
 			
 			if (elementSubtype.equals(Collection.class)) {
-				List<DataElement> collectionDataElements = this.datastore.getDataElementsByCollection(elementId);
-				for (DataElement dataElement: collectionDataElements) {
-					deleteElement(dataElement.getId(), DataElement.class);
-				}
+				cascadeCollectionDeletion(elementId);
 			}
 			
 			deleteElementFromAuxiliaryServices(elementId);
@@ -236,11 +315,25 @@ public class Femme {
 		}
 	}
 	
-	private void deleteElementFromAuxiliaryServices(String elementId) {
-		if (this.fulltextClient != null) {
-			this.fulltextClient.deleteByElementId(elementId);
+	private void cascadeCollectionDeletion(String collectionId) throws DatastoreException, FemmeException {
+		List<DataElement> collectionDataElements = this.datastore.getDataElementsByCollection(collectionId);
+		for (DataElement dataElement: collectionDataElements) {
+			deleteElement(dataElement.getId(), DataElement.class);
+			deleteElementFromAuxiliaryServices(dataElement.getId());
 		}
+	}
+	
+	private void deleteElementFromAuxiliaryServices(String elementId) {
+		this.auxiliaryServicesExecutor.submit(() -> {
+			if (this.fulltextClient != null) {
+				this.fulltextClient.deleteByElementId(elementId);
+			}
+		});
+		
 		// TODO Delete from geo service
+		/*this.auxiliaryServicesExecutor.submit(() -> {
+		
+		});*/
 	}
 	
 	private void deleteMetadata(List<Metadatum> existingMetadata) throws MetadataStoreException {
@@ -282,7 +375,7 @@ public class Femme {
 		}
 
 		dataElement.setCollections(Collections.singletonList(collection));
-		return insertOrUpdateElement(dataElement);
+		return upsert(dataElement);
 	}
 
 	public String addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException, FemmeException {
@@ -291,7 +384,7 @@ public class Femme {
 
 		if (collections != null && collections.size() > 0) {
 			dataElement.setCollections(collections);
-			return insertOrUpdateElement(dataElement);
+			return upsert(dataElement);
 		}
 
 		return null;
@@ -337,6 +430,14 @@ public class Femme {
 	public List<Metadatum> getElementMetadata(String elementId) throws MetadataStoreException {
 		return this.metadataStore.find(elementId);
 	}
+	
+	public Collection getCollectionByName(String name) throws DatastoreException {
+		return this.datastore.getElementByName(name, Collection.class);
+	}
+	
+	public DataElement getDataElementByName(String name) throws DatastoreException {
+		return this.datastore.getElementByName(name, DataElement.class);
+	}
 
 	/*public <T extends Element> T get(String id, String xPath, Class<T> elementSubType) throws DatastoreException, MetadataStoreException {
 		try {
@@ -354,7 +455,7 @@ public class Femme {
 	}*/
 
 	public <T extends Element> MetadataQueryExecutorBuilder<T> query(Class<T> elementSubType) {
-		return QueryExecutorFactory.getQueryExecutor(this.datastore, this.metadataStore, elementSubType);
+		return QueryExecutorFactory.getQueryExecutor(this.datastore.getDatastoreRepositoryProvider(), this.metadataStore, elementSubType);
 	}
 
 	/*public <T extends Element> MetadataQueryExecutorBuilder<T> find(Query<? extends Criterion> getQueryExecutor, Class<T> elementSubType) {
@@ -367,22 +468,6 @@ public class Femme {
 
 	public void reIndex() throws MetadataStoreException, MetadataIndexException {
 		this.metadataStore.reIndexAll();
-	}
-
-	private void insertInFulltextIndex(Element element) {
-		if (! this.pipelineConfiguration.isEmpty()) {
-			ProcessingPipeline pipeline = new ProcessingPipeline(this.pipelineConfiguration.getConfigurationForDatastoreTypeAndElementType(DatastoreType.FULLTEXT, element.getType()));
-
-			for (Metadatum metadatum : element.getMetadata()) {
-				try {
-					if (this.fulltextClient != null) {
-						this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue(), metadatum.getContentType().toLowerCase().split("/")[1]));
-					}
-				} catch (ProcessingPipelineException | FulltextException e) {
-					logger.error(e.getMessage(), e);
-				}
-			}
-		}
 	}
 
 	private void deleteFromFulltextIndexByElementId(String elementId) throws FemmeException {

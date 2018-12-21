@@ -1,6 +1,6 @@
 package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.engine.metadatastore.mongodb.MetadataGridFSFile;
 import gr.cite.femme.core.model.Metadatum;
 import org.bson.BsonReader;
@@ -136,7 +136,7 @@ public class MetadataGridFSFileCodec implements CollectibleCodec<MetadataGridFSF
 	@Override
 	public BsonValue getDocumentId(MetadataGridFSFile metadatum) {
 		if (!documentHasId(metadatum)) {
-			throw new IllegalStateException("The MetadataGridFS file does not contain an _id");
+			throw new IllegalStateException("The MetadataGridFSRepository file does not contain an _id");
 		}
 		return new BsonString(metadatum.getId());
 	}

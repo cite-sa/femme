@@ -1,4 +1,4 @@
-package gr.cite.commons.pipeline.handlers;
+package gr.cite.commons.pipelinenew.handlers;
 
 import gr.cite.commons.pipeline.exceptions.ProcessingPipelineHandlerException;
 import gr.cite.commons.pipeline.operations.TransformOperation;
@@ -6,7 +6,7 @@ import gr.cite.commons.pipeline.operations.TransformOperation;
 import javax.naming.OperationNotSupportedException;
 import java.time.LocalDateTime;
 
-public class TransformHandler implements ProcessingPipelineHandler {
+public class TransformHandler implements PipelineHandler {
 	private TransformOperation operation;
 	
 	public TransformHandler(TransformOperation operation) {

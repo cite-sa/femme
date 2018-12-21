@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import gr.cite.femme.application.exception.FemmeApplicationException;
@@ -40,17 +41,18 @@ import gr.cite.femme.core.model.DataElement;
 @Produces(MediaType.APPLICATION_JSON)
 public class FemmeAdminResource {
 	private static final Logger logger = LoggerFactory.getLogger(FemmeAdminResource.class);
+	
+	private String rootUrl;
 
 	private static final String COLLECTIONS_PATH = "collections";
 	private static final String DATA_ELEMENTS_PATH = "dataElements";
 	private static final String METADATA_PATH = "metadata";
-
-	@Context
-	private UriInfo uriInfo;
+	
 	private Femme femme;
 
 	@Inject
-	public FemmeAdminResource(Femme femme) {
+	public FemmeAdminResource(String rootUrl, Femme femme) {
+		this.rootUrl = rootUrl;
 		this.femme = femme;
 	}
 
@@ -65,11 +67,12 @@ public class FemmeAdminResource {
 	@Path(FemmeAdminResource.COLLECTIONS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response insertCollection(@NotNull Collection collection) throws FemmeApplicationException {
-		if (StringUtils.isEmpty(collection.getName())) {
+		if ("".equals(collection.getName().trim())) {
 			collection.setName("collection_" + UUID.randomUUID().toString());
 		} else {
 			collection.setName(collection.getName().trim().toLowerCase().replaceAll(" ", "_"));
 		}
+		
 		return insert(collection);
 	}
 
@@ -77,65 +80,52 @@ public class FemmeAdminResource {
 	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response insertDataElement(@NotNull DataElement dataElement) throws FemmeApplicationException {
-		if (StringUtils.isEmpty(dataElement.getName())) {
-			dataElement.setName("dataElement_" + UUID.randomUUID().toString());
+		if ("".equals(dataElement.getName())) {
+			dataElement.setName(UUID.randomUUID().toString());
 		}
+		
 		return insert(dataElement);
 	}
 
 	private <T extends Element> Response insert(T element) throws FemmeApplicationException {
-		URI location;
-		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
+		FemmeResponse<String> femmeResponse;
 
 		try {
-			this.femme.insertOrUpdateElement(element);
-
-			String elementSubtypePathFragment = element.getClass().getSimpleName().toLowerCase().charAt(0) + element.getClass().getSimpleName().substring(1) + "s";
-			location = this.uriInfo.getRequestUriBuilder()
-					.path(elementSubtypePathFragment)
-					.path(element.getId()).build();
-			entity.setHref(location.toString()).setBody(element.getId());
-
+			String elementId = this.femme.upsert(element);
+			
 			String message = element.getClass().getSimpleName() + " " + element.getId() + " successfully inserted";
-			logger.info(message);
-			femmeResponse.setStatus(Response.Status.CREATED.getStatusCode()).setMessage(message).setEntity(entity);
+			int statusCode = elementId != null ? Response.Status.CREATED.getStatusCode() : Response.Status.OK.getStatusCode();
+			
+			femmeResponse = buildResponse(element.getClass(), element.getId(), element.getId(), statusCode, message);
 		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
-			throw buildFemmeApplicationExceptionForError(element.getClass().getSimpleName() + " insertion failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError(element.getClass().getSimpleName() + " insertion failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
-		return Response.status(Response.Status.CREATED).location(location).entity(femmeResponse).build();
+		return Response.status(femmeResponse.getStatus()).location(URI.create(femmeResponse.getEntity().getHref())).entity(femmeResponse).build();
 	}
 
+	// TODO OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 	@POST
 	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.DATA_ELEMENTS_PATH)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addToCollection(@NotNull @PathParam("collectionId") String collectionId, @NotNull DataElement dataElement) throws FemmeApplicationException {
-		URI location;
-		FemmeResponse<String> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<String> entity = new FemmeResponseEntity<>();
-		
+		FemmeResponse<String> femmeResponse;
 		
 		try {
 			String dataElementId = this.femme.addToCollection(dataElement, collectionId);
 
-			location = this.uriInfo.getRequestUriBuilder().path(FemmeAdminResource.DATA_ELEMENTS_PATH).path(dataElement.getId()).build();
-			entity.setHref(location.toString()).setBody(dataElement.getId());
-			entity.setBody(dataElement.getId());
-
 			String message = "DataElement " + dataElement.getId() + " successfully " + (dataElementId != null ? "inserted" : "updated") +  " in collection " + collectionId;
-			logger.info(message);
-			
 			int statusCode = dataElementId != null ? Response.Status.CREATED.getStatusCode() : Response.Status.OK.getStatusCode();
-			femmeResponse.setStatus(statusCode).setMessage(message).setEntity(entity);
+			
+			femmeResponse = buildResponse(DataElement.class, dataElement.getId(), dataElement.getId(), statusCode, message);
 			
 		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
-			throw buildFemmeApplicationExceptionForError("DataElement insertion in Collection " + collectionId + " failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError("DataElement insertion in Collection " + collectionId + " failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
-		return Response.status(femmeResponse.getStatus()).location(location).entity(femmeResponse).build();
+		return Response.status(femmeResponse.getStatus()).location(URI.create(femmeResponse.getEntity().getHref())).entity(femmeResponse).build();
 	}
-
+	
 	@POST
 	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -151,20 +141,18 @@ public class FemmeAdminResource {
 	}
 
 	private <T extends Element> Response updateElement(String elementId, T element) throws FemmeApplicationException {
-		FemmeResponse<T> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<T> entity = new FemmeResponseEntity<>();
+		FemmeResponse<T> femmeResponse;
 
 		element.setId(elementId);
 
 		try {
 			T updatedElement = this.femme.updateElement(element);
-			entity.setBody(updatedElement);
 
 			String message = element.getClass().getSimpleName() + " " + element.getId() + " successfully updated";
-			logger.info(message);
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
+			
+			femmeResponse = buildResponse(element.getClass(), updatedElement.getId(), updatedElement, Response.Status.OK.getStatusCode(), message);
 		} catch (DatastoreException | MetadataStoreException e) {
-			throw buildFemmeApplicationExceptionForError(element.getClass().getSimpleName() + " " + elementId + " update failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError(element.getClass().getSimpleName() + " " + elementId + " update failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
 		return Response.status(Response.Status.OK).entity(femmeResponse).build();
@@ -202,7 +190,7 @@ public class FemmeAdminResource {
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (MetadataStoreException e) {
-			throw buildFemmeApplicationExceptionForError("Metadatum insertion failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError("Metadatum insertion failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 		
 		return Response.status(Response.Status.OK).entity(femmeResponse).build();
@@ -246,42 +234,7 @@ public class FemmeAdminResource {
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
 		} catch (FemmeException e) {
-			throw buildFemmeApplicationExceptionForError("Metadatum " + metadatumId + " of " + elementSubType.getSimpleName() + " " + elementId + " update failed", Response.Status.INTERNAL_SERVER_ERROR, e);
-		}
-
-		return Response.status(Response.Status.OK).entity(femmeResponse).build();
-	}
-
-	@DELETE
-	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteCollectionMetadatum(
-			@NotNull @PathParam("collectionId") String collectionId,
-			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
-		return deleteElementMetadatum(collectionId, metadatumId);
-	}
-
-	@DELETE
-	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteDataElementMetadatum(
-			@NotNull @PathParam("dataElementId") String dataElementId,
-			@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
-		return deleteElementMetadatum(dataElementId, metadatumId);
-	}
-
-	private Response deleteElementMetadatum(String elementId, String metadatumId) throws FemmeApplicationException {
-		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
-		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
-
-		try {
-			this.femme.softDeleteMetadatum(metadatumId);
-
-			String message = "Metadatum " + metadatumId + " successfully soft deleted";
-			logger.info(message);
-			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
-		} catch (FemmeException e) {
-			throw buildFemmeApplicationExceptionForError("Metadatum " + metadatumId + " of " + elementId + " soft deletion failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError("Metadatum " + metadatumId + " of " + elementSubType.getSimpleName() + " " + elementId + " update failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
 		return Response.status(Response.Status.OK).entity(femmeResponse).build();
@@ -299,7 +252,7 @@ public class FemmeAdminResource {
 			logger.info(message);
 			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message);
 		} catch (MetadataStoreException | MetadataIndexException e) {
-			throw buildFemmeApplicationExceptionForError("Reindexing failed", Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError("Reindexing failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 
 		return Response.ok().entity(femmeResponse).build();
@@ -322,7 +275,7 @@ public class FemmeAdminResource {
 
 		try {
 			if (!this.femme.exists(elementSubtype, elementId)) {
-				throw buildFemmeApplicationExceptionForInfo(elementSubtype.getSimpleName() + " [" + elementId + "] doesn't exist", Response.Status.NOT_FOUND);
+				throw buildFemmeApplicationExceptionForInfo(elementSubtype.getSimpleName() + " [" + elementId + "] doesn't exist", Response.Status.NOT_FOUND.getStatusCode());
 			}
 
 			this.femme.deleteElement(elementId, elementSubtype);
@@ -332,17 +285,68 @@ public class FemmeAdminResource {
 			
 			return Response.ok().entity(femmeResponse).build();
 		} catch (FemmeException | DatastoreException | MetadataStoreException e) {
-			throw buildFemmeApplicationExceptionForError(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR, e);
+			throw buildFemmeApplicationExceptionForError(e.getMessage(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
 		}
 	}
 	
-	private FemmeApplicationException buildFemmeApplicationExceptionForInfo(String message, Response.Status status) {
-		logger.info(message);
-		return new FemmeApplicationException(message, status.getStatusCode());
+	@DELETE
+	@Path(FemmeAdminResource.COLLECTIONS_PATH + "/{collectionId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response deleteCollectionMetadatum(
+		@NotNull @PathParam("collectionId") String collectionId,
+		@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
+		return deleteElementMetadatum(collectionId, metadatumId);
 	}
 	
-	private FemmeApplicationException buildFemmeApplicationExceptionForError(String message, Response.Status status, Exception exception) {
+	@DELETE
+	@Path(FemmeAdminResource.DATA_ELEMENTS_PATH + "/{dataElementId}/" + FemmeAdminResource.METADATA_PATH + "/{metadatumId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response deleteDataElementMetadatum(
+		@NotNull @PathParam("dataElementId") String dataElementId,
+		@NotNull @PathParam("metadatumId") String metadatumId) throws FemmeApplicationException {
+		return deleteElementMetadatum(dataElementId, metadatumId);
+	}
+	
+	private Response deleteElementMetadatum(String elementId, String metadatumId) throws FemmeApplicationException {
+		FemmeResponse<Metadatum> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<Metadatum> entity = new FemmeResponseEntity<>();
+		
+		try {
+			this.femme.softDeleteMetadatum(metadatumId);
+			
+			String message = "Metadatum " + metadatumId + " successfully soft deleted";
+			logger.info(message);
+			femmeResponse.setStatus(Response.Status.OK.getStatusCode()).setMessage(message).setEntity(entity);
+		} catch (FemmeException e) {
+			throw buildFemmeApplicationExceptionForError("Metadatum " + metadatumId + " of " + elementId + " soft deletion failed", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e);
+		}
+		
+		return Response.status(Response.Status.OK).entity(femmeResponse).build();
+	}
+	
+	private <U, V> FemmeResponse<V> buildResponse(Class<U> elementSubtype, String elementId, V body, int statusCode, String message) {
+		FemmeResponse<V> femmeResponse = new FemmeResponse<>();
+		FemmeResponseEntity<V> entity = new FemmeResponseEntity<>();
+		
+		String elementPath = elementSubtype.getSimpleName().substring(0, 1).toLowerCase() + elementSubtype.getSimpleName().substring(1) + "s";
+		URI location = UriBuilder.fromUri(this.rootUrl).path(elementPath).path(elementId).build();
+		entity.setHref(location.toString()).setBody(body);
+		entity.setBody(body);
+		
+		femmeResponse.setStatus(statusCode).setMessage(message).setEntity(entity);
+		
+		logger.info(message);
+		
+		return femmeResponse;
+	}
+	
+	private FemmeApplicationException buildFemmeApplicationExceptionForInfo(String message, int status) {
+		logger.info(message);
+		return new FemmeApplicationException(message, status);
+	}
+	
+	private FemmeApplicationException buildFemmeApplicationExceptionForError(String message, int status, Exception exception) {
 		logger.error(message, exception);
-		return new FemmeApplicationException(message, status.getStatusCode(), exception);
+		return new FemmeApplicationException(message, status, exception);
 	}
 }

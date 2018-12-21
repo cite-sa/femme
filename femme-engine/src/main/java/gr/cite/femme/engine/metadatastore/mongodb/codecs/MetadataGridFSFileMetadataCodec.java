@@ -1,6 +1,6 @@
 package gr.cite.femme.engine.metadatastore.mongodb.codecs;
 
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.model.FieldNames;
 import gr.cite.femme.core.model.Metadatum;
 import gr.cite.femme.core.model.SystemicMetadata;
 import gr.cite.femme.core.model.Status;

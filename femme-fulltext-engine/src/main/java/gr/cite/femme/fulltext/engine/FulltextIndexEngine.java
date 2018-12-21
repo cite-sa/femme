@@ -63,20 +63,25 @@ public class FulltextIndexEngine {
 
 		this.indexClient.insert(jsonDoc, this.indexName);
 	}
-
+	
+	public void update(String id, FulltextDocument doc) throws FemmeFulltextException, IOException {
+		deleteByElementId(id);
+		insert(doc);
+	}
+	
 	public void delete(String id) throws FemmeFulltextException {
 		this.indexClient.delete(id, this.indexName);
 	}
 
 	public void deleteByElementId(String elementId) throws FemmeFulltextException {
-		deleteByQuery("elementId", elementId);
+		deleteByField("elementId", elementId);
 	}
 
 	public void deleteByMetadatumId(String metadatumId) throws FemmeFulltextException {
-		deleteByQuery("metadatumId", metadatumId);
+		deleteByField("metadatumId", metadatumId);
 	}
 
-	private void deleteByQuery(String field, String value) throws FemmeFulltextException {
+	private void deleteByField(String field, String value) throws FemmeFulltextException {
 		String deleteQuery = "{" +
 				"\"query\":{" +
 					"\"constant_score\":{" +

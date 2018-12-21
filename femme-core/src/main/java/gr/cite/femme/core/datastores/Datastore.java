@@ -15,59 +15,46 @@ import gr.cite.femme.core.query.execution.QueryExecutor;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
 
 public interface Datastore {
+	DatastoreRepositoryProvider getDatastoreRepositoryProvider();
 	
-	public void close();
+	<T extends Element> String insert(T element) throws DatastoreException;
 
-	public String insert(Element element) throws DatastoreException;
-
-	public List<String> insert(List<? extends Element> element) throws DatastoreException;
+	<T extends Element> List<String> insert(List<T> elements, Class<T> elementSubtype) throws DatastoreException;
 	
-	/*public <T extends Element> List<String> insert(List<T> elements) throws DatastoreException;*/
+	DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException, MetadataStoreException;
 	
-	public DataElement addToCollection(DataElement dataElement, String collectionId) throws DatastoreException;
+	DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException, MetadataStoreException;
+
+	<T extends Element> T update(T element) throws DatastoreException;
+
+	<T extends Element> T  update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException;
+
+	<T extends Element> T softDelete(String id, Class<T> elementSubType) throws DatastoreException;
 	
-	public DataElement addToCollection(DataElement dataElement, Query<? extends Criterion> query) throws DatastoreException;
+	<T extends Element> T delete(Element element, Class<T> elementSubtype) throws DatastoreException;
 
-	public <T extends Element> T update(T element) throws DatastoreException;
+	//<T extends Element> T findElementAndUpdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType);
 
-	public <T extends Element> T  update(String id, Map<String, Object> fieldsAndValues, Class<T> elementSubType) throws DatastoreException;
+	//<T extends Element> List<T> delete(Query<? extends Criterion> query, Class<T> elementSubtype) throws DatastoreException;
 
-	public <T extends Element> T softDelete(String id, Class<T> elementSubType) throws DatastoreException;
+	<T extends Element> T get(String id, Class<T> elementSubtype) throws DatastoreException, MetadataStoreException;
 
-	public <T extends Element> T delete(String id, Class<T> elementSubType) throws DatastoreException;
+	<T extends Element> T get(String id, Class<T> elementSubtype, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException;
 
-	public <T extends Element> T findElementAndUpdateMetadata(String id, Set<String> addMetadataIds, Set<String> removeMetadataIds, Class<T> elementSubType);
+	<T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
 
-	public void remove(DataElement dataElement, Collection collection) throws DatastoreException;
-
-	/*public <T extends Element> T delete(String id, Class<T> elementSubtype) throws DatastoreException;
-
-	public <T extends Element> List<T> delete(Query<? extends Criterion> query, Class<T> elementSubtype) throws DatastoreException;*/
-
-	public <T extends Element> T get(String id, Class<T> elementSubtype) throws DatastoreException, MetadataStoreException;
-
-	public <T extends Element> T get(String id, Class<T> elementSubtype, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException;
-
-	//public <T extends Element> T get(String id, Class<T> elementSubtype, MetadataStore metadataStore, QueryOptionsMessenger options) throws DatastoreException, MetadataStoreException;
-
-	public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype);
-
-	//public <T extends Element> QueryExecutor<T> find(Query<? extends Criterion> query, Class<T> elementSubtype, MetadataStore metadataStore);
-
-	public <T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype);
+	<T extends Element> long count(Query<? extends Criterion> query, Class<T> elementSubtype);
 	
-	public DataElement getDataElementByName(String id) throws DatastoreException;
+	<T extends Element> T getElementByName(String name, Class<T> elementSubtype) throws DatastoreException;
 	
-	public List<DataElement> getDataElementsByCollection(String collectionId) throws DatastoreException;
+	List<DataElement> getDataElementsByCollection(String collectionId) throws DatastoreException;
 
-	/*public void reIndexAll() throws DatastoreException;*/
-
-	public String generateId();
-
-	public Object generateId(String id);
+	Collection getCollectionByNameAndEndpoint(String name, String endpoint) throws DatastoreException;
 	
-	
-	public Collection getCollectionByNameAndEndpoint(String name, String endpoint);
-	public DataElement getDataElementByNameEndpointAndCollections(String name, String endpoint, List<Collection> collectionIds);
+	DataElement getDataElementByNameEndpointAndCollections(String name, String endpoint, List<Collection> collectionIds);
+
+	String generateId();
+
+	Object generateId(String id);
 	
 }

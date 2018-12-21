@@ -1,4 +1,4 @@
-package gr.cite.commons.pipeline.handlers;
+package gr.cite.commons.pipelinenew.handlers;
 
 import gr.cite.commons.pipeline.operations.ExtractOperation;
 import gr.cite.commons.pipeline.operations.FilterOperation;
@@ -7,7 +7,7 @@ import gr.cite.commons.pipeline.operations.TransformOperation;
 
 public class ProcessingPipelineHandlerFactory {
 	
-	public ProcessingPipelineHandler getHandler(ProcessingPipelineOperation operation) {
+	public static PipelineHandler getHandler(ProcessingPipelineOperation operation) {
 		switch (operation.getOperation()) {
 			case EXTRACT:
 				return new ExtractHandler((ExtractOperation) operation);

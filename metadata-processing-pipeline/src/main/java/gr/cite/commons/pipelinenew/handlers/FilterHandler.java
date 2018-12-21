@@ -1,4 +1,4 @@
-package gr.cite.commons.pipeline.handlers;
+package gr.cite.commons.pipelinenew.handlers;
 
 import gr.cite.commons.pipeline.operations.FilterOperation;
 import gr.cite.commons.pipeline.operations.ProcessingPipelineOperation;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
-public class FilterHandler implements ProcessingPipelineHandler {
+public class FilterHandler implements PipelineHandler {
 	private FilterOperation operation;
 	
 	FilterHandler(FilterOperation operation) {

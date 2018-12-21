@@ -6,7 +6,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<mongodb.version>3.4.3</mongodb.version>
+		<!--<mongodb.version>3.4.3</mongodb.version>-->
+		<mongodb.version>3.6.4</mongodb.version>
 	</properties>
 
 	<!--<repositories>-->
@@ -41,11 +42,11 @@
 			<artifactId>guava</artifactId>
 			<version>22.0</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.4</version>
-		</dependency>
+		</dependency>-->
 		<!-- <dependency>
 			<groupId>com.fasterxml.jackconfigcore</groupId>
 			<artifactId>jackson-databind</artifactId>

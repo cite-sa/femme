@@ -1,5 +1,6 @@
 package gr.cite.femme.engine.query.execution.mongodb;
 
+import com.mongodb.client.model.Filters;
 import gr.cite.femme.core.datastores.MetadataStore;
 import gr.cite.femme.core.exceptions.DatastoreException;
 import gr.cite.femme.core.exceptions.MetadataStoreException;
@@ -9,9 +10,10 @@ import gr.cite.femme.core.query.construction.Criterion;
 import gr.cite.femme.core.query.execution.MetadataQueryExecutor;
 import gr.cite.femme.core.query.construction.Query;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
-import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.datastores.DatastoreRepositoryProvider;
+import gr.cite.femme.core.model.FieldNames;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +29,8 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 	private MetadataStore metadataStore;
 	private List<Metadatum> metadataXPathResults = null;
 
-	public MetadataQueryMongoExecutor(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
-		super(datastore, elementSubtype);
+	public MetadataQueryMongoExecutor(DatastoreRepositoryProvider datastoreRepositoryProvider, MetadataStore metadataStore, Class<T> elementSubtype) {
+		super(datastoreRepositoryProvider, elementSubtype);
 		this.metadataStore = metadataStore;
 	}
 
@@ -61,16 +63,12 @@ public class MetadataQueryMongoExecutor<T extends Element> extends QueryMongoExe
 			long xPathQueryEnd = System.currentTimeMillis();
 			logger.info("[" + xPath + "] XPath metadata query time: " + (xPathQueryEnd - xPathQueryStart) + " ms");
 
-			Document xPathSatisfyingElementsQuery = new Document()
-					.append(FieldNames.ID,
-							new Document().append("$in",
-									this.metadataXPathResults.stream()/*.filter(metadatum -> metadatum.getId() != null)*/
-											.map(metadatum -> new ObjectId(metadatum.getElementId()))
-											.distinct().collect(Collectors.toList())));
+			Bson xPathSatisfyingElementsQuery = /*new Document()*/
+					//.append(FieldNames.ID, new Document().append(Filters.in(),
+					Filters.in(FieldNames.ID, this.metadataXPathResults.stream().map(metadatum -> new ObjectId(metadatum.getElementId())).collect(Collectors.toSet()));
 			//logger.debug(xPathSatisfyingElementsQuery.toString());
 
-			super.setQueryDocument(getQueryDocument() == null ?
-					xPathSatisfyingElementsQuery : new Document().append("$and", Arrays.asList(getQueryDocument(), xPathSatisfyingElementsQuery)));
+			super.setQueryDocument(getQueryDocument() == null ? xPathSatisfyingElementsQuery : Filters.and(xPathSatisfyingElementsQuery, getQueryDocument()));
 		}
 		return this;
 	}

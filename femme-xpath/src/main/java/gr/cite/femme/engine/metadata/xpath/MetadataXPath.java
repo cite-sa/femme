@@ -14,7 +14,7 @@ import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathLexer;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
-import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaIndexDatastore;
+import gr.cite.femme.engine.metadata.xpath.mongodb.MongoMetadataSchemaDatastore;
 import gr.cite.femme.engine.metadata.xpath.parser.visitors.MongoXPathVisitor;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -42,25 +42,20 @@ public class MetadataXPath {
 	private boolean reIndexingInProgress = false;
 	//private ReIndexingProcess reIndexer;
 	
-	public MetadataXPath() {
-		this.metadataSchemaIndexDatastore = new MongoMetadataSchemaIndexDatastore();
+	/*public MetadataXPath() {
+		this.metadataSchemaIndexDatastore = new MongoMetadataSchemaDatastore();
 		try {
 			this.metadataIndexDatastore = new ElasticMetadataIndexDatastore(this.metadataSchemaIndexDatastore);
 		} catch (UnknownHostException | MetadataIndexException e) {
 			logger.error("Metadata insert datastore initialization failed", e);
 		}
 		this.reIndexingProcess = this.metadataIndexDatastore.retrieveReIndexer(this.metadataSchemaIndexDatastore);
-	}
+	}*/
 	
 	public MetadataXPath(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, MetadataIndexDatastore metadataIndexDatastore) {
 		this.metadataSchemaIndexDatastore = metadataSchemaIndexDatastore;
 		this.metadataIndexDatastore = metadataIndexDatastore;
 		this.reIndexingProcess = this.metadataIndexDatastore.retrieveReIndexer(this.metadataSchemaIndexDatastore);
-	}
-	
-	public void close() throws IOException {
-		this.metadataIndexDatastore.close();
-		this.metadataSchemaIndexDatastore.close();
 	}
 	
 	public void index(Metadatum metadatum) throws UnsupportedOperationException, MetadataIndexException {

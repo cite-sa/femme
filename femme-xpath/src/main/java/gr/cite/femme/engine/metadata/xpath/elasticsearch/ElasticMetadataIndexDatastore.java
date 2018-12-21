@@ -1,7 +1,6 @@
 package gr.cite.femme.engine.metadata.xpath.elasticsearch;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gr.cite.commons.metadata.analyzer.core.JSONPath;
 import gr.cite.femme.core.exceptions.MetadataIndexException;
@@ -11,7 +10,6 @@ import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.core.MetadataSchema;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataIndexDatastore;
 import gr.cite.femme.engine.metadata.xpath.datastores.api.MetadataSchemaIndexDatastore;
-import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.FilterNodesExpression;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Node;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
@@ -19,12 +17,11 @@ import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLStreamException;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.locks.StampedLock;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
@@ -34,7 +31,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	private final StampedLock lock = new StampedLock();
 
-	private ElasticMetadataIndexDatastoreClient client;
+	private ElasticMetadataIndexDatastoreRepository metadataIndexDatastoreRepository;
 	private MetadataSchemaIndexDatastore schemaIndexDatastore;
 	private Indices indices;
 
@@ -43,15 +40,15 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 
 	public ElasticMetadataIndexDatastore(MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException, MetadataIndexException {
-		this.client = new ElasticMetadataIndexDatastoreClient();
+		this.metadataIndexDatastoreRepository = new ElasticMetadataIndexDatastoreRepository();
 		this.schemaIndexDatastore = schemaIndexDatastore;
-		this.indices = new Indices(this.client.getIndicesByAlias(this.client.getIndexAlias()));
+		this.indices = new Indices(this.metadataIndexDatastoreRepository.getIndicesByAlias(this.metadataIndexDatastoreRepository.getIndexAlias()));
 	}
 
-	public ElasticMetadataIndexDatastore(String hostName, int port, String indexAlias, MetadataSchemaIndexDatastore schemaIndexDatastore) throws UnknownHostException, MetadataIndexException {
-		this.client = new ElasticMetadataIndexDatastoreClient(hostName, port, indexAlias);
+	public ElasticMetadataIndexDatastore(ElasticMetadataIndexDatastoreRepository metadataIndexDatastoreRepository, MetadataSchemaIndexDatastore schemaIndexDatastore) throws MetadataIndexException {
+		this.metadataIndexDatastoreRepository = metadataIndexDatastoreRepository;
 		this.schemaIndexDatastore = schemaIndexDatastore;
-		this.indices = new Indices(this.client.getIndicesByAlias(this.client.getIndexAlias()));
+		this.indices = new Indices(this.metadataIndexDatastoreRepository.getIndicesByAlias(this.metadataIndexDatastoreRepository.getIndexAlias()));
 	}
 
 	synchronized Indices getIndices() {
@@ -63,12 +60,13 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 	}
 
 	@Override
+	@PreDestroy
 	public void close() throws IOException {
-		client.close();
+		metadataIndexDatastoreRepository.close();
 	}
 
 	public ReIndexingProcess retrieveReIndexer(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore) {
-		return new ElasticReindexingProcess(metadataSchemaIndexDatastore, this, this.client);
+		return new ElasticReindexingProcess(metadataSchemaIndexDatastore, this, this.metadataIndexDatastoreRepository);
 	}
 
 	public void insert(IndexableMetadatum indexableMetadatum, MetadataSchema metadataSchema) throws MetadataIndexException {
@@ -78,28 +76,28 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 		synchronized (this) {
 			if (this.indices.compareAndAdd(metadataSchemaId, randomId)) {
-				uniqueMetadataIndexName = this.client.getFullIndexName(metadataSchemaId, randomId);
-				this.client.createIndex(uniqueMetadataIndexName);
-				this.client.createMapping(metadataSchema, uniqueMetadataIndexName);
-				this.client.createIndexAliasAssociation(uniqueMetadataIndexName);
+				uniqueMetadataIndexName = this.metadataIndexDatastoreRepository.getFullIndexName(metadataSchemaId, randomId);
+				this.metadataIndexDatastoreRepository.createIndex(uniqueMetadataIndexName);
+				this.metadataIndexDatastoreRepository.createMapping(metadataSchema, uniqueMetadataIndexName);
+				this.metadataIndexDatastoreRepository.createIndexAliasAssociation(uniqueMetadataIndexName);
 			} else {
-				//uniqueMetadataIndexName = this.client.findIndex(metadataIndexName);
-				uniqueMetadataIndexName = this.client.getFullIndexName(metadataSchemaId, this.indices.getUniqueId(metadataSchemaId));
+				//uniqueMetadataIndexName = this.metadataIndexDatastoreRepository.findIndex(metadataIndexName);
+				uniqueMetadataIndexName = this.metadataIndexDatastoreRepository.getFullIndexName(metadataSchemaId, this.indices.getUniqueId(metadataSchemaId));
 			}
 		}
 
-		/*if (!this.client.indexExists(timestampedMetadataIndexName)) {
-			this.client.createIndex(timestampedMetadataIndexName);
-			this.client.createIndexAliasAssociation(timestampedMetadataIndexName);
+		/*if (!this.metadataIndexDatastoreRepository.indexExists(timestampedMetadataIndexName)) {
+			this.metadataIndexDatastoreRepository.createIndex(timestampedMetadataIndexName);
+			this.metadataIndexDatastoreRepository.createIndexAliasAssociation(timestampedMetadataIndexName);
 		}*/
 
-		/*if (!this.client.mappingExists(timestampedMetadataIndexName)) {
-			this.client.createMapping(metadataSchema, timestampedMetadataIndexName);
+		/*if (!this.metadataIndexDatastoreRepository.mappingExists(timestampedMetadataIndexName)) {
+			this.metadataIndexDatastoreRepository.createMapping(metadataSchema, timestampedMetadataIndexName);
 		}*/
 
-		/*if (!this.client.indexExists(metadataIndexName)) {
-			this.client.createIndex(metadataIndexName);
-			this.client.createIndexAliasAssociation(metadataIndexName);
+		/*if (!this.metadataIndexDatastoreRepository.indexExists(metadataIndexName)) {
+			this.metadataIndexDatastoreRepository.createIndex(metadataIndexName);
+			this.metadataIndexDatastoreRepository.createIndexAliasAssociation(metadataIndexName);
 		}*/
 
 		String indexableMetadatumSerialized;
@@ -108,7 +106,7 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		} catch (JsonProcessingException e) {
 			throw new MetadataIndexException("Metadatum serialization failed", e);
 		}
-		this.client.insert(indexableMetadatumSerialized, uniqueMetadataIndexName);
+		this.metadataIndexDatastoreRepository.insert(indexableMetadatumSerialized, uniqueMetadataIndexName);
 	}
 
 	@Override
@@ -126,9 +124,9 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 		Map<String, String> fieldsAndValues = new HashMap<>();
 		fieldsAndValues.put(field, value);
 
-		this.client.search(fieldsAndValues).forEach(hit -> {
+		this.metadataIndexDatastoreRepository.search(fieldsAndValues).forEach(hit -> {
 			try {
-				this.client.delete(hit.getId(), hit.getIndex());
+				this.metadataIndexDatastoreRepository.delete(hit.getId(), hit.getIndex());
 			} catch (MetadataIndexException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -152,11 +150,11 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public List<IndexableMetadatum> query(List<String> elementIds, Tree<QueryNode> queryTree, boolean lazy) throws MetadataIndexException {
-		if (!this.client.isIndexAliasCreated()) {
+		if (!this.metadataIndexDatastoreRepository.isIndexAliasCreated()) {
 			return new ArrayList<>();
 		}
 
-		ElasticScrollQuery scrollQuery = new ElasticScrollQuery(this.client);
+		ElasticScrollQuery scrollQuery = new ElasticScrollQuery(this.metadataIndexDatastoreRepository);
 		List<IndexableMetadatum> results = new ArrayList<>();
 		try {
 			//logger.info("ElasticSearch query: " + buildElasticSearchQuery(queryTree, lazy));

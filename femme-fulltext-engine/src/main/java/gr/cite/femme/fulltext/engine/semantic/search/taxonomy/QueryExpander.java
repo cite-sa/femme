@@ -164,11 +164,10 @@ public class QueryExpander {
 		childrenTerms.addAll(currentLevelTerms);
 		uniqueTaxonomyTerms.addAll(childrenTerms);*/
 		
-		List<TaxonomyTerm> childrenTerms = new ArrayList<>();
+		/*List<TaxonomyTerm> childrenTerms = new ArrayList<>();
 		childrenTerms.addAll(currentLevelTerms);
 		uniqueTaxonomyTerms.addAll(childrenTerms);
-		
-		expandedResults.put(level, childrenTerms);
+		expandedResults.put(level, childrenTerms);*/
 		
 		while (! currentLevelTerms.isEmpty() && (maxLevel == -1 || level < maxLevel)) {
 			level++;
@@ -176,9 +175,9 @@ public class QueryExpander {
 			currentLevelTerms = getNonDuplicateNextLevelTerms(currentLevelTerms, "broader", uniqueTaxonomyTerms);
 			uniqueTaxonomyTerms.addAll(currentLevelTerms);
 			
-			childrenTerms = getAllChildrenTerms(currentLevelTerms, uniqueTaxonomyTerms);
+			/*childrenTerms = getAllChildrenTerms(currentLevelTerms, uniqueTaxonomyTerms);
 			currentLevelTerms.addAll(childrenTerms);
-			uniqueTaxonomyTerms.addAll(childrenTerms);
+			uniqueTaxonomyTerms.addAll(childrenTerms);*/
 			
 			if (! currentLevelTerms.isEmpty()) {
 				expandedResults.put(level, currentLevelTerms);

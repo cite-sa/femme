@@ -11,43 +11,43 @@ import gr.cite.femme.core.query.execution.MetadataQueryExecutor;
 import gr.cite.femme.core.query.execution.MetadataQueryExecutorBuilder;
 import gr.cite.femme.core.query.construction.Query;
 import gr.cite.femme.core.dto.QueryOptionsMessenger;
-import gr.cite.femme.engine.datastore.mongodb.MongoDatastore;
-import gr.cite.femme.engine.datastore.mongodb.utils.FieldNames;
+import gr.cite.femme.core.datastores.DatastoreRepositoryProvider;
+import gr.cite.femme.core.model.FieldNames;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MetadataQueryMongoExecutorBuilder<T extends Element> implements MetadataQueryExecutorBuilder<T> {
-	private MongoDatastore datastore;
+	private DatastoreRepositoryProvider datastoreRepositoryProvider;
 	private MetadataStore metadataStore;
 	private Class<T> elementSubtype;
 
-	MetadataQueryMongoExecutorBuilder(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
-		this.datastore = datastore;
+	MetadataQueryMongoExecutorBuilder(DatastoreRepositoryProvider datastoreRepositoryProvider, MetadataStore metadataStore, Class<T> elementSubtype) {
+		this.datastoreRepositoryProvider = datastoreRepositoryProvider;
 		this.metadataStore = metadataStore;
 		this.elementSubtype = elementSubtype;
 	}
 	
 	public FindQueryExecutorBuilder<T> find() {
-		return new FindQueryMongoExecutorBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).find();
+		return new FindQueryMongoExecutorBuilder<>(this.datastoreRepositoryProvider, this.metadataStore, this.elementSubtype).find();
 	}
 	
 	public FindQueryExecutorBuilder<T> find(Query<? extends Criterion> query) {
-		return new FindQueryMongoExecutorBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).find(query);
+		return new FindQueryMongoExecutorBuilder<>(this.datastoreRepositoryProvider, this.metadataStore, this.elementSubtype).find(query);
 	}
 	
 	public CountQueryMongoExecutionBuilder<T> count() {
-		return new CountQueryMongoExecutionBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).count();
+		return new CountQueryMongoExecutionBuilder<>(this.datastoreRepositoryProvider, this.metadataStore, this.elementSubtype).count();
 	}
 
 	public CountQueryMongoExecutionBuilder<T> count(Query<? extends Criterion> query) {
-		return new CountQueryMongoExecutionBuilder<>(this.datastore, this.metadataStore, this.elementSubtype).count(query);
+		return new CountQueryMongoExecutionBuilder<>(this.datastoreRepositoryProvider, this.metadataStore, this.elementSubtype).count(query);
 	}
 
 
-	public static class FindQueryMongoExecutorBuilder<T extends Element> implements FindQueryExecutorBuilder<T> {
-		private MongoDatastore datastore;
+	public class FindQueryMongoExecutorBuilder<T extends Element> implements FindQueryExecutorBuilder<T> {
+		private DatastoreRepositoryProvider datastoreRepositoryProvider;
 		private Class<T> elementSubtype;
 
 		private MetadataQueryMongoExecutor<T> queryExecutor;
@@ -57,10 +57,10 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		private String xPath;
 		private boolean xPathInMemory;
 
-		private FindQueryMongoExecutorBuilder(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
-			this.datastore = datastore;
+		private FindQueryMongoExecutorBuilder(DatastoreRepositoryProvider datastoreRepositoryProvider, MetadataStore metadataStore, Class<T> elementSubtype) {
+			this.datastoreRepositoryProvider = datastoreRepositoryProvider;
 			this.elementSubtype = elementSubtype;
-			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastore, metadataStore, elementSubtype);
+			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastoreRepositoryProvider, metadataStore, elementSubtype);
 		}
 		
 		public FindQueryExecutorBuilder<T> find() {
@@ -84,7 +84,6 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		}
 		
 		public FindQueryMongoExecutorBuilder<T> xPathInMemory(String xPath) throws MetadataStoreException {
-			//queryExecutor.xPathInMemory(xPath);
 			this.xPath = xPath;
 			this.xPathInMemory = true;
 			return this;
@@ -93,7 +92,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		public MetadataQueryExecutor<T> execute() throws MetadataStoreException, DatastoreException {
 
 			if (this.xPath != null) {
-				QueryMongoExecutor<T> preFilteringQueryExecutor = new QueryMongoExecutor<>(this.datastore, this.elementSubtype);
+				QueryMongoExecutor<T> preFilteringQueryExecutor = new QueryMongoExecutor<>(this.datastoreRepositoryProvider, this.elementSubtype);
 				List<T> preFilteringIds = new ArrayList<>();
 				if (this.query != null) {
 					preFilteringIds = preFilteringQueryExecutor.find(this.query).options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).list();
@@ -120,8 +119,8 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		}
 	}
 
-	public static class CountQueryMongoExecutionBuilder<T extends Element> implements CountQueryExecutorBuilder<T> {
-		private MongoDatastore datastore;
+	public class CountQueryMongoExecutionBuilder<T extends Element> implements CountQueryExecutorBuilder<T> {
+		private DatastoreRepositoryProvider datastoreRepositoryProvider;
 		private Class<T> elementSubtype;
 
 		private MetadataQueryMongoExecutor<T> queryExecutor;
@@ -129,10 +128,10 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		private Query<? extends Criterion> query;
 		private String xPath;
 
-		private CountQueryMongoExecutionBuilder(MongoDatastore datastore, MetadataStore metadataStore, Class<T> elementSubtype) {
-			this.datastore = datastore;
+		private CountQueryMongoExecutionBuilder(DatastoreRepositoryProvider datastoreRepositoryProvider, MetadataStore metadataStore, Class<T> elementSubtype) {
+			this.datastoreRepositoryProvider = datastoreRepositoryProvider;
 			this.elementSubtype = elementSubtype;
-			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastore, metadataStore, elementSubtype);
+			this.queryExecutor = new MetadataQueryMongoExecutor<>(datastoreRepositoryProvider, metadataStore, elementSubtype);
 		}
 		
 		public CountQueryMongoExecutionBuilder<T> count() {
@@ -157,7 +156,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 		public long execute() throws MetadataStoreException, DatastoreException {
 
 			if (this.xPath != null) {
-				QueryMongoExecutor<T> preFilteringQueryExecutor = new QueryMongoExecutor<>(this.datastore, this.elementSubtype);
+				QueryMongoExecutor<T> preFilteringQueryExecutor = new QueryMongoExecutor<>(this.datastoreRepositoryProvider, this.elementSubtype);
 				List<T> preFilteringIds = new ArrayList<>();
 				if (this.query != null) {
 					preFilteringIds = preFilteringQueryExecutor.find(this.query).options(QueryOptionsMessenger.builder().include(FieldNames.ID).build()).list();
@@ -168,6 +167,7 @@ public class MetadataQueryMongoExecutorBuilder<T extends Element> implements Met
 				} else {
 					return 0;
 				}
+
 				this.query = null;
 			}
 

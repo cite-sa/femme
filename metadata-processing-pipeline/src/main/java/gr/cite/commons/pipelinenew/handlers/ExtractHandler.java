@@ -1,6 +1,5 @@
-package gr.cite.commons.pipeline.handlers;
+package gr.cite.commons.pipelinenew.handlers;
 
-import gr.cite.commons.pipeline.ProcessingPipelineCtx;
 import gr.cite.commons.pipeline.exceptions.ProcessingPipelineHandlerException;
 import gr.cite.commons.pipeline.operations.ExtractOperation;
 import gr.cite.commons.utils.xml.XMLConverter;
@@ -13,7 +12,7 @@ import javax.naming.OperationNotSupportedException;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.util.List;
 
-public class ExtractHandler implements ProcessingPipelineHandler {
+public class ExtractHandler implements PipelineHandler {
 	//private ProcessingPipelineCtx ctx;
 	private ExtractOperation operation;
 	

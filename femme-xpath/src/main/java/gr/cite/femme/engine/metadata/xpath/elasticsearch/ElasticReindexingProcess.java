@@ -26,7 +26,7 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 
 	private MetadataSchemaIndexDatastore metadataSchemaIndexDatastore;
 	private ElasticMetadataIndexDatastore elasticMetadataIndexDatastore;
-	private ElasticMetadataIndexDatastoreClient indexClient;
+	private ElasticMetadataIndexDatastoreRepository indexClient;
 
 	private UUID indexProcessId;
 	private Indices indices;
@@ -38,7 +38,7 @@ public class ElasticReindexingProcess implements ReIndexingProcess {
 
 	private LongAdder total = new LongAdder();
 
-	public ElasticReindexingProcess(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, ElasticMetadataIndexDatastore elasticMetadataIndexDatastore, ElasticMetadataIndexDatastoreClient indexClient) {
+	public ElasticReindexingProcess(MetadataSchemaIndexDatastore metadataSchemaIndexDatastore, ElasticMetadataIndexDatastore elasticMetadataIndexDatastore, ElasticMetadataIndexDatastoreRepository indexClient) {
 		this.metadataSchemaIndexDatastore = metadataSchemaIndexDatastore;
 		this.elasticMetadataIndexDatastore = elasticMetadataIndexDatastore;
 		this.indexClient = indexClient;

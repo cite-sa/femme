@@ -61,6 +61,21 @@ public class FulltextIndexAdminResource {
 		
 		return Response.ok("done").build();
 	}
+	
+	@POST
+	@Path("elements/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response update(@PathParam("id") String id, FulltextDocument doc) {
+		try {
+			this.engine.update(id, doc);
+			logger.info(doc.getElementId() + " successfully updated");
+		} catch (IOException | FemmeFulltextException e) {
+			logger.error(e.getMessage(), e);
+			throw new WebApplicationException(e);
+		}
+		
+		return Response.ok().build();
+	}
 
 	@DELETE
 	@Path("elements/{id}")
