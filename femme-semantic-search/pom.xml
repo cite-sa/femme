@@ -6,21 +6,21 @@
 
 	<groupId>gr.cite.femme</groupId>
 	<artifactId>femme-semantic-search</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<packaging>war</packaging>
 
 	<properties>
 		<slf4j.version>1.7.25</slf4j.version>
-		<logback.version>1.1.7</logback.version>
-		<jersey.version>2.25.1</jersey.version>
-		<spring.version>4.3.9.RELEASE</spring.version>
-		<elasticsearch-client.version>6.2.4</elasticsearch-client.version>
+		<logback.version>1.2.3</logback.version>
+		<jersey.version>2.27</jersey.version>
+		<spring.version>4.3.21.RELEASE</spring.version>
+		<elasticsearch-client.version>6.5.4</elasticsearch-client.version>
 
 		<junit.version>4.12</junit.version>
 
-		<maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
+		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-		<maven-war-plugin.version>3.0.0</maven-war-plugin.version>
+		<maven-war-plugin.version>3.2.2</maven-war-plugin.version>
 		<tomcat-maven-plugin.version>2.2</tomcat-maven-plugin.version>
 	</properties>
 
@@ -46,7 +46,7 @@
 		<!-- Jersey dependencies -->
 		<dependency>
 			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-spring3</artifactId>
+			<artifactId>jersey-spring4</artifactId>
 			<version>${jersey.version}</version>
 			<exclusions>
 				<exclusion>
