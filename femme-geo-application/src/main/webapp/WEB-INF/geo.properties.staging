@@ -1,0 +1,5 @@
+gr.cite.femme.geo.mongodb.host=es-devel1.local.cite.gr
+gr.cite.femme.geo.mongodb.port=27017
+gr.cite.femme.geo.mongodb.name=femme-geo-db-devel
+
+gr.cite.femme.client.femme.url=http://localhost:8080/femme

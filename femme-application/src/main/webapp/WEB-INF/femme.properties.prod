@@ -1,11 +1,12 @@
-gr.cite.femme.datastore.db.host=localhost
-gr.cite.femme.datastore.db.port=27017
-gr.cite.femme.datastore.db.name=femme-db
+gr.cite.femme.url=http://es-devel1.local.cite.gr:8081/femme
 
-gr.cite.femme.datastore.metadata.db.host=localhost
-gr.cite.femme.datastore.metadata.db.port=27017
-gr.cite.femme.datastore.metadata.db.name=femme-db
-gr.cite.femme.datastore.metadata.db.bucket.name=metadataGridFS
+gr.cite.femme.datastore.db.host=localhost:27017
+gr.cite.femme.datastore.db.name=femme-db
+gr.cite.femme.datastore.db.sharding=false
+
+gr.cite.femme.metadatastore.db.host=localhost:27017
+gr.cite.femme.metadatastore.db.name=femme-db
+gr.cite.femme.metadatastore.db.sharding=false
 
 gr.cite.femme.datastore.metadata.index.db.host=es-devel1.local.cite.gr
 gr.cite.femme.datastore.metadata.index.db.port=9200

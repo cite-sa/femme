@@ -8,12 +8,21 @@ import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.QueryNode;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.Tree;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathBaseVisitor;
 import gr.cite.femme.engine.metadata.xpath.grammar.XPathParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
+	private static final Logger logger = LoggerFactory.getLogger(MongoXPathVisitor.class);
+	
 	private static final String ATTRIBUTE = "@";
 	private static final String TEXT = "text()";
+	
+	private final ExecutorService executor = Executors.newFixedThreadPool(5);
 	
 	private MetadataSchemaIndexDatastore metadataSchemaDatastore;
 	private QueryNode filterBuilder;
@@ -105,9 +114,11 @@ public class MongoXPathVisitor extends XPathBaseVisitor<Tree<QueryNode>> {
 									newLevelNodes.add(childNode);
 								});*/
 
-
+						
 						this.metadataSchemaDatastore.findMetadataIndexPathByRegexAndGroupById("(?:\\.|^)(" + node.getData().getNodePath().toString() + this.filterBuilder.getNodePath().toString() + ")$")
 								.forEach((path, ids) -> {
+									logger.info(path);
+									
 									QueryNode childNodeData = new QueryNode();
 									
 									childNodeData.setNodePath(new StringBuilder(path));

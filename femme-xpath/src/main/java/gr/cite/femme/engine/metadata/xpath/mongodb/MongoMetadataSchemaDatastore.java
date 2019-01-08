@@ -38,7 +38,7 @@ public class MongoMetadataSchemaDatastore implements MetadataSchemaIndexDatastor
 			try {
 				this.metadataSchemaDatastoreRepository.insert(schema);
 			} catch (MetadataStoreException e) {
-				logger.error("Error inserting metadata schema");
+				logger.error("Error inserting metadata schema", e);
 			}
 			//this.schemasCollection.insertOne(schema);
 		} else {
@@ -69,13 +69,9 @@ public class MongoMetadataSchemaDatastore implements MetadataSchemaIndexDatastor
 	@Override
 	public Map<String, List<String>> findMetadataIndexPathByRegexAndGroupById(String regex) {
 		//List<MetadataSchema> metadataSchemas = new ArrayList<>();
+		long start = System.currentTimeMillis();
+		
 		Bson filterByRegex = Aggregates.match(Filters.regex("schema.path", regex));
-		/*this.schemasCollection.aggregate(Arrays.asList(
-				filterByRegex,
-				Aggregates.unwind("$schema"),
-				filterByRegex,
-				Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
-		)).into(metadataSchemas);*/
 		
 		Map<String, List<String>> pathAndMetadataSchemaIds = new ConcurrentHashMap<>();
 		
@@ -85,21 +81,9 @@ public class MongoMetadataSchemaDatastore implements MetadataSchemaIndexDatastor
 			filterByRegex,
 			Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
 		)).forEach((Block<MetadataSchema>) metadataSchema -> addMetadataSchemaToMap(metadataSchema, pathAndMetadataSchemaIds));
-
-		/*Map<String, List<String>> pathAndMetadataSchemaIds = new ConcurrentHashMap<>();
-
-		metadataSchemas.forEach(metadataSchema -> {
-			final String metadataSchemaId = metadataSchema.getId();
-			metadataSchema.getSchema().forEach(schema -> {
-				if (pathAndMetadataSchemaIds.containsKey(schema.getPath())) {
-					pathAndMetadataSchemaIds.get(schema.getPath()).add(metadataSchemaId);
-				} else {
-					List<String> metadataSchemasIds = new ArrayList<>();
-					metadataSchemasIds.add(metadataSchemaId);
-					pathAndMetadataSchemaIds.put(schema.getPath(), metadataSchemasIds);
-				}
-			});
-		});*/
+		
+		long end = System.currentTimeMillis();
+		logger.info("findMetadataIndexPathByRegexAndGroupById query time: " + (end - start) + " ms");
 
 		return pathAndMetadataSchemaIds;
 	}
@@ -136,6 +120,8 @@ public class MongoMetadataSchemaDatastore implements MetadataSchemaIndexDatastor
 	
 	@Override
 	public List<MetadataSchema> findArrayMetadataIndexPaths(List<String> ids, String pathPrefix) {
+		long start = System.currentTimeMillis();
+		
 		List<ObjectId> objectIds = ids.stream().map(ObjectId::new).collect(Collectors.toList());
 		
 		/*return this.schemasCollection.aggregate(Arrays.asList(
@@ -145,12 +131,17 @@ public class MongoMetadataSchemaDatastore implements MetadataSchemaIndexDatastor
 			Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
 		)).into(new ArrayList<>());*/
 		
-		return this.metadataSchemaDatastoreRepository.aggregate(Arrays.asList(
+		List<MetadataSchema> schemas = this.metadataSchemaDatastoreRepository.aggregate(Arrays.asList(
 			Aggregates.match(Filters.and(Filters.eq("schema.array", true), Filters.in("_id", objectIds))),
 			Aggregates.unwind("$schema"),
 			Aggregates.match(Filters.and(Filters.eq("schema.array", true))),
 			Aggregates.group("$_id", Accumulators.addToSet("schema", "$schema"))
 		)).into(new ArrayList<>());
+		
+		long end = System.currentTimeMillis();
+		logger.info("findArrayMetadataIndexPaths query time: " + (end - start) + " ms");
+		
+		return schemas;
 	}
 
 	@Override

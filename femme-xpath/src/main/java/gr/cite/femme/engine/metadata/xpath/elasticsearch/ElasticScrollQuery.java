@@ -6,9 +6,7 @@ import gr.cite.commons.converter.XmlJsonConverter;
 import gr.cite.femme.engine.metadata.xpath.core.IndexableMetadatum;
 import gr.cite.femme.engine.metadata.xpath.elasticsearch.utils.ElasticResponseContent;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,16 +25,13 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private boolean firstScroll = true;
-	private ElasticMetadataIndexDatastoreRepository client;
+	private ElasticMetadataIndexDatastoreRepository repository;
 	private String scrollId;
 	private Response indexResponse;
 	private List<IndexableMetadatum> results;
 	
-	public ElasticScrollQuery() {
-	
-	}
-	public ElasticScrollQuery(ElasticMetadataIndexDatastoreRepository client) {
-		this.client = client;
+	public ElasticScrollQuery(ElasticMetadataIndexDatastoreRepository repository) {
+		this.repository = repository;
 	}
 
 	public void query(String query, Set<String> originalIncludes, List<String> metadataSchemaIds, boolean payloadLazy) throws Throwable {
@@ -48,9 +44,6 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 		}
 
 		String scrollQuery = buildScrollQuery(query, includes, payloadLazy);
-
-		logger.info("Scroll query: " + scrollQuery);
-		logger.info("Scroll query URL: " + "/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s");
 
 		submitScrollQuery(scrollQuery, metadataSchemaIds);
 		getResults();
@@ -69,24 +62,27 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private String buildScrollQuery(String query, Set<String> includes, boolean payloadLazy) {
 		return "{" +
 			"\"_source\": {" +
-				(includes.size() > 0 ? "\"includes\":[" + includes.stream().collect(Collectors.joining(",")) + "]" : "") +
+				(includes.size() > 0 ? "\"includes\":[" + String.join(",", includes) + "]" : "") +
 				(includes.size() > 0 && payloadLazy ? "," : "") +
 				(payloadLazy ? "\"excludes\":[\"value\"]" : "") +
 			"}," +
-			(query != null && ! "".equals(query) ? query + "," : "") +
+			(query == null || "".equals(query) ? "" : query + ",") +
 			"\"sort\" : [\"_doc\"]," +
 			"\"size\":  1000" +
 		"}";
 	}
 	
 	private void submitScrollQuery(String scrollQuery, List<String> metadataSchemaIds) throws IOException {
-		HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
-		this.indexResponse = this.client.get().performRequest(
-			"GET",
-			//"/" + this.client.getIndexAlias() + "/_search?scroll=15s",
-			"/" + metadataSchemaIds.stream().map(metadataSchemaId -> this.client.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(",")) + "/_search?scroll=15s",
-			Collections.emptyMap(),
-			entity);
+		String indices = metadataSchemaIds.stream().map(metadataSchemaId -> this.repository.getIndexPrefix(metadataSchemaId) + "_*").collect(Collectors.joining(","));
+		String indicesEndpoint = indices.getBytes(StandardCharsets.UTF_8).length < 4000 ? indices : this.repository.getIndexAlias();
+		
+		logger.debug("Scroll endpoint: " + indicesEndpoint);
+		logger.debug("Scroll query: " + scrollQuery);
+		
+		Request request = new Request("POST", "/" + indicesEndpoint + "/_search?scroll=15s");
+		request.setJsonEntity(scrollQuery);
+		
+		this.indexResponse = this.repository.get().performRequest(request);
 	}
 
 	private String queryJsonTree(String query, String json, String contentType, boolean getText) throws Throwable {
@@ -206,16 +202,16 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	public boolean hasNext() {
 		if (!this.firstScroll) {
 			String scrollQuery = "{" +
-					"\"scroll\": \"60s\"," +
+					"\"scroll\": \"30s\"," +
 					"\"scroll_id\": \"" + this.scrollId + "\"" +
-					"}";
-			HttpEntity entity = new NStringEntity(scrollQuery, ContentType.APPLICATION_JSON);
+				"}";
+			
+			Request request = new Request("POST", "/_search/scroll");
+			request.setJsonEntity(scrollQuery);
+			
 			try {
-				this.indexResponse = this.client.get().performRequest(
-						"GET",
-						"/_search/scroll",
-						Collections.emptyMap(),
-						entity);
+				
+				this.indexResponse = this.repository.get().performRequest(request);
 			} catch (IOException e) {
 				logger.error("Elasticsearch scroll query failed", e);
 				return false;
@@ -236,8 +232,8 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 	private void getResults() {
 		ElasticResponseContent content;
 		try {
-			content = mapper.readValue(IOUtils.toString(this.indexResponse.getEntity().getContent(),
-					Charset.defaultCharset()), ElasticResponseContent.class);
+			String contentString = IOUtils.toString(this.indexResponse.getEntity().getContent(), Charset.defaultCharset());
+			content = mapper.readValue(contentString, ElasticResponseContent.class);
 		} catch (IOException e) {
 			logger.error("Elasticsearch scroll response serialization failed", e);
 			this.results = new ArrayList<>();
@@ -252,17 +248,7 @@ public class ElasticScrollQuery implements Iterator<List<IndexableMetadatum>> {
 			return hit.getSource();
 		}).collect(Collectors.toList());
 	}
-
-	public static void main(String[] args) throws Throwable {
-		ElasticScrollQuery query = new ElasticScrollQuery();
-		String res = query.queryJsonTree(
-				"wcs:CoverageDescriptions.wcs:CoverageDescription.domainSet.gmlrgrid:ReferenceableGridByVectors.gmlrgrid:generalGridAxis",
-				"{\"wcs:CoverageDescriptions\":{\"wcs:CoverageDescription\":{\"domainSet\":{\"gmlrgrid:ReferenceableGridByVectors\":{\"gmlrgrid:generalGridAxis\":[{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}},{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}},{\"gmlrgrid:GeneralGridAxis\":{\"gmlrgrid:sequenceRule\":{\"@\":{\"axisOrder\":\"+1\"},\"#text\":\"Linear\"}}}]}}}}}",
-				"xml",
-				false
-		);
-		System.out.println(res);
-	}
+	
 }
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${CATALINA_HOME}/logs/femme.log</file>
+		<file>/data/femme/logs/femme.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>${CATALINA_HOME}/logs/archived/femme.%d{yyyy-MM}.%i.log</fileNamePattern>
 			<triggeringPolicy class="ch.qos.logbconfigcore.rolling.SizeBasedTriggeringPolicy">

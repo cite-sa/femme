@@ -7,13 +7,12 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class XMLSchemaAnalyzer {
 
     public static Object analyze(String xml) {
 
-        XMLStreamReader streamReader = null;
+        XMLStreamReader streamReader;
         try {
             streamReader = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(xml));
 

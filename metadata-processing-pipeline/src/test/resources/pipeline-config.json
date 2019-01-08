@@ -1,0 +1,20 @@
+{
+	"filter": [
+		{
+			"format": "xml",
+			"query": "//*[local-name()='Envelope']/@srsDimension",
+			"operator": "=",
+			"value": "3",
+			"type": "INTEGER"
+		}
+	],
+	"map": [
+		{
+			"format": "xml",
+			"query": "//wcs:CoverageId/text()",
+			"name": "name",
+			"type": "string",
+			"array": false
+		}
+	]
+}

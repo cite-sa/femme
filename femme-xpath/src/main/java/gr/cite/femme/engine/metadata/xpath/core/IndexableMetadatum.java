@@ -22,89 +22,111 @@ import java.util.Map;
 public class IndexableMetadatum {
 
     private String id;
-
-    @JsonProperty("metadataSchemaId")
-    private String metadataSchemaId;
+    
+    @JsonProperty("elementId")
+    private String elementId;
 
     @JsonProperty("metadatumId")
     private String metadatumId;
-
-    @JsonProperty("elementId")
-    private String elementId;
+    
+    @JsonProperty("metadataSchemaId")
+    private String metadataSchemaId;
+    
+    @JsonProperty("value")
+    private String value;
 
     @JsonProperty("originalContentType")
     private String originalContentType;
 
-    @JsonProperty("value")
-    private String value;
-
     private Instant created;
 
     private Instant modified;
-
+    
     public String getId() {
         return id;
     }
-
+    
     public void setId(String id) {
         this.id = id;
     }
-
-    public String getMetadataSchemaId() {
-        return metadataSchemaId;
-    }
-
-    public void setMetadataSchemaId(String metadataSchemaId) {
-        this.metadataSchemaId = metadataSchemaId;
-    }
-
-    public String getMetadatumId() {
-        return metadatumId;
-    }
-
-    public void setMetadatumId(String metadatumId) {
-        this.metadatumId = metadatumId;
-    }
-
+    
     public String getElementId() {
         return elementId;
     }
-
+    
     public void setElementId(String elementId) {
         this.elementId = elementId;
     }
-
-    public String getOriginalContentType() {
-        return originalContentType;
+    
+    public String getMetadatumId() {
+        return metadatumId;
     }
-
-    public void setOriginalContentType(String originalContentType) {
-        this.originalContentType = originalContentType;
+    
+    public void setMetadatumId(String metadatumId) {
+        this.metadatumId = metadatumId;
     }
-
+    
+    public String getMetadataSchemaId() {
+        return metadataSchemaId;
+    }
+    
+    public void setMetadataSchemaId(String metadataSchemaId) {
+        this.metadataSchemaId = metadataSchemaId;
+    }
+    
     public String getValue() {
         return value;
     }
-
+    
     public void setValue(String value) {
         this.value = value;
     }
-
+    
+    public String getOriginalContentType() {
+        return originalContentType;
+    }
+    
+    public void setOriginalContentType(String originalContentType) {
+        this.originalContentType = originalContentType;
+    }
+    
     public Instant getCreated() {
         return created;
     }
-
+    
     public void setCreated(Instant created) {
         this.created = created;
     }
-
+    
     public Instant getModified() {
         return modified;
     }
-
+    
     public void setModified(Instant modified) {
         this.modified = modified;
     }
+	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		
+		IndexableMetadatum that = (IndexableMetadatum) o;
+		
+		if (! getId().equals(that.getId())) return false;
+		if (! getElementId().equals(that.getElementId())) return false;
+		if (! getMetadatumId().equals(that.getMetadatumId())) return false;
+		return getMetadataSchemaId().equals(that.getMetadataSchemaId());
+	}
+	
+	@Override
+	public int hashCode() {
+		int result = getId().hashCode();
+		result = 31 * result + getElementId().hashCode();
+		result = 31 * result + getMetadatumId().hashCode();
+		result = 31 * result + getMetadataSchemaId().hashCode();
+		return result;
+	}
 }
 
 class CustomIndexableMetadatumSerializer extends JsonSerializer<IndexableMetadatum> {

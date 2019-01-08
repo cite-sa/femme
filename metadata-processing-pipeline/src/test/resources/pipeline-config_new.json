@@ -1,0 +1,30 @@
+[
+	{
+		"operation": "map",
+		"format": "xml",
+		"mappings": {
+			"name": "//*[local-name()='CoverageId']/text()",
+			"lowerCorner": "//*[local-name()='lowerCorner']/text()"
+		}
+	},
+	{
+		"operation": "filter",
+		"conditions": {
+			"and": [
+				{
+					"field": "name",
+					"operator": "=",
+					"value": "L8_RGB_32631_3",
+					"datatype": "string"
+				},
+				{
+					"field": "lowerCorner",
+					"operator": "=",
+					"value": "126885 3234885 1433157189",
+					"datatype": "string"
+				}
+			]
+		}
+
+	}
+]

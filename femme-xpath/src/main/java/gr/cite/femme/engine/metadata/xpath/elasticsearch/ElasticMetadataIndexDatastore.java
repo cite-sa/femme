@@ -21,6 +21,10 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
@@ -150,12 +154,14 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 
 	@Override
 	public List<IndexableMetadatum> query(List<String> elementIds, Tree<QueryNode> queryTree, boolean lazy) throws MetadataIndexException {
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+		
 		if (!this.metadataIndexDatastoreRepository.isIndexAliasCreated()) {
 			return new ArrayList<>();
 		}
 
 		ElasticScrollQuery scrollQuery = new ElasticScrollQuery(this.metadataIndexDatastoreRepository);
-		List<IndexableMetadatum> results = new ArrayList<>();
+		Set<IndexableMetadatum> results = new HashSet<>();
 		try {
 			//logger.info("ElasticSearch query: " + buildElasticSearchQuery(queryTree, lazy));
 			//String searchQuery = buildElasticSearchQuery(queryTree, lazy);
@@ -166,24 +172,48 @@ public class ElasticMetadataIndexDatastore implements MetadataIndexDatastore {
 			end = System.currentTimeMillis();
 			logger.info("Elasticsearch query build time: " + (end - start) + " ms");
 
+			
+			List<Future<List<IndexableMetadatum>>> futures = new ArrayList<>();
 			for (ElasticSearchQuery searchQuery: searchQueries) {
+				
+				//futures.add(executor.submit(() -> {
+				List<IndexableMetadatum> scrollResults = new ArrayList<>();
+				
 				for (Map.Entry<String, List<String>> searchQueryEntry: searchQuery.getIndicesPerQuery().entrySet()) {
-					start = System.currentTimeMillis();
-					scrollQuery.query(searchQueryEntry.getKey(), searchQuery.getIncludes(), searchQueryEntry.getValue(), lazy);
-					while (scrollQuery.hasNext()) {
-						results.addAll(scrollQuery.next());
-					}
-					end = System.currentTimeMillis();
-					logger.info("Elasticsearch scroll query total time: " + (end - start) + " ms");
+					
+					futures.add(executor.submit(() -> {
+						long startScroll = System.currentTimeMillis();
+						
+						try {
+							scrollQuery.query(searchQueryEntry.getKey(), searchQuery.getIncludes(), searchQueryEntry.getValue(), lazy);
+						} catch (Throwable e) {
+							logger.error("Elasticsearch scroll query failed", e);
+							return new ArrayList<>();
+						}
+						
+						while (scrollQuery.hasNext()) {
+							scrollResults.addAll(scrollQuery.next());
+						}
+						
+						long endScroll = System.currentTimeMillis();
+						logger.info("Elasticsearch scroll query total time: " + (endScroll - startScroll) + " ms");
+						
+						return scrollResults;
+					}));
 				}
 			}
+				
+			for (Future<List<IndexableMetadatum>> future: futures) {
+				results.addAll(future.get());
+			}
+			
 		} catch (Throwable e) {
-			throw new MetadataIndexException("ElasticSearch scroll query failed", e);
+			throw new MetadataIndexException("Elasticsearch scroll query failed", e);
 		}
 
 		logger.debug("Total metadata found: " + results.size());
 
-		return results;
+		return new ArrayList<>(results);
 	}
 
 	private List<ElasticSearchQuery> buildElasticSearchQuery(List<String> elementIds, Tree<QueryNode> queryTree) {

@@ -4,6 +4,7 @@ import gr.cite.commons.utils.hash.HashGenerationException;
 import gr.cite.commons.utils.hash.HashGeneratorUtils;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MetadataSchemaAnalysis {
 
@@ -32,6 +33,7 @@ public class MetadataSchemaAnalysis {
             MurmurHash3.murmurhash3_x64_128(schemaString.getBytes(StandardCharsets.UTF_8), 0, schemaString.length(), 1234567890, hashResult);
             getChecksum = new String(Long.toString(hashResult.val1) + Long.toString(hashResult.val2));*/
 
+            //return HashGeneratorUtils.generateMD5(schema.stream().filter(JSONPath::isArray).collect(Collectors.toSet()).toString());
             return HashGeneratorUtils.generateMD5(schema.toString());
         }
         return checksum;

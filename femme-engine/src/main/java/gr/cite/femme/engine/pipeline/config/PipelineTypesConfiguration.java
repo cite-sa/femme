@@ -17,7 +17,7 @@ public class PipelineTypesConfiguration {
 	
 	private Map<DatastoreType, Map<ElementType, List<PipelineStep>>> pipelines;
 	
-	public PipelineTypesConfiguration(Map<DatastoreType, Map<ElementType, List<PipelineStep>>> pipeliness) {
+	public PipelineTypesConfiguration(Map<DatastoreType, Map<ElementType, List<PipelineStep>>> pipelines) {
 		this.pipelines = pipelines;
 	}
 	

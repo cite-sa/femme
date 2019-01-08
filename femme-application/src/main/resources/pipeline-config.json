@@ -33,6 +33,18 @@
 					"name": "/scientificName"
 				}
 			}
+		],
+		"OPENAIRE": [
+			{
+				"operation": "map",
+				"format": "xml",
+				"mappings": {
+					"title": "/record/result/metadata/oaf:entity/oaf:result/title/text()",
+					"journal": "/record/result/metadata/oaf:entity/oaf:result/journal/text()",
+					"publisher": "/record/result/metadata/oaf:entity/oaf:result/publisher/text()",
+					"description": "/record/result/metadata/oaf:entity/oaf:result/description/text()"
+				}
+			}
 		]
 	},
 	"GEO": {

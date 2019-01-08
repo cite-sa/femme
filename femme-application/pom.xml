@@ -2,134 +2,89 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>gr.cite.femme</groupId>
+
 	<artifactId>femme-application</artifactId>
-	<version>0.0.1</version>
+	<version>0.1</version>
 	<packaging>war</packaging>
 
+	<parent>
+		<groupId>gr.cite.femme</groupId>
+		<artifactId>femme</artifactId>
+		<version>0.1</version>
+		<relativePath>../femme/pom.xml</relativePath>
+	</parent>
+
 	<properties>
-		<slf4j.version>1.7.25</slf4j.version>
-		<logback.version>1.2.3</logback.version>
-		<spring.version>4.3.9.RELEASE</spring.version>
-		<spring.security.version>4.2.3.RELEASE</spring.security.version>
-		<jersey.version>2.25.1</jersey.version>
+		<!--<spring.security.version>4.2.3.RELEASE</spring.security.version>-->
 		<junit.version>4.12</junit.version>
 
-		<maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
-		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-		<maven-war-plugin.version>3.0.0</maven-war-plugin.version>
-		<tomcat-maven-plugin.version>2.2</tomcat-maven-plugin.version>
+
 	</properties>
 
 	<dependencies>
-		<dependency>
+		<!--<dependency>
 		    <groupId>javax.servlet</groupId>
 		    <artifactId>javax.servlet-api</artifactId>
 		    <version>3.1.0</version>
 		    <scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-spring3</artifactId>
-			<version>${jersey.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-web</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-beans</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-json-jackson</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.glassfish.jersey.media</groupId>
-		    <artifactId>jersey-media-multipart</artifactId>
-		    <version>${jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-bean-validation</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
-
-		
-		<!-- <dependency> <groupId>org.glassfish.jersey.media</groupId> <artifactId>jersey-media-multipart</artifactId> 
-			<version>${jersey.version}</version> </dependency> -->
-
-		<!-- Spring dependencies -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${spring.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<!--<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
-			<version>${spring.version}</version>
-		</dependency>-->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-aop</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-
-		<!--<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-			<version>${spring.security.version}</version>
 		</dependency>-->
 
 		<!-- Logging dependencies -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<!--<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slstores-api</artifactId>
-			<version>${slf4j.version}</version>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>${logback.version}</version>
-		</dependency>-->
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.glassfish.jersey.ext</groupId>
+			<artifactId>jersey-spring4</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.glassfish.jersey.media</groupId>
+		    <artifactId>jersey-media-multipart</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.ext</groupId>
+			<artifactId>jersey-bean-validation</artifactId>
+		</dependency>
+		
+		<!-- Spring dependencies -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+		</dependency>
 
 		<!-- Femme depndencies -->
 		<dependency>
 			<groupId>gr.cite.femme</groupId>
 			<artifactId>femme-engine</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.1</version>
 		</dependency>
 
 		<!--Test dependencies-->
@@ -157,24 +112,6 @@
 			<version>${spring.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.glassfish.jerconfigcore</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>${jersey.version}</version>
-			<scope>test</scope>
-		</dependency>-->
-		<!--<dependency>
-			<groupId>gr.cite.earthserver</groupId>
-			<artifactId>wcs-adapter</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>test</scope>
-		</dependency>-->
-
-		<!--<dependency>
-			<groupId>org.apache.tomcat.maven</groupId>
-			<artifactId>tomcat-maven-plugin</artifactId>
-			<version>${tomcat-maven-plugin.version}</version>
-		</dependency>-->
 
 	</dependencies>
 

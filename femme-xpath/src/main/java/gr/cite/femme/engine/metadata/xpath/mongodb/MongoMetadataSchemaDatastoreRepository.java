@@ -93,6 +93,9 @@ public class MongoMetadataSchemaDatastoreRepository {
 			this.metadataCollection.createIndex(Indexes.ascending("metadatumId"), uniqueIndex);
 		}
 		this.collection.createIndex(Indexes.ascending("checksum"), uniqueIndex);
+		this.collection.createIndex(Indexes.ascending("schema"));
+		this.collection.createIndex(Indexes.ascending("schema.array"));
+		this.collection.createIndex(Indexes.ascending("schema.path"));
 	}
 	
 	public String insert(MetadataSchema element) throws MetadataStoreException {

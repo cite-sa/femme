@@ -115,9 +115,10 @@ public class Femme {
 	public String insert(Element element) throws DatastoreException, MetadataStoreException, FemmeException {
 		insertElement(element);
 		
-		if (this.fulltextClient != null) {
+		insertInAuxiliaryServices(element);
+		/*if (this.fulltextClient != null) {
 			insertInFulltextIndex(element);
-		}
+		}*/
 
 		return element.getId();
 	}
@@ -229,7 +230,7 @@ public class Femme {
 					if (this.fulltextClient != null) {
 						this.fulltextClient.insert(metadatum.getElementId(), metadatum.getId(), pipeline.process(metadatum.getValue()));
 					}
-				} catch (FulltextException | OperationNotSupportedException e) {
+				} catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
 			}

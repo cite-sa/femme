@@ -1,14 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>gr.cite.femme</groupId>
-	<artifactId>femme-engine</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 
-	<properties>
-		<!--<mongodb.version>3.4.3</mongodb.version>-->
-		<mongodb.version>3.6.4</mongodb.version>
-	</properties>
+	<artifactId>femme-engine</artifactId>
+	<version>0.1</version>
+
+	<parent>
+		<groupId>gr.cite.femme</groupId>
+		<artifactId>femme</artifactId>
+		<version>0.1</version>
+		<relativePath>../femme/pom.xml</relativePath>
+	</parent>
 
 	<!--<repositories>-->
 		<!--<repository>-->
@@ -35,54 +37,33 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongodb.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>22.0</version>
 		</dependency>
-		<!--<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
-		</dependency>-->
-		<!-- <dependency>
-			<groupId>com.fasterxml.jackconfigcore</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.8.2</version>
-			<scope>test</scope>
-		</dependency> -->
+
 		<dependency>
 			<groupId>gr.cite.femme</groupId>
 			<artifactId>femme-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-databind</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>0.1</version>
 		</dependency>
-		<!--<dependency>
+
+		<dependency>
 			<groupId>gr.cite.femme</groupId>
-			<artifactId>feinsertndex-client</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>-->
-		<dependency>
-			<groupId>gr.cite.femme.metadata</groupId>
 			<artifactId>femme-xpath</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.1</version>
 		</dependency>
 		<dependency>
-			<groupId>gr.cite.commons</groupId>
+			<groupId>gr.cite.femme.commons</groupId>
 			<artifactId>metadata-processing-pipeline</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>gr.cite.femme.fulltext</groupId>
 			<artifactId>femme-fulltext-client</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>gr.cite.commons</groupId>
@@ -103,7 +84,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -113,7 +94,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.3</version>
+				<version>${maven-source-plugin.version}</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
